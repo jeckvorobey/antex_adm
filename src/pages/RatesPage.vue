@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
-import { api } from 'src/boot/axios';
+import { api } from '@boot/axios';
 
 const $q = useQuasar();
 const allowanceValue = ref(0.02);

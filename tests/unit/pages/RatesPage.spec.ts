@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { Quasar, Notify } from 'quasar';
-import RatesPage from 'src/pages/RatesPage.vue';
+import RatesPage from '@pages/RatesPage.vue';
 
 vi.mock('src/boot/axios', () => ({
   api: { get: vi.fn(), post: vi.fn(), put: vi.fn() },
 }));
 
-import { api } from 'src/boot/axios';
+import { api } from '@boot/axios';
 
 function mountPage() {
   return mount(RatesPage, {

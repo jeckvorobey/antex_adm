@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { Quasar } from 'quasar';
-import MainLayout from 'src/layouts/MainLayout.vue';
+import MainLayout from '@layouts/MainLayout.vue';
 
 vi.mock('src/boot/axios', () => ({
   api: { post: vi.fn(), get: vi.fn() },

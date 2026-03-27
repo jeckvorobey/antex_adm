@@ -8,8 +8,8 @@ vi.mock('src/boot/axios', () => ({
   },
 }));
 
-import { api } from 'src/boot/axios';
-import { useAuthStore } from 'src/stores/auth';
+import { api } from '@boot/axios';
+import { useAuthStore } from '@stores/auth';
 
 describe('useAuthStore', () => {
   beforeEach(() => {

@@ -9,7 +9,7 @@ vi.mock('src/boot/axios', () => ({
   api: { post: vi.fn(), get: vi.fn() },
 }));
 
-import { useAuthStore } from 'src/stores/auth';
+import { useAuthStore } from '@stores/auth';
 
 describe('boot/init — route guard', () => {
   let store: ReturnType<typeof useAuthStore>;

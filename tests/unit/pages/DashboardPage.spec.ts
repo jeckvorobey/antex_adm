@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { Quasar } from 'quasar';
-import DashboardPage from 'src/pages/DashboardPage.vue';
+import DashboardPage from '@pages/DashboardPage.vue';
 
 describe('DashboardPage', () => {
   function mountDashboard() {

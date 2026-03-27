@@ -1,5 +1,5 @@
 import { boot } from 'quasar/wrappers';
-import { useAuthStore } from 'src/stores/auth';
+import { useAuthStore } from '@stores/auth';
 
 export default boot(async ({ router }) => {
   const authStore = useAuthStore();

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { api } from 'src/boot/axios';
+import { api } from '@boot/axios';
 
 export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(null);

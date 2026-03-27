@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { Quasar, Notify } from 'quasar';
-import LoginPage from 'src/pages/LoginPage.vue';
+import LoginPage from '@pages/LoginPage.vue';
 
 vi.mock('src/boot/axios', () => ({
   api: { post: vi.fn(), get: vi.fn() },
@@ -13,7 +13,7 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-import { api } from 'src/boot/axios';
+import { api } from '@boot/axios';
 
 function mountLogin(stubActions = false) {
   return mount(LoginPage, {

@@ -29,8 +29,12 @@ const refreshing = ref(false);
 const savingAllowance = ref(false);
 
 onMounted(async () => {
-  const res = await api.get('/api/admin/allowance');
-  allowanceValue.value = res.data.value;
+  try {
+    const res = await api.get('/api/admin/allowance');
+    allowanceValue.value = res.data.value;
+  } catch {
+    allowanceValue.value = 0.02;
+  }
 });
 
 async function refreshRates() {

@@ -33,6 +33,8 @@ onMounted(async () => {
   try {
     const res = await api.get('/api/admin/orders');
     orders.value = res.data;
+  } catch {
+    orders.value = [];
   } finally {
     loading.value = false;
   }

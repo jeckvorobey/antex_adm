@@ -25,8 +25,12 @@ const $q = useQuasar();
 const botEnabled = ref(true);
 
 onMounted(async () => {
-  const res = await api.get('/api/admin/config');
-  botEnabled.value = res.data.enabled;
+  try {
+    const res = await api.get('/api/admin/config');
+    botEnabled.value = res.data.enabled;
+  } catch {
+    botEnabled.value = false;
+  }
 });
 
 async function toggleBot() {

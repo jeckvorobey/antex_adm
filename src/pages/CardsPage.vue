@@ -38,6 +38,8 @@ onMounted(async () => {
   try {
     const res = await api.get('/api/admin/cards');
     cards.value = res.data;
+  } catch {
+    cards.value = [];
   } finally {
     loading.value = false;
   }

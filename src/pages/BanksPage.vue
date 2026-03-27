@@ -23,6 +23,8 @@ onMounted(async () => {
   try {
     const res = await api.get('/api/admin/banks');
     banks.value = res.data;
+  } catch {
+    banks.value = [];
   } finally {
     loading.value = false;
   }

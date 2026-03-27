@@ -25,6 +25,8 @@ onMounted(async () => {
   try {
     const res = await api.get('/api/admin/users');
     users.value = res.data;
+  } catch {
+    users.value = [];
   } finally {
     loading.value = false;
   }

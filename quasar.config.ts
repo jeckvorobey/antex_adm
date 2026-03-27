@@ -31,16 +31,6 @@ export default defineConfig((/* ctx */) => {
           '@assets': fileURLToPath(new URL('./src/assets', import.meta.url)),
         });
       },
-      vitePlugins: [
-        [
-          'vite-plugin-checker',
-          {
-            // Отключено временно
-            // vueTsc: true,
-          },
-          { server: false },
-        ],
-      ],
     },
     devServer: {
       host: '127.0.0.1',

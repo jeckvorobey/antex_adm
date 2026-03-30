@@ -40,6 +40,7 @@ const menu = [
   { to: '/cards', icon: 'credit_card', label: 'Карты' },
   { to: '/banks', icon: 'account_balance', label: 'Банки' },
   { to: '/rates', icon: 'trending_up', label: 'Курсы' },
+  { to: '/broadcasts', icon: 'campaign', label: 'Рассылка' },
   { to: '/settings', icon: 'settings', label: 'Настройки' },
 ];
 

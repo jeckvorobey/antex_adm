@@ -62,7 +62,10 @@ const QBtnStub = defineComponent({
           loading: props.loading ? 'true' : undefined,
           onClick: (event: MouseEvent) => emit('click', event),
         },
-        props.label || slotChildren(slots),
+        [
+          props.label ? h('span', { class: 'q-btn__label' }, props.label) : null,
+          ...slotChildren(slots),
+        ],
       );
   },
 });
@@ -106,6 +109,28 @@ const QInputStub = defineComponent({
             const nextValue =
               props.type === 'number' ? Number(target.value || '0') : target.value;
             emit('update:modelValue', nextValue);
+          },
+        }),
+      ]);
+  },
+});
+
+const QEditorStub = defineComponent({
+  name: 'QEditorStub',
+  props: {
+    modelValue: { type: String, default: '' },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit, attrs, slots }) {
+    return () =>
+      h('label', { class: 'q-editor' }, [
+        ...Object.values(slots).flatMap((slot) => slot?.() ?? []),
+        h('textarea', {
+          ...attrs,
+          value: props.modelValue,
+          onInput: (event: Event) => {
+            const target = event.target as HTMLTextAreaElement;
+            emit('update:modelValue', target.value);
           },
         }),
       ]);
@@ -187,6 +212,27 @@ const QTableStub = defineComponent({
   },
 });
 
+const QDialogStub = defineComponent({
+  name: 'QDialogStub',
+  props: {
+    modelValue: { type: Boolean, default: false },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { slots, attrs }) {
+    return () =>
+      props.modelValue
+        ? h('div', { ...attrs, class: 'q-dialog' }, slotChildren(slots))
+        : null;
+  },
+});
+
+const QMenuStub = defineComponent({
+  name: 'QMenuStub',
+  setup(_props, { slots, attrs }) {
+    return () => h('div', { ...attrs, class: 'q-menu' }, slotChildren(slots));
+  },
+});
+
 config.global.plugins = [];
 config.global.stubs = {
   'q-page': wrapTag('div', 'q-page'),
@@ -201,13 +247,17 @@ config.global.stubs = {
   'q-page-container': wrapTag('div', 'q-page-container'),
   'q-card': wrapTag('div', 'q-card'),
   'q-card-section': wrapTag('div', 'q-card-section'),
+  'q-card-actions': wrapTag('div', 'q-card-actions'),
   'q-space': wrapTag('div', 'q-space'),
   'q-td': wrapTag('td', 'q-td'),
   'q-icon': wrapTag('span', 'q-icon'),
+  'q-dialog': QDialogStub,
+  'q-menu': QMenuStub,
   'router-view': wrapTag('div', 'router-view'),
   'q-btn': QBtnStub,
   'q-form': QFormStub,
   'q-input': QInputStub,
+  'q-editor': QEditorStub,
   'q-toggle': QToggleStub,
   'q-badge': QBadgeStub,
   'q-table': QTableStub,

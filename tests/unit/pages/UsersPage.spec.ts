@@ -34,12 +34,20 @@ describe('UsersPage', () => {
 
   it('данные из API отображаются в таблице', async () => {
     const users = [
-      { id: 1, username: 'johndoe', first_name: 'John', role: 'user', createdAt: '2024-01-01' },
+      {
+        id: 1,
+        username: 'johndoe',
+        first_name: 'John',
+        role: 9,
+        role_name: 'Пользователь',
+        createdAt: '2024-01-01',
+      },
     ];
     vi.mocked(api.get).mockResolvedValue({ data: users });
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.html()).toContain('johndoe');
+    expect(wrapper.html()).toContain('Пользователь');
   });
 
   it('loading=false после успешной загрузки', async () => {

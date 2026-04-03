@@ -6,17 +6,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { api } from '@boot/axios';
+import { onMounted, ref } from 'vue';
 
-const users = ref([]);
+type UserRow = {
+  id: number;
+  username: string | null;
+  first_name: string | null;
+  role: number;
+  role_name?: string;
+  createdAt: string;
+};
+
+const roleTitles: Record<number, string> = {
+  2: 'Менеджер',
+  3: 'Администратор',
+  8: 'Оператор',
+  9: 'Пользователь',
+};
+
+const users = ref<UserRow[]>([]);
 const loading = ref(false);
 
 const columns = [
   { name: 'id', label: 'ID', field: 'id', sortable: true },
   { name: 'username', label: 'Username', field: 'username' },
   { name: 'first_name', label: 'Имя', field: 'first_name' },
-  { name: 'role', label: 'Роль', field: 'role' },
+  {
+    name: 'role',
+    label: 'Роль',
+    field: (row: UserRow) => row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`,
+  },
   { name: 'createdAt', label: 'Регистрация', field: 'createdAt' },
 ];
 

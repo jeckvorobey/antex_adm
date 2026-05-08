@@ -187,14 +187,18 @@ const QTableStub = defineComponent({
       const children = [...slotChildren(slots)];
 
       for (const row of props.rows as Array<Record<string, unknown>>) {
-        if (slots['body-cell-isActive']) {
-          children.push(
-            ...(slots['body-cell-isActive']({
-              row,
-              value: row.isActive,
-            }) ?? []),
-          );
+      for (const [slotName, slot] of Object.entries(slots)) {
+        if (!slotName.startsWith('body-cell-')) {
+          continue;
         }
+        const columnName = slotName.replace('body-cell-', '');
+        children.push(
+          ...(slot?.({
+            row,
+            value: row[columnName],
+          }) ?? []),
+        );
+      }
 
         children.push(
           h(

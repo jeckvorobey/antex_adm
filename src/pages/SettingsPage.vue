@@ -9,7 +9,7 @@
           v-model="botEnabled"
           :label="botEnabled ? 'Бот включён' : 'Бот выключен'"
           color="green"
-          @update:model-value="toggleBot"
+          @update:model-value="updateBotEnabled"
         />
       </q-card-section>
     </q-card>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { api } from '@boot/axios';
 
@@ -33,12 +33,17 @@ onMounted(async () => {
   }
 });
 
-async function toggleBot() {
+/**
+ * Сохраняет статус бота через единый endpoint конфигурации.
+ */
+async function updateBotEnabled(enabled: boolean) {
+  const previousValue = !enabled;
   try {
-    const res = await api.post('/api/admin/config/toggle');
+    const res = await api.patch('/api/admin/config', { enabled });
     botEnabled.value = res.data.enabled;
     $q.notify({ type: 'positive', message: botEnabled.value ? 'Бот включён' : 'Бот выключен' });
   } catch {
+    botEnabled.value = previousValue;
     $q.notify({ type: 'negative', message: 'Ошибка' });
   }
 }

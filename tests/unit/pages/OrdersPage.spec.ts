@@ -4,7 +4,7 @@ import { Quasar } from 'quasar';
 import OrdersPage from '@pages/OrdersPage.vue';
 
 vi.mock('src/boot/axios', () => ({
-  api: { get: vi.fn(), post: vi.fn() },
+  api: { get: vi.fn(), patch: vi.fn() },
 }));
 
 import { api } from '@boot/axios';
@@ -49,11 +49,30 @@ describe('OrdersPage', () => {
 
   it('данные из API попадают в таблицу', async () => {
     const orders = [
-      { id: 1, UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 'new', createdAt: '2024-01-01' },
+      { id: 1, UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
     ];
     vi.mocked(api.get).mockResolvedValue({ data: orders });
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.html()).toContain('1');
+  });
+
+  it('обновляет статус заявки через backend', async () => {
+    const orders = [
+      { id: 1, UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
+    ];
+    vi.mocked(api.get).mockResolvedValue({ data: orders });
+    vi.mocked(api.patch).mockResolvedValue({
+      data: { ...orders[0], status: 2 },
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.find('[data-testid="confirm-order-1"]').trigger('click');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/orders/1/status', { status: 2 });
+    expect(wrapper.html()).toContain('Подтверждена');
   });
 });

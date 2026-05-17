@@ -9,6 +9,16 @@ vi.mock('src/boot/axios', () => ({
 
 import { api } from '@boot/axios';
 
+function mockAdminGet(params?: { allowance?: number; rates?: unknown[] }) {
+  vi.mocked(api.get).mockImplementation((url: string) => {
+    if (url === '/api/admin/allowance') {
+      return Promise.resolve({ data: { value: params?.allowance ?? 0.02 } });
+    }
+
+    return Promise.resolve({ data: params?.rates ?? [] });
+  });
+}
+
 function mountPage() {
   return mount(RatesPage, {
     global: { plugins: [[Quasar, { plugins: { Notify } }]] },
@@ -16,17 +26,25 @@ function mountPage() {
 }
 
 describe('RatesPage', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAdminGet();
+  });
 
   it('вызывает /api/admin/allowance при монтировании', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { value: 0.02 } });
     mountPage();
     await flushPromises();
     expect(api.get).toHaveBeenCalledWith('/api/admin/allowance');
   });
 
+  it('вызывает /api/admin/rates при монтировании', async () => {
+    mountPage();
+    await flushPromises();
+    expect(api.get).toHaveBeenCalledWith('/api/admin/rates');
+  });
+
   it('allowanceValue устанавливается из ответа API', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { value: 0.05 } });
+    mockAdminGet({ allowance: 0.05 });
     const wrapper = mountPage();
     await flushPromises();
     const input = wrapper.find('input[type="number"]');
@@ -34,7 +52,7 @@ describe('RatesPage', () => {
   });
 
   it('saveAllowance вызывает PUT с текущим значением', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { value: 0.03 } });
+    mockAdminGet({ allowance: 0.03 });
     vi.mocked(api.put).mockResolvedValue({ data: {} });
     const wrapper = mountPage();
     await flushPromises();
@@ -45,7 +63,6 @@ describe('RatesPage', () => {
   });
 
   it('saveAllowance показывает positive уведомление', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { value: 0.02 } });
     vi.mocked(api.put).mockResolvedValue({ data: {} });
     const notifySpy = vi.spyOn(Notify, 'create');
     const wrapper = mountPage();
@@ -59,7 +76,6 @@ describe('RatesPage', () => {
   });
 
   it('refreshRates вызывает POST /api/admin/rates/refresh', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { value: 0.02 } });
     vi.mocked(api.post).mockResolvedValue({ data: {} });
     const wrapper = mountPage();
     await flushPromises();
@@ -69,8 +85,45 @@ describe('RatesPage', () => {
     expect(api.post).toHaveBeenCalledWith('/api/admin/rates/refresh');
   });
 
+  it('показывает текущие курсы GEL и VND из backend', async () => {
+    mockAdminGet({
+      rates: [
+        {
+          id: 1,
+          currency: 'RUBGEL',
+          price: 0.03,
+          createdAt: '2026-05-12T10:00:00Z',
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+        {
+          id: 2,
+          currency: 'USDTVND',
+          price: 25500,
+          createdAt: '2026-05-12T10:00:00Z',
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+      ],
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(wrapper.html()).toContain('RUBGEL');
+    expect(wrapper.html()).toContain('USDTVND');
+  });
+
+  it('после refresh перезагружает список курсов', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: { ok: true, rates: { RUBGEL: 0.03 } } });
+    const wrapper = mountPage();
+    await flushPromises();
+    vi.mocked(api.get).mockClear();
+
+    const refreshBtn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Обновить'));
+    await refreshBtn?.trigger('click');
+    await flushPromises();
+
+    expect(api.get).toHaveBeenCalledWith('/api/admin/rates');
+  });
+
   it('refreshRates показывает positive уведомление', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { value: 0.02 } });
     vi.mocked(api.post).mockResolvedValue({ data: {} });
     const notifySpy = vi.spyOn(Notify, 'create');
     const wrapper = mountPage();
@@ -91,7 +144,6 @@ describe('RatesPage', () => {
   });
 
   it('кнопка Сохранить и кнопка Обновить присутствуют на странице', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { value: 0.02 } });
     const wrapper = mountPage();
     await flushPromises();
     const btns = wrapper.findAll('.q-btn').map((b) => b.text());

@@ -17,6 +17,8 @@ describe('router/index', () => {
     expect(paths).toContain('/login');
     expect(paths).toContain('/');
     expect(paths).toContain('/broadcasts');
+    expect(paths).not.toContain('/cards');
+    expect(paths).not.toContain('/banks');
   });
 
   it('маршрут /login рендерится через layout, а не напрямую в QPage', async () => {

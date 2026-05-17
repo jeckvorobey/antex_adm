@@ -37,8 +37,6 @@ const menu = [
   { to: '/dashboard', icon: 'dashboard', label: 'Дашборд' },
   { to: '/orders', icon: 'list_alt', label: 'Заявки' },
   { to: '/users', icon: 'people', label: 'Пользователи' },
-  { to: '/cards', icon: 'credit_card', label: 'Карты' },
-  { to: '/banks', icon: 'account_balance', label: 'Банки' },
   { to: '/rates', icon: 'trending_up', label: 'Курсы' },
   { to: '/broadcasts', icon: 'campaign', label: 'Рассылка' },
   { to: '/settings', icon: 'settings', label: 'Настройки' },

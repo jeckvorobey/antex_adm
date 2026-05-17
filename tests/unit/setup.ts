@@ -1,5 +1,5 @@
 import { config } from '@vue/test-utils';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, reactive } from 'vue';
 import { vi } from 'vitest';
 
 const notifyCreate = vi.fn();
@@ -237,6 +237,18 @@ const QMenuStub = defineComponent({
   },
 });
 
+const QPopupEditStub = defineComponent({
+  name: 'QPopupEdit',
+  props: {
+    modelValue: { type: [String, Number], default: '' },
+  },
+  emits: ['save'],
+  setup(props, { slots, attrs }) {
+    const scope = reactive({ value: props.modelValue });
+    return () => h('div', { ...attrs, class: 'q-popup-edit' }, slots.default?.(scope) ?? []);
+  },
+});
+
 config.global.plugins = [];
 config.global.stubs = {
   'q-page': wrapTag('div', 'q-page'),
@@ -257,6 +269,7 @@ config.global.stubs = {
   'q-icon': wrapTag('span', 'q-icon'),
   'q-dialog': QDialogStub,
   'q-menu': QMenuStub,
+  'q-popup-edit': QPopupEditStub,
   'router-view': wrapTag('div', 'router-view'),
   'q-btn': QBtnStub,
   'q-form': QFormStub,

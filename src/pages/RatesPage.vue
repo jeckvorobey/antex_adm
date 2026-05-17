@@ -1,24 +1,15 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center q-mb-md">
-      <div class="text-h5">Курсы и надбавка</div>
+      <div class="text-h5">Курсы и наценка</div>
       <q-space />
       <q-btn color="secondary" icon="refresh" label="Обновить курсы" :loading="refreshing" @click="refreshRates" />
     </div>
 
-    <q-card class="q-mb-md">
-      <q-card-section>
-        <div class="text-subtitle1">Надбавка (allowance)</div>
-        <div class="row items-center q-gutter-sm q-mt-sm">
-          <q-input v-model.number="allowanceValue" type="number" step="0.001" outlined dense style="max-width: 150px" />
-          <q-btn color="primary" label="Сохранить" :loading="savingAllowance" @click="saveAllowance" />
-        </div>
-      </q-card-section>
-    </q-card>
-
     <q-card>
       <q-card-section>
         <div class="text-subtitle1">Текущие курсы</div>
+        <div class="text-caption text-grey-7 q-mt-xs">Наценка редактируется прямо в таблице</div>
       </q-card-section>
 
       <q-table
@@ -29,28 +20,56 @@
         flat
         dense
         :pagination="{ rowsPerPage: 0 }"
-      />
+      >
+        <template #body-cell-margin="props">
+          <q-td :props="props">
+            <div class="row items-center justify-end q-gutter-xs">
+              <span>{{ formatMargin(props.row.margin) }}</span>
+              <q-icon name="edit" size="16px" color="grey-6" />
+            </div>
+            <q-popup-edit
+              v-slot="scope"
+              :model-value="props.row.margin"
+              buttons
+              label-set="Сохранить"
+              label-cancel="Отмена"
+              @save="(value) => updateMargin(props.row, Number(value))"
+            >
+              <q-input
+                v-model.number="scope.value"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                dense
+                autofocus
+                outlined
+              />
+            </q-popup-edit>
+          </q-td>
+        </template>
+      </q-table>
     </q-card>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar';
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
+
 import { api } from '@boot/axios';
 
 interface RateRow {
   id: number;
   currency: string;
   price: number;
+  margin: number;
   updatedAt: string;
 }
 
 const $q = useQuasar();
-const allowanceValue = ref(0.02);
 const refreshing = ref(false);
-const savingAllowance = ref(false);
 const loadingRates = ref(false);
 const rates = ref<RateRow[]>([]);
 const rateColumns: QTableColumn<RateRow>[] = [
@@ -63,11 +82,19 @@ const rateColumns: QTableColumn<RateRow>[] = [
   },
   {
     name: 'price',
-    label: 'Курс',
+    label: 'Базовый курс',
     field: 'price',
     align: 'right',
     sortable: true,
     format: (value: number) => formatRate(value),
+  },
+  {
+    name: 'margin',
+    label: 'Наценка',
+    field: 'margin',
+    align: 'right',
+    sortable: true,
+    format: (value: number) => formatMargin(value),
   },
   {
     name: 'updatedAt',
@@ -80,24 +107,9 @@ const rateColumns: QTableColumn<RateRow>[] = [
 ];
 
 onMounted(async () => {
-  await Promise.all([loadAllowance(), loadRates()]);
+  await loadRates();
 });
 
-/**
- * Загружает текущую надбавку обменника.
- */
-async function loadAllowance() {
-  try {
-    const res = await api.get('/api/admin/allowance');
-    allowanceValue.value = res.data.value;
-  } catch {
-    allowanceValue.value = 0.02;
-  }
-}
-
-/**
- * Загружает список сохранённых курсов для таблицы администратора.
- */
 async function loadRates() {
   loadingRates.value = true;
   try {
@@ -121,26 +133,27 @@ async function refreshRates() {
   }
 }
 
-async function saveAllowance() {
-  savingAllowance.value = true;
+async function updateMargin(row: RateRow, margin: number) {
   try {
-    await api.put('/api/admin/allowance', { value: allowanceValue.value });
-    $q.notify({ type: 'positive', message: 'Надбавка сохранена' });
-  } finally {
-    savingAllowance.value = false;
+    const res = await api.patch<RateRow>(`/api/admin/rates/${row.id}`, { margin });
+    const index = rates.value.findIndex((item) => item.id === row.id);
+    if (index >= 0) {
+      rates.value[index] = res.data;
+    }
+    $q.notify({ type: 'positive', message: 'Наценка сохранена' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Не удалось сохранить наценку' });
   }
 }
 
-/**
- * Форматирует курс без потери малых значений RUB-пар.
- */
 function formatRate(value: number) {
   return value >= 1 ? value.toLocaleString('ru-RU', { maximumFractionDigits: 4 }) : value.toFixed(6);
 }
 
-/**
- * Форматирует дату обновления курса для админской таблицы.
- */
+function formatMargin(value: number) {
+  return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString('ru-RU');
 }

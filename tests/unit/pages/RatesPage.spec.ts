@@ -4,17 +4,13 @@ import { Quasar, Notify } from 'quasar';
 import RatesPage from '@pages/RatesPage.vue';
 
 vi.mock('src/boot/axios', () => ({
-  api: { get: vi.fn(), post: vi.fn(), put: vi.fn() },
+  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn() },
 }));
 
 import { api } from '@boot/axios';
 
-function mockAdminGet(params?: { allowance?: number; rates?: unknown[] }) {
+function mockAdminGet(params?: { rates?: unknown[] }) {
   vi.mocked(api.get).mockImplementation((url: string) => {
-    if (url === '/api/admin/allowance') {
-      return Promise.resolve({ data: { value: params?.allowance ?? 0.02 } });
-    }
-
     return Promise.resolve({ data: params?.rates ?? [] });
   });
 }
@@ -31,48 +27,10 @@ describe('RatesPage', () => {
     mockAdminGet();
   });
 
-  it('вызывает /api/admin/allowance при монтировании', async () => {
-    mountPage();
-    await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/allowance');
-  });
-
   it('вызывает /api/admin/rates при монтировании', async () => {
     mountPage();
     await flushPromises();
     expect(api.get).toHaveBeenCalledWith('/api/admin/rates');
-  });
-
-  it('allowanceValue устанавливается из ответа API', async () => {
-    mockAdminGet({ allowance: 0.05 });
-    const wrapper = mountPage();
-    await flushPromises();
-    const input = wrapper.find('input[type="number"]');
-    expect(input.element.value).toBe('0.05');
-  });
-
-  it('saveAllowance вызывает PUT с текущим значением', async () => {
-    mockAdminGet({ allowance: 0.03 });
-    vi.mocked(api.put).mockResolvedValue({ data: {} });
-    const wrapper = mountPage();
-    await flushPromises();
-    const saveBtn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сохранить'));
-    await saveBtn?.trigger('click');
-    await flushPromises();
-    expect(api.put).toHaveBeenCalledWith('/api/admin/allowance', { value: 0.03 });
-  });
-
-  it('saveAllowance показывает positive уведомление', async () => {
-    vi.mocked(api.put).mockResolvedValue({ data: {} });
-    const notifySpy = vi.spyOn(Notify, 'create');
-    const wrapper = mountPage();
-    await flushPromises();
-    const saveBtn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сохранить'));
-    await saveBtn?.trigger('click');
-    await flushPromises();
-    expect(notifySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'positive' })
-    );
   });
 
   it('refreshRates вызывает POST /api/admin/rates/refresh', async () => {
@@ -92,6 +50,7 @@ describe('RatesPage', () => {
           id: 1,
           currency: 'RUBGEL',
           price: 0.03,
+          margin: 3,
           createdAt: '2026-05-12T10:00:00Z',
           updatedAt: '2026-05-12T10:00:00Z',
         },
@@ -99,6 +58,7 @@ describe('RatesPage', () => {
           id: 2,
           currency: 'USDTVND',
           price: 25500,
+          margin: 4.5,
           createdAt: '2026-05-12T10:00:00Z',
           updatedAt: '2026-05-12T10:00:00Z',
         },
@@ -108,6 +68,61 @@ describe('RatesPage', () => {
     await flushPromises();
     expect(wrapper.html()).toContain('RUBGEL');
     expect(wrapper.html()).toContain('USDTVND');
+  });
+
+  it('показывает колонку процента и не показывает allowance-блок', async () => {
+    mockAdminGet({
+      rates: [
+        {
+          id: 1,
+          currency: 'RUBTHB',
+          price: 0.41,
+          margin: 3,
+          createdAt: '2026-05-12T10:00:00Z',
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+      ],
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.html()).toContain('Наценка');
+    expect(wrapper.html()).not.toContain('allowance');
+  });
+
+  it('сохраняет процент строки через PATCH /api/admin/rates/:id', async () => {
+    mockAdminGet({
+      rates: [
+        {
+          id: 1,
+          currency: 'RUBTHB',
+          price: 0.41,
+          margin: 3,
+          createdAt: '2026-05-12T10:00:00Z',
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+      ],
+    });
+    vi.mocked(api.patch).mockResolvedValue({
+      data: {
+        id: 1,
+        currency: 'RUBTHB',
+        price: 0.41,
+        margin: 4.5,
+        createdAt: '2026-05-12T10:00:00Z',
+        updatedAt: '2026-05-12T10:05:00Z',
+      },
+    });
+    const notifySpy = vi.spyOn(Notify, 'create');
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const popup = wrapper.findComponent({ name: 'QPopupEdit' });
+    popup.vm.$emit('save', 4.5);
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/rates/1', { margin: 4.5 });
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
   });
 
   it('после refresh перезагружает список курсов', async () => {
@@ -136,18 +151,17 @@ describe('RatesPage', () => {
     );
   });
 
-  it('компонент не падает при ошибке загрузки allowance', async () => {
+  it('компонент не падает при ошибке загрузки курсов', async () => {
     vi.mocked(api.get).mockRejectedValue(new Error('500'));
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.exists()).toBe(true);
   });
 
-  it('кнопка Сохранить и кнопка Обновить присутствуют на странице', async () => {
+  it('кнопка Обновить присутствует на странице', async () => {
     const wrapper = mountPage();
     await flushPromises();
     const btns = wrapper.findAll('.q-btn').map((b) => b.text());
-    expect(btns.some((t) => t.includes('Сохранить'))).toBe(true);
     expect(btns.some((t) => t.includes('Обновить'))).toBe(true);
   });
 });

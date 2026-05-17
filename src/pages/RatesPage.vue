@@ -64,6 +64,7 @@ interface RateRow {
   id: number;
   currency: string;
   price: number;
+  priceDisplay: string;
   margin: number;
   updatedAt: string;
 }
@@ -83,10 +84,9 @@ const rateColumns: QTableColumn<RateRow>[] = [
   {
     name: 'price',
     label: 'Базовый курс',
-    field: 'price',
+    field: 'priceDisplay',
     align: 'right',
     sortable: true,
-    format: (value: number) => formatRate(value),
   },
   {
     name: 'margin',
@@ -144,10 +144,6 @@ async function updateMargin(row: RateRow, margin: number) {
   } catch {
     $q.notify({ type: 'negative', message: 'Не удалось сохранить наценку' });
   }
-}
-
-function formatRate(value: number) {
-  return value >= 1 ? value.toLocaleString('ru-RU', { maximumFractionDigits: 4 }) : value.toFixed(6);
 }
 
 function formatMargin(value: number) {

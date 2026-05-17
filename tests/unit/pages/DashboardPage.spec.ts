@@ -21,12 +21,16 @@ describe('DashboardPage', () => {
   }
 
   it('рендерится без ошибок', () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { ordersToday: 0, usersTotal: 0, rubThbRate: null } });
+    vi.mocked(api.get).mockResolvedValue({
+      data: { ordersToday: 0, usersTotal: 0, featuredRates: [] },
+    });
     expect(() => mountDashboard()).not.toThrow();
   });
 
   it('показывает карточки статистики', () => {
-    vi.mocked(api.get).mockResolvedValue({ data: { ordersToday: 0, usersTotal: 0, rubThbRate: null } });
+    vi.mocked(api.get).mockResolvedValue({
+      data: { ordersToday: 0, usersTotal: 0, featuredRates: [] },
+    });
     const wrapper = mountDashboard();
     const cards = wrapper.findAll('.q-card');
     expect(cards.length).toBeGreaterThanOrEqual(1);
@@ -34,13 +38,25 @@ describe('DashboardPage', () => {
 
   it('загружает summary с backend', async () => {
     vi.mocked(api.get).mockResolvedValue({
-      data: { ordersToday: 3, usersTotal: 12, rubThbRate: 0.41 },
+      data: {
+        ordersToday: 3,
+        usersTotal: 12,
+        featuredRates: [
+          {
+            pairId: 'rub-thb',
+            label: 'RUB/THB',
+            finalRate: 0.41,
+            finalRateDisplay: '0.41',
+          },
+        ],
+      },
     });
     const wrapper = mountDashboard();
     await flushPromises();
     expect(api.get).toHaveBeenCalledWith('/api/admin/summary');
     expect(wrapper.html()).toContain('3');
     expect(wrapper.html()).toContain('12');
+    expect(wrapper.html()).toContain('RUB/THB');
     expect(wrapper.html()).toContain('0.41');
   });
 });

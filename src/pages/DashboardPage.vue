@@ -16,8 +16,12 @@
       </q-card>
       <q-card class="col-xs-12 col-sm-6 col-md-3">
         <q-card-section>
-          <div class="text-subtitle2 text-grey">Курс RUB/THB</div>
-          <div class="text-h4">{{ summary?.rubThbRate ?? '—' }}</div>
+          <div class="text-subtitle2 text-grey">Ключевые пары</div>
+          <div v-for="rate in summary?.featuredRates ?? []" :key="rate.pairId" class="q-mt-sm">
+            <div class="text-caption text-grey-7">{{ rate.label }}</div>
+            <div class="text-h6">{{ rate.finalRateDisplay }}</div>
+          </div>
+          <div v-if="!summary?.featuredRates?.length" class="text-h4">—</div>
         </q-card-section>
       </q-card>
     </div>
@@ -31,7 +35,12 @@ import { api } from '@boot/axios';
 interface DashboardSummary {
   ordersToday: number;
   usersTotal: number;
-  rubThbRate: number | null;
+  featuredRates: Array<{
+    pairId: string;
+    label: string;
+    finalRate: number;
+    finalRateDisplay: string;
+  }>;
 }
 
 const summary = ref<DashboardSummary | null>(null);

@@ -49,8 +49,14 @@ describe('RatesPage', () => {
         {
           id: 1,
           currency: 'RUBGEL',
+          country: 'georgia',
+          countryRuName: 'Грузия',
           price: 0.03,
           priceDisplay: '0.03',
+          baseRate: 33.33,
+          baseRateDisplay: '33.33',
+          finalRate: 34.36,
+          finalRateDisplay: '34.36',
           margin: 3,
           createdAt: '2026-05-12T10:00:00Z',
           updatedAt: '2026-05-12T10:00:00Z',
@@ -58,8 +64,14 @@ describe('RatesPage', () => {
         {
           id: 2,
           currency: 'USDTVND',
+          country: 'vietnam',
+          countryRuName: 'Вьетнам',
           price: 25500,
           priceDisplay: '25500.00',
+          baseRate: 25500,
+          baseRateDisplay: '25500.00',
+          finalRate: 24735,
+          finalRateDisplay: '24735.00',
           margin: 4.5,
           createdAt: '2026-05-12T10:00:00Z',
           updatedAt: '2026-05-12T10:00:00Z',
@@ -70,6 +82,8 @@ describe('RatesPage', () => {
     await flushPromises();
     expect(wrapper.html()).toContain('RUBGEL');
     expect(wrapper.html()).toContain('USDTVND');
+    expect(wrapper.html()).toContain('Грузия');
+    expect(wrapper.html()).toContain('Вьетнам');
   });
 
   it('показывает колонку процента и не показывает allowance-блок', async () => {
@@ -78,8 +92,14 @@ describe('RatesPage', () => {
         {
           id: 1,
           currency: 'RUBTHB',
+          country: 'thailand',
+          countryRuName: 'Тайланд',
           price: 0.41,
           priceDisplay: '0.41',
+          baseRate: 2.44,
+          baseRateDisplay: '2.44',
+          finalRate: 2.51,
+          finalRateDisplay: '2.51',
           margin: 3,
           createdAt: '2026-05-12T10:00:00Z',
           updatedAt: '2026-05-12T10:00:00Z',
@@ -90,6 +110,7 @@ describe('RatesPage', () => {
     await flushPromises();
 
     expect(wrapper.html()).toContain('Наценка');
+    expect(wrapper.html()).toContain('Тайланд');
     expect(wrapper.html()).not.toContain('allowance');
   });
 
@@ -99,8 +120,14 @@ describe('RatesPage', () => {
         {
           id: 1,
           currency: 'RUBTHB',
+          country: 'thailand',
+          countryRuName: 'Тайланд',
           price: 0.41,
           priceDisplay: '0.41',
+          baseRate: 2.44,
+          baseRateDisplay: '2.44',
+          finalRate: 2.51,
+          finalRateDisplay: '2.51',
           margin: 3,
           createdAt: '2026-05-12T10:00:00Z',
           updatedAt: '2026-05-12T10:00:00Z',
@@ -111,8 +138,14 @@ describe('RatesPage', () => {
       data: {
         id: 1,
         currency: 'RUBTHB',
+        country: 'thailand',
+        countryRuName: 'Тайланд',
         price: 0.41,
         priceDisplay: '0.41',
+        baseRate: 2.44,
+        baseRateDisplay: '2.44',
+        finalRate: 2.48,
+        finalRateDisplay: '2.48',
         margin: 4.5,
         createdAt: '2026-05-12T10:00:00Z',
         updatedAt: '2026-05-12T10:05:00Z',

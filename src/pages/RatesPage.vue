@@ -63,8 +63,12 @@ import { api } from '@boot/axios';
 interface RateRow {
   id: number;
   currency: string;
-  price: number;
-  priceDisplay: string;
+  country: string;
+  countryRuName: string;
+  baseRate: number;
+  baseRateDisplay: string;
+  finalRate: number;
+  finalRateDisplay: string;
   margin: number;
   updatedAt: string;
 }
@@ -82,9 +86,23 @@ const rateColumns: QTableColumn<RateRow>[] = [
     sortable: true,
   },
   {
-    name: 'price',
+    name: 'country',
+    label: 'Страна',
+    field: 'countryRuName',
+    align: 'left',
+    sortable: true,
+  },
+  {
+    name: 'baseRate',
     label: 'Базовый курс',
-    field: 'priceDisplay',
+    field: 'baseRateDisplay',
+    align: 'right',
+    sortable: true,
+  },
+  {
+    name: 'finalRate',
+    label: 'Итоговый курс',
+    field: 'finalRateDisplay',
     align: 'right',
     sortable: true,
   },

@@ -93,7 +93,7 @@ describe('RatesPage', () => {
           id: 1,
           currency: 'RUBTHB',
           country: 'thailand',
-          countryRuName: 'Тайланд',
+          countryRuName: 'Таиланд',
           price: 0.41,
           priceDisplay: '0.41',
           baseRate: 2.44,
@@ -110,7 +110,7 @@ describe('RatesPage', () => {
     await flushPromises();
 
     expect(wrapper.html()).toContain('Наценка');
-    expect(wrapper.html()).toContain('Тайланд');
+    expect(wrapper.html()).toContain('Таиланд');
     expect(wrapper.html()).not.toContain('allowance');
   });
 
@@ -121,7 +121,7 @@ describe('RatesPage', () => {
           id: 1,
           currency: 'RUBTHB',
           country: 'thailand',
-          countryRuName: 'Тайланд',
+          countryRuName: 'Таиланд',
           price: 0.41,
           priceDisplay: '0.41',
           baseRate: 2.44,
@@ -139,7 +139,7 @@ describe('RatesPage', () => {
         id: 1,
         currency: 'RUBTHB',
         country: 'thailand',
-        countryRuName: 'Тайланд',
+        countryRuName: 'Таиланд',
         price: 0.41,
         priceDisplay: '0.41',
         baseRate: 2.44,

@@ -115,6 +115,54 @@ const QInputStub = defineComponent({
   },
 });
 
+const QSelectStub = defineComponent({
+  name: 'QSelectStub',
+  props: {
+    modelValue: { type: [String, Number, Object, null], default: null },
+    options: { type: Array, default: () => [] },
+    optionValue: { type: String, default: 'value' },
+    optionLabel: { type: String, default: 'label' },
+    emitValue: { type: Boolean, default: false },
+    mapOptions: { type: Boolean, default: false },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit, attrs }) {
+    return () =>
+      h(
+        'label',
+        { class: 'q-select' },
+        [
+          h(
+            'select',
+            {
+              ...attrs,
+              value: String(props.modelValue ?? ''),
+              onChange: (event: Event) => {
+                const target = event.target as HTMLSelectElement;
+                const selected = (props.options as Array<Record<string, unknown>>).find(
+                  (option) => String(option[props.optionValue]) === target.value,
+                );
+                emit(
+                  'update:modelValue',
+                  props.emitValue ? Number(target.value) : selected ?? target.value,
+                );
+              },
+            },
+            (props.options as Array<Record<string, unknown>>).map((option) =>
+              h(
+                'option',
+                {
+                  value: String(option[props.optionValue]),
+                },
+                String(option[props.optionLabel]),
+              ),
+            ),
+          ),
+        ],
+      );
+  },
+});
+
 const QEditorStub = defineComponent({
   name: 'QEditorStub',
   props: {
@@ -274,6 +322,7 @@ config.global.stubs = {
   'q-btn': QBtnStub,
   'q-form': QFormStub,
   'q-input': QInputStub,
+  'q-select': QSelectStub,
   'q-editor': QEditorStub,
   'q-toggle': QToggleStub,
   'q-badge': QBadgeStub,

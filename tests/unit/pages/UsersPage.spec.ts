@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { Notify, Quasar } from 'quasar';
+import { nextTick } from 'vue';
 import UsersPage from '@pages/UsersPage.vue';
 
 vi.mock('src/boot/axios', () => ({
@@ -116,6 +117,53 @@ describe('UsersPage', () => {
     expect(api.patch).toHaveBeenCalledWith('/api/admin/users/1', { role: 2 });
     expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
     expect(wrapper.html()).toContain('Менеджер');
+  });
+
+  it('не отправляет повторное сохранение роли, пока предыдущий запрос не завершён', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          username: 'johndoe',
+          first_name: 'John',
+          role: 9,
+          role_name: 'Пользователь',
+          createdAt: '2024-01-01',
+        },
+      ],
+    });
+
+    let resolvePatch: ((value: { data: Record<string, unknown> }) => void) | undefined;
+    vi.mocked(api.patch).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePatch = resolve;
+        }) as ReturnType<typeof api.patch>
+    );
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const popup = wrapper.findComponent({ name: 'QPopupEdit' });
+    popup.vm.$emit('save', 2);
+    await nextTick();
+    popup.vm.$emit('save', 1);
+    await nextTick();
+
+    expect(api.patch).toHaveBeenCalledTimes(1);
+
+    resolvePatch?.({
+      data: {
+        id: 1,
+        username: 'johndoe',
+        first_name: 'John',
+        role: 2,
+        role_name: 'Менеджер',
+        createdAt: '2024-01-01',
+      },
+    });
+    await flushPromises();
+    expect(api.patch).toHaveBeenCalledTimes(1);
   });
 
   it('показывает detail из backend при ошибке сохранения роли', async () => {

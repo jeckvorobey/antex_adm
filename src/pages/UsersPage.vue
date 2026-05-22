@@ -22,11 +22,12 @@
             buttons
             label-set="Сохранить"
             label-cancel="Отмена"
+            :disable="isRoleSaving(props.row.id)"
             @save="(value) => updateRole(props.row, Number(value))"
           >
             <q-select
               v-model="scope.value"
-              :options="roleOptions"
+              :options="getRoleOptions(props.row)"
               option-value="value"
               option-label="label"
               emit-value
@@ -34,6 +35,8 @@
               dense
               outlined
               autofocus
+              :loading="isRoleSaving(props.row.id)"
+              :disable="isRoleSaving(props.row.id)"
             />
           </q-popup-edit>
         </q-td>
@@ -54,6 +57,7 @@ import type { QTableColumn } from 'quasar';
 import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
+import { getRoleOptionsForUser } from '@pages/users/role-options';
 import { formatAdminDateTime } from '@utils/date';
 
 type UserRow = {
@@ -65,11 +69,6 @@ type UserRow = {
   createdAt: string;
 };
 
-type RoleOption = {
-  label: string;
-  value: number;
-};
-
 const $q = useQuasar();
 
 const roleTitles: Record<number, string> = {
@@ -78,14 +77,9 @@ const roleTitles: Record<number, string> = {
   9: 'Пользователь',
 };
 
-const roleOptions: RoleOption[] = [
-  { label: 'Пользователь', value: 9 },
-  { label: 'Менеджер', value: 2 },
-  { label: 'Администратор', value: 1 },
-];
-
 const users = ref<UserRow[]>([]);
 const loading = ref(false);
+const savingRoleIds = ref<number[]>([]);
 
 const columns: QTableColumn<UserRow>[] = [
   { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'width: 8%' },
@@ -123,6 +117,21 @@ function getRoleTitle(row: UserRow) {
   return row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`;
 }
 
+function hasAssignedManager() {
+  return users.value.some((row) => row.role === 2)
+}
+
+function getRoleOptions(row: UserRow) {
+  return getRoleOptionsForUser({
+    editedUserRole: row.role,
+    hasAssignedManager: hasAssignedManager(),
+  })
+}
+
+function isRoleSaving(userId: number) {
+  return savingRoleIds.value.includes(userId)
+}
+
 function getErrorMessage(error: unknown, fallback: string) {
   if (
     typeof error === 'object' &&
@@ -142,6 +151,11 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 async function updateRole(row: UserRow, role: number) {
+  if (isRoleSaving(row.id)) {
+    return
+  }
+
+  savingRoleIds.value = [...savingRoleIds.value, row.id]
   try {
     const res = await api.patch<UserRow>(`/api/admin/users/${row.id}`, { role });
     const index = users.value.findIndex((item) => item.id === row.id);
@@ -154,6 +168,8 @@ async function updateRole(row: UserRow, role: number) {
       type: 'negative',
       message: getErrorMessage(error, 'Не удалось сохранить роль пользователя'),
     });
+  } finally {
+    savingRoleIds.value = savingRoleIds.value.filter((id) => id !== row.id)
   }
 }
 </script>

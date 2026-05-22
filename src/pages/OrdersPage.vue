@@ -25,17 +25,17 @@
             dense
             flat
             color="primary"
-            label="Подтвердить"
+            label="Взять в работу"
             @click="updateStatus(row.id, 2)"
           />
           <q-btn
-            v-if="[1, 2, 3].includes(row.status)"
+            v-if="row.status === 2"
             :data-testid="`complete-order-${row.id}`"
             dense
             flat
             color="positive"
             label="Завершить"
-            @click="updateStatus(row.id, 4)"
+            @click="updateStatus(row.id, 3)"
           />
         </q-td>
       </template>
@@ -49,6 +49,7 @@ import { api } from '@boot/axios';
 
 interface AdminOrder {
   id: number;
+  publicNumber: string;
   UserId: number;
   CityId?: number;
   currencySell: string;
@@ -73,7 +74,7 @@ const orders = ref<AdminOrder[]>([]);
 const loading = ref(false);
 
 const columns = [
-  { name: 'id', label: '#', field: 'id', sortable: true },
+  { name: 'id', label: 'Номер', field: 'publicNumber', sortable: true },
   { name: 'user', label: 'Пользователь', field: formatUser },
   { name: 'city', label: 'Город', field: (row: AdminOrder) => row.city?.name ?? row.CityId ?? '—' },
   { name: 'currencySell', label: 'Отдаёт', field: (row: AdminOrder) => `${row.amountSell} ${row.currencySell}` },
@@ -119,10 +120,9 @@ function formatUser(row: AdminOrder) {
 function getStatusLabel(status: number) {
   const labels: Record<number, string> = {
     1: 'Новая',
-    2: 'Подтверждена',
-    3: 'В обработке',
-    4: 'Выполнена',
-    5: 'Отменена',
+    2: 'В работе',
+    3: 'Выполнена',
+    4: 'Отменена',
   };
   return labels[status] ?? `Статус ${status}`;
 }
@@ -131,9 +131,8 @@ function getStatusColor(status: number) {
   const colors: Record<number, string> = {
     1: 'orange',
     2: 'blue',
-    3: 'purple',
-    4: 'green',
-    5: 'grey',
+    3: 'green',
+    4: 'grey',
   };
   return colors[status] ?? 'grey';
 }

@@ -49,17 +49,17 @@ describe('OrdersPage', () => {
 
   it('данные из API попадают в таблицу', async () => {
     const orders = [
-      { id: 1, UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
+      { id: 1, publicNumber: '2026050001', UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
     ];
     vi.mocked(api.get).mockResolvedValue({ data: orders });
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.html()).toContain('1');
+    expect(wrapper.html()).toContain('2026050001');
   });
 
   it('обновляет статус заявки через backend', async () => {
     const orders = [
-      { id: 1, UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
+      { id: 1, publicNumber: '2026050001', UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
     ];
     vi.mocked(api.get).mockResolvedValue({ data: orders });
     vi.mocked(api.patch).mockResolvedValue({
@@ -73,6 +73,6 @@ describe('OrdersPage', () => {
     await flushPromises();
 
     expect(api.patch).toHaveBeenCalledWith('/api/admin/orders/1/status', { status: 2 });
-    expect(wrapper.html()).toContain('Подтверждена');
+    expect(wrapper.html()).toContain('В работе');
   });
 });

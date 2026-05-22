@@ -118,6 +118,42 @@ describe('UsersPage', () => {
     expect(wrapper.html()).toContain('Менеджер');
   });
 
+  it('показывает detail из backend при ошибке сохранения роли', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          username: 'johndoe',
+          first_name: 'John',
+          role: 9,
+          role_name: 'Пользователь',
+          createdAt: '2024-01-01',
+        },
+      ],
+    });
+    vi.mocked(api.patch).mockRejectedValue({
+      response: {
+        data: {
+          detail: 'Role update failed',
+        },
+      },
+    });
+    const notifySpy = vi.spyOn(Notify, 'create');
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const popup = wrapper.findComponent({ name: 'QPopupEdit' });
+    popup.vm.$emit('save', 2);
+    await flushPromises();
+
+    expect(notifySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'negative',
+        message: 'Role update failed',
+      })
+    );
+  });
+
   it('loading=false после успешной загрузки', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     mountPage();

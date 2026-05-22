@@ -110,7 +110,7 @@ const columns: QTableColumn<UserRow>[] = [
 onMounted(async () => {
   loading.value = true;
   try {
-    const res = await api.get('/api/admin/users');
+    const res = await api.get<UserRow[]>('/api/admin/users');
     users.value = res.data;
   } catch {
     users.value = [];
@@ -123,6 +123,24 @@ function getRoleTitle(row: UserRow) {
   return row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`;
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof error.response === 'object' &&
+    error.response !== null &&
+    'data' in error.response &&
+    typeof error.response.data === 'object' &&
+    error.response.data !== null &&
+    'detail' in error.response.data &&
+    typeof error.response.data.detail === 'string'
+  ) {
+    return error.response.data.detail;
+  }
+  return fallback;
+}
+
 async function updateRole(row: UserRow, role: number) {
   try {
     const res = await api.patch<UserRow>(`/api/admin/users/${row.id}`, { role });
@@ -131,8 +149,11 @@ async function updateRole(row: UserRow, role: number) {
       users.value[index] = res.data;
     }
     $q.notify({ type: 'positive', message: 'Роль пользователя сохранена' });
-  } catch {
-    $q.notify({ type: 'negative', message: 'Не удалось сохранить роль пользователя' });
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: getErrorMessage(error, 'Не удалось сохранить роль пользователя'),
+    });
   }
 }
 </script>

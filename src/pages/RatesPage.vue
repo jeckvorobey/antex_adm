@@ -3,7 +3,7 @@
     <div class="row items-center q-mb-md">
       <div class="text-h5">Курсы и наценка</div>
       <q-space />
-      <q-btn color="secondary" icon="refresh" label="Обновить курсы" :loading="refreshing" @click="refreshRates" />
+      <q-btn color="secondary" icon="refresh" label="Обновить курс" :loading="refreshing" @click="refreshRates" />
     </div>
 
     <q-card>

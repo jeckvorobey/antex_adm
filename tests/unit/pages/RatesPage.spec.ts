@@ -202,4 +202,11 @@ describe('RatesPage', () => {
     const btns = wrapper.findAll('.q-btn').map((b) => b.text());
     expect(btns.some((t) => t.includes('Обновить'))).toBe(true);
   });
+
+  it('кнопка ручного запуска имеет текст "Обновить курс"', async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+    const btns = wrapper.findAll('.q-btn').map((b) => b.text());
+    expect(btns).toContain('Обновить курс');
+  });
 });

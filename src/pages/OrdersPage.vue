@@ -1,11 +1,13 @@
 <template>
   <q-page class="q-pa-md">
     <div class="text-h5 q-mb-md">Заявки</div>
-    <q-table
+    <AppResponsiveTable
       :rows="orders"
       :columns="columns"
       row-key="id"
       :loading="loading"
+      :mobile="mobileConfig"
+      table-style="table-layout: fixed; width: 100%"
       flat
       bordered
     >
@@ -39,13 +41,40 @@
           />
         </q-td>
       </template>
-    </q-table>
+
+      <template #mobile-actions="{ row }">
+        <div class="row q-gutter-sm">
+          <q-btn
+            v-if="row.status === 1"
+            :data-testid="`confirm-order-${row.id}`"
+            dense
+            flat
+            color="primary"
+            label="Взять в работу"
+            @click="updateStatus(row.id, 2)"
+          />
+          <q-btn
+            v-if="row.status === 2"
+            :data-testid="`complete-order-${row.id}`"
+            dense
+            flat
+            color="positive"
+            label="Завершить"
+            @click="updateStatus(row.id, 3)"
+          />
+        </div>
+      </template>
+    </AppResponsiveTable>
   </q-page>
 </template>
 
 <script setup lang="ts">
+import type { QTableColumn } from 'quasar';
 import { onMounted, ref } from 'vue';
+
 import { api } from '@boot/axios';
+import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue';
+import { formatAdminDateTime } from '@utils/date';
 
 interface AdminOrder {
   id: number;
@@ -73,17 +102,40 @@ interface AdminOrder {
 const orders = ref<AdminOrder[]>([]);
 const loading = ref(false);
 
-const columns = [
-  { name: 'id', label: 'Номер', field: 'publicNumber', sortable: true },
-  { name: 'user', label: 'Пользователь', field: formatUser },
-  { name: 'city', label: 'Город', field: (row: AdminOrder) => row.city?.name ?? row.CityId ?? '—' },
-  { name: 'currencySell', label: 'Отдаёт', field: (row: AdminOrder) => `${row.amountSell} ${row.currencySell}` },
-  { name: 'currencyBuy', label: 'Получает', field: (row: AdminOrder) => `${row.amountBuy ?? '—'} ${row.currencyBuy}` },
-  { name: 'rate', label: 'Курс', field: (row: AdminOrder) => row.rate ?? '—' },
-  { name: 'status', label: 'Статус', field: 'status' },
-  { name: 'actions', label: 'Действия', field: 'actions' },
-  { name: 'createdAt', label: 'Создана', field: 'createdAt' },
+const columns: QTableColumn<AdminOrder>[] = [
+  { name: 'id', label: 'Номер', field: 'publicNumber', sortable: true, align: 'left', style: 'width: 11%' },
+  { name: 'user', label: 'Пользователь', field: formatUser, align: 'left', style: 'width: 14%' },
+  { name: 'city', label: 'Город', field: (row) => row.city?.name ?? row.CityId ?? '—', align: 'left', style: 'width: 11%' },
+  { name: 'currencySell', label: 'Отдаёт', field: (row) => `${row.amountSell} ${row.currencySell}`, align: 'right', style: 'width: 12%' },
+  { name: 'currencyBuy', label: 'Получает', field: (row) => `${row.amountBuy ?? '—'} ${row.currencyBuy}`, align: 'right', style: 'width: 12%' },
+  { name: 'rate', label: 'Курс', field: (row) => row.rate ?? '—', align: 'right', style: 'width: 9%' },
+  { name: 'status', label: 'Статус', field: 'status', align: 'left', style: 'width: 10%' },
+  { name: 'actions', label: 'Действия', field: 'actions', align: 'left', style: 'width: 12%' },
+  {
+    name: 'createdAt',
+    label: 'Создана',
+    field: 'createdAt',
+    align: 'left',
+    style: 'width: 13%',
+    format: (value) => formatAdminDateTime(String(value)),
+  },
 ];
+
+const mobileConfig = {
+  title: (row: AdminOrder) => `Заявка ${row.publicNumber}`,
+  subtitle: (row: AdminOrder) => formatAdminDateTime(row.createdAt),
+  badge: (row: AdminOrder) => ({
+    label: getStatusLabel(row.status),
+    color: getStatusColor(row.status),
+  }),
+  fields: [
+    { name: 'user', label: 'Пользователь' },
+    { name: 'city', label: 'Город' },
+    { name: 'currencySell', label: 'Отдаёт' },
+    { name: 'currencyBuy', label: 'Получает' },
+    { name: 'rate', label: 'Курс' },
+  ],
+};
 
 onMounted(async () => {
   loading.value = true;

@@ -1,11 +1,12 @@
 <template>
   <q-page class="q-pa-md">
     <div class="text-h5 q-mb-md">Пользователи</div>
-    <q-table
+    <AppResponsiveTable
       :rows="users"
       :columns="columns"
       row-key="id"
       :loading="loading"
+      :mobile="mobileConfig"
       table-style="table-layout: fixed; width: 100%"
       flat
       bordered
@@ -47,7 +48,37 @@
           {{ formatAdminDateTime(props.row.createdAt) }}
         </q-td>
       </template>
-    </q-table>
+
+      <template #mobile-field-role="{ row }">
+        <div class="row items-center justify-end q-gutter-xs">
+          <span>{{ getRoleTitle(row) }}</span>
+          <q-icon name="edit" size="16px" color="grey-6" />
+        </div>
+        <q-popup-edit
+          v-slot="scope"
+          :model-value="row.role"
+          buttons
+          label-set="Сохранить"
+          label-cancel="Отмена"
+          :disable="isRoleSaving(row.id)"
+          @save="(value) => updateRole(row, Number(value))"
+        >
+          <q-select
+            v-model="scope.value"
+            :options="getRoleOptions(row)"
+            option-value="value"
+            option-label="label"
+            emit-value
+            map-options
+            dense
+            outlined
+            autofocus
+            :loading="isRoleSaving(row.id)"
+            :disable="isRoleSaving(row.id)"
+          />
+        </q-popup-edit>
+      </template>
+    </AppResponsiveTable>
   </q-page>
 </template>
 
@@ -58,6 +89,7 @@ import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
 import { getRoleOptionsForUser } from '@pages/users/role-options';
+import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue';
 import { formatAdminDateTime } from '@utils/date';
 
 type UserRow = {
@@ -98,8 +130,21 @@ const columns: QTableColumn<UserRow>[] = [
     field: 'createdAt',
     align: 'left',
     style: 'width: 20%',
+    format: (value) => formatAdminDateTime(String(value)),
   },
 ];
+
+const mobileConfig = {
+  title: (row: UserRow) => row.username ? `@${row.username}` : row.first_name ?? `ID ${row.id}`,
+  subtitle: (row: UserRow) => formatAdminDateTime(row.createdAt),
+  badge: (row: UserRow) => ({ label: getRoleTitle(row), color: row.role === 1 ? 'primary' : 'grey' }),
+  fields: [
+    { name: 'id', label: 'ID' },
+    { name: 'first_name', label: 'Имя' },
+    { name: 'role', label: 'Роль' },
+    { name: 'createdAt', label: 'Регистрация' },
+  ],
+};
 
 onMounted(async () => {
   loading.value = true;

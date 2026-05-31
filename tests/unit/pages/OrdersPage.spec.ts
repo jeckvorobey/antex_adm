@@ -57,6 +57,29 @@ describe('OrdersPage', () => {
     expect(wrapper.html()).toContain('2026050001');
   });
 
+  it('показывает дату заявки в едином admin-формате', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          publicNumber: '2026050001',
+          UserId: 42,
+          amountSell: 100,
+          currencySell: 'RUB',
+          amountBuy: 1,
+          currencyBuy: 'USDT',
+          status: 1,
+          createdAt: '1970-01-01T16:20:00Z',
+        },
+      ],
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.html()).toContain('01.01.1970 16:20');
+  });
+
   it('обновляет статус заявки через backend', async () => {
     const orders = [
       { id: 1, publicNumber: '2026050001', UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },

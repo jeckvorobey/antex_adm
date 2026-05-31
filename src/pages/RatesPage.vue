@@ -12,11 +12,13 @@
         <div class="text-caption text-grey-7 q-mt-xs">Наценка редактируется прямо в таблице</div>
       </q-card-section>
 
-      <q-table
+      <AppResponsiveTable
         :rows="rates"
         :columns="rateColumns"
         row-key="id"
         :loading="loadingRates"
+        :mobile="mobileConfig"
+        table-style="table-layout: fixed; width: 100%"
         flat
         dense
         :pagination="{ rowsPerPage: 0 }"
@@ -48,7 +50,33 @@
             </q-popup-edit>
           </q-td>
         </template>
-      </q-table>
+
+        <template #mobile-field-margin="{ row }">
+          <div class="row items-center justify-end q-gutter-xs">
+            <span>{{ formatMargin(row.margin) }}</span>
+            <q-icon name="edit" size="16px" color="grey-6" />
+          </div>
+          <q-popup-edit
+            v-slot="scope"
+            :model-value="row.margin"
+            buttons
+            label-set="Сохранить"
+            label-cancel="Отмена"
+            @save="(value) => updateMargin(row, Number(value))"
+          >
+            <q-input
+              v-model.number="scope.value"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              dense
+              autofocus
+              outlined
+            />
+          </q-popup-edit>
+        </template>
+      </AppResponsiveTable>
     </q-card>
   </q-page>
 </template>
@@ -59,6 +87,8 @@ import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
 import { api } from '@boot/axios';
+import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue';
+import { formatAdminDateTime } from '@utils/date';
 
 interface RateRow {
   id: number;
@@ -84,6 +114,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'currency',
     align: 'left',
     sortable: true,
+    style: 'width: 15%',
   },
   {
     name: 'country',
@@ -91,6 +122,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'countryRuName',
     align: 'left',
     sortable: true,
+    style: 'width: 18%',
   },
   {
     name: 'baseRate',
@@ -98,6 +130,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'baseRateDisplay',
     align: 'right',
     sortable: true,
+    style: 'width: 17%',
   },
   {
     name: 'finalRate',
@@ -105,6 +138,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'finalRateDisplay',
     align: 'right',
     sortable: true,
+    style: 'width: 17%',
   },
   {
     name: 'margin',
@@ -113,6 +147,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     align: 'right',
     sortable: true,
     format: (value: number) => formatMargin(value),
+    style: 'width: 14%',
   },
   {
     name: 'updatedAt',
@@ -120,9 +155,22 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'updatedAt',
     align: 'left',
     sortable: true,
-    format: (value: string) => formatDate(value),
+    format: (value: string) => formatAdminDateTime(value),
+    style: 'width: 19%',
   },
 ];
+
+const mobileConfig = {
+  title: (row: RateRow) => row.currency,
+  subtitle: (row: RateRow) => row.countryRuName,
+  badge: (row: RateRow) => ({ label: formatMargin(row.margin), color: 'primary' }),
+  fields: [
+    { name: 'baseRate', label: 'Базовый курс' },
+    { name: 'finalRate', label: 'Итоговый курс' },
+    { name: 'margin', label: 'Наценка' },
+    { name: 'updatedAt', label: 'Обновлено' },
+  ],
+};
 
 onMounted(async () => {
   await loadRates();
@@ -168,7 +216,4 @@ function formatMargin(value: number) {
   return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleString('ru-RU');
-}
 </script>

@@ -86,6 +86,33 @@ describe('RatesPage', () => {
     expect(wrapper.html()).toContain('Вьетнам');
   });
 
+  it('показывает дату обновления курса в едином admin-формате', async () => {
+    mockAdminGet({
+      rates: [
+        {
+          id: 1,
+          currency: 'RUBTHB',
+          country: 'thailand',
+          countryRuName: 'Таиланд',
+          price: 0.41,
+          priceDisplay: '0.41',
+          baseRate: 2.44,
+          baseRateDisplay: '2.44',
+          finalRate: 2.51,
+          finalRateDisplay: '2.51',
+          margin: 3,
+          createdAt: '1970-01-01T16:20:00Z',
+          updatedAt: '1970-01-01T16:20:00Z',
+        },
+      ],
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.html()).toContain('01.01.1970 16:20');
+  });
+
   it('показывает колонку процента и не показывает allowance-блок', async () => {
     mockAdminGet({
       rates: [

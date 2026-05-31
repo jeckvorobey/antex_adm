@@ -115,11 +115,13 @@
     <q-card class="q-mb-md">
       <q-card-section>
         <div class="text-subtitle1 q-mb-sm">История рассылок</div>
-        <q-table
+        <AppResponsiveTable
           :rows="broadcasts"
           :columns="columns"
           row-key="id"
           :loading="loading"
+          :mobile="mobileConfig"
+          table-style="table-layout: fixed; width: 100%"
           flat
           bordered
         />
@@ -153,11 +155,13 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { api } from '@boot/axios';
+import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue';
 import {
   hasTelegramRenderableContent,
   normalizeTelegramHtml,
   telegramPreviewHtml,
 } from '@utils/telegramHtml';
+import { formatAdminDateTime } from '@utils/date';
 
 type BroadcastRow = {
   id: number;
@@ -193,17 +197,49 @@ const editorToolbar = [
 ];
 
 const columns = [
-  { name: 'createdAt', label: 'Дата', field: 'createdAt' },
-  { name: 'status', label: 'Статус', field: 'status' },
-  { name: 'speed_mode_requested', label: 'Режим', field: 'speed_mode_requested' },
+  {
+    name: 'createdAt',
+    label: 'Дата',
+    field: 'createdAt',
+    align: 'left' as const,
+    style: 'width: 16%',
+    format: (value: string | undefined) => formatAdminDateTime(value),
+  },
+  { name: 'status', label: 'Статус', field: 'status', align: 'left' as const, style: 'width: 12%' },
+  { name: 'speed_mode_requested', label: 'Режим', field: 'speed_mode_requested', align: 'left' as const, style: 'width: 10%' },
   {
     name: 'counts',
     label: 'Итог',
     field: (row: BroadcastRow) => `${row.total_count ?? 0}/${row.success_count ?? 0}/${row.failed_count ?? 0}`,
+    align: 'right' as const,
+    style: 'width: 12%',
   },
-  { name: 'text', label: 'Текст', field: 'text' },
-  { name: 'last_error', label: 'Ошибка', field: 'last_error' },
+  {
+    name: 'text',
+    label: 'Текст',
+    field: 'text',
+    align: 'left' as const,
+    style: 'width: 30%; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+  },
+  {
+    name: 'last_error',
+    label: 'Ошибка',
+    field: 'last_error',
+    align: 'left' as const,
+    style: 'width: 20%; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+  },
 ];
+
+const mobileConfig = {
+  title: (row: BroadcastRow) => row.text || `Рассылка ${row.id}`,
+  subtitle: (row: BroadcastRow) => formatAdminDateTime(row.createdAt),
+  badge: (row: BroadcastRow) => ({ label: row.status, color: row.status === 'completed' ? 'positive' : 'grey' }),
+  fields: [
+    { name: 'speed_mode_requested', label: 'Режим' },
+    { name: 'counts', label: 'Итог' },
+    { name: 'last_error', label: 'Ошибка' },
+  ],
+};
 
 const normalizedMessageHtml = computed(() => normalizeTelegramHtml(form.value.text));
 const previewHtml = computed(() => telegramPreviewHtml(normalizedMessageHtml.value));

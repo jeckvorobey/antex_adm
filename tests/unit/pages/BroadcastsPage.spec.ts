@@ -36,6 +36,28 @@ describe('BroadcastsPage', () => {
     expect(wrapper.find('.q-table').exists()).toBe(true);
   });
 
+  it('показывает дату рассылки в едином admin-формате', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          text: 'Промо текст',
+          status: 'completed',
+          speed_mode_requested: 'free',
+          total_count: 10,
+          success_count: 9,
+          failed_count: 1,
+          createdAt: '1970-01-01T16:20:00Z',
+        },
+      ],
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.html()).toContain('01.01.1970 16:20');
+  });
+
   it('открывает подтверждение перед отправкой', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
 

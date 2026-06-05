@@ -34,16 +34,16 @@ describe('MainLayout', () => {
     vi.clearAllMocks();
   });
 
-  it('рендерит 6 пунктов навигации', () => {
+  it('рендерит 7 пунктов навигации', () => {
     const wrapper = mountLayout();
     const items = wrapper.findAll('.q-item');
-    expect(items.length).toBe(6);
+    expect(items.length).toBe(7);
   });
 
   it('меню не содержит удалённые routes cards и banks', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
-    for (const route of ['/dashboard', '/orders', '/users', '/rates', '/broadcasts', '/settings']) {
+    for (const route of ['/dashboard', '/orders', '/site-leads', '/users', '/rates', '/broadcasts', '/settings']) {
       expect(html).toContain(route);
     }
     expect(html).not.toContain('/cards');

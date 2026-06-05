@@ -17,6 +17,7 @@ describe('router/index', () => {
     expect(paths).toContain('/login');
     expect(paths).toContain('/');
     expect(paths).toContain('/broadcasts');
+    expect(paths).toContain('/site-leads');
     expect(paths).not.toContain('/cards');
     expect(paths).not.toContain('/banks');
   });

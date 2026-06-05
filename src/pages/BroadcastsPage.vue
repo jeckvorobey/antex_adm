@@ -124,7 +124,45 @@
           table-style="table-layout: fixed; width: 100%"
           flat
           bordered
-        />
+        >
+          <template #body-cell-status="props">
+            <q-td :props="props">
+              <q-badge :color="statusColor(props.row.status)">
+                {{ props.row.status }}
+              </q-badge>
+            </q-td>
+          </template>
+
+          <template #body-cell-actions="props">
+            <q-td :props="props">
+              <q-btn
+                v-if="isBroadcastActive(props.row)"
+                dense
+                unelevated
+                no-caps
+                color="warning"
+                icon="stop_circle"
+                label="Остановить"
+                :loading="stoppingIds.has(props.row.id)"
+                @click="stopBroadcast(props.row)"
+              />
+            </q-td>
+          </template>
+
+          <template #mobile-actions="{ row }">
+            <q-btn
+              v-if="isBroadcastActive(row)"
+              dense
+              unelevated
+              no-caps
+              color="warning"
+              icon="stop_circle"
+              label="Остановить"
+              :loading="stoppingIds.has(row.id)"
+              @click="stopBroadcast(row)"
+            />
+          </template>
+        </AppResponsiveTable>
       </q-card-section>
     </q-card>
 
@@ -180,6 +218,7 @@ const loading = ref(false);
 const sending = ref(false);
 const confirmOpen = ref(false);
 const broadcasts = ref<BroadcastRow[]>([]);
+const stoppingIds = ref(new Set<number>());
 const isPaid = ref(false);
 const emojiQuery = ref('');
 const form = ref({
@@ -228,12 +267,19 @@ const columns = [
     align: 'left' as const,
     style: 'width: 20%; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
   },
+  {
+    name: 'actions',
+    label: '',
+    field: 'id',
+    align: 'right' as const,
+    style: 'width: 14%',
+  },
 ];
 
 const mobileConfig = {
   title: (row: BroadcastRow) => row.text || `Рассылка ${row.id}`,
   subtitle: (row: BroadcastRow) => formatAdminDateTime(row.createdAt),
-  badge: (row: BroadcastRow) => ({ label: row.status, color: row.status === 'completed' ? 'positive' : 'grey' }),
+  badge: (row: BroadcastRow) => ({ label: row.status, color: statusColor(row.status) }),
   fields: [
     { name: 'speed_mode_requested', label: 'Режим' },
     { name: 'counts', label: 'Итог' },
@@ -306,8 +352,24 @@ function validateForm() {
   return true;
 }
 
+function isBroadcastActive(row: BroadcastRow) {
+  return row.status === 'pending' || row.status === 'running';
+}
+
+function statusColor(statusValue: string) {
+  const colors: Record<string, string> = {
+    completed: 'positive',
+    failed: 'negative',
+    stopped: 'warning',
+    running: 'primary',
+    pending: 'grey',
+  };
+
+  return colors[statusValue] ?? 'grey';
+}
+
 function startPollingIfNeeded() {
-  const hasRunning = broadcasts.value.some((item) => item.status === 'running' || item.status === 'pending');
+  const hasRunning = broadcasts.value.some((item) => isBroadcastActive(item));
   if (!hasRunning || pollTimer !== null) {
     return;
   }
@@ -318,7 +380,7 @@ function startPollingIfNeeded() {
 }
 
 function stopPollingIfDone() {
-  const hasRunning = broadcasts.value.some((item) => item.status === 'running' || item.status === 'pending');
+  const hasRunning = broadcasts.value.some((item) => isBroadcastActive(item));
   if (!hasRunning && pollTimer !== null) {
     window.clearInterval(pollTimer);
     pollTimer = null;
@@ -371,6 +433,28 @@ async function submitBroadcast() {
     $q.notify({ type: 'negative', message: 'Не удалось запустить рассылку' });
   } finally {
     sending.value = false;
+  }
+}
+
+async function stopBroadcast(row: BroadcastRow) {
+  if (stoppingIds.value.has(row.id)) {
+    return;
+  }
+
+  stoppingIds.value = new Set(stoppingIds.value).add(row.id);
+  try {
+    const response = await api.post(`/api/admin/broadcasts/${row.id}/stop`);
+    broadcasts.value = broadcasts.value.map((item) => (
+      item.id === row.id ? response.data : item
+    ));
+    stopPollingIfDone();
+    $q.notify({ type: 'positive', message: 'Рассылка остановлена' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Не удалось остановить рассылку' });
+  } finally {
+    const nextStoppingIds = new Set(stoppingIds.value);
+    nextStoppingIds.delete(row.id);
+    stoppingIds.value = nextStoppingIds;
   }
 }
 

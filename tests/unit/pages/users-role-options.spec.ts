@@ -11,7 +11,6 @@ describe('getRoleOptionsForUser', () => {
 
     expect(options).toEqual([
       { label: 'Пользователь', value: 9 },
-      { label: 'Администратор', value: 1 },
     ]);
   });
 
@@ -24,7 +23,6 @@ describe('getRoleOptionsForUser', () => {
     expect(options).toEqual([
       { label: 'Пользователь', value: 9 },
       { label: 'Менеджер', value: 2 },
-      { label: 'Администратор', value: 1 },
     ]);
   });
 });

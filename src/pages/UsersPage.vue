@@ -105,7 +105,6 @@ const $q = useQuasar();
 
 const roleTitles: Record<number, string> = {
   2: 'Менеджер',
-  1: 'Администратор',
   9: 'Пользователь',
 };
 
@@ -137,7 +136,7 @@ const columns: QTableColumn<UserRow>[] = [
 const mobileConfig = {
   title: (row: UserRow) => row.username ? `@${row.username}` : row.first_name ?? `ID ${row.id}`,
   subtitle: (row: UserRow) => formatAdminDateTime(row.createdAt),
-  badge: (row: UserRow) => ({ label: getRoleTitle(row), color: row.role === 1 ? 'primary' : 'grey' }),
+  badge: (row: UserRow) => ({ label: getRoleTitle(row), color: row.role === 2 ? 'primary' : 'grey' }),
   fields: [
     { name: 'id', label: 'ID' },
     { name: 'first_name', label: 'Имя' },

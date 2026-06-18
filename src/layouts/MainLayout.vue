@@ -38,6 +38,7 @@ const menu = [
   { to: '/orders', icon: 'list_alt', label: 'Заявки' },
   { to: '/site-leads', icon: 'mark_email_unread', label: 'Заявки сайта' },
   { to: '/users', icon: 'people', label: 'Пользователи' },
+  { to: '/admins', icon: 'admin_panel_settings', label: 'Админы' },
   { to: '/rates', icon: 'trending_up', label: 'Курсы' },
   { to: '/broadcasts', icon: 'campaign', label: 'Рассылка' },
   { to: '/settings', icon: 'settings', label: 'Настройки' },

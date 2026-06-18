@@ -70,38 +70,44 @@
         <q-card-section>
           <div class="text-h6">Новый администратор</div>
         </q-card-section>
-        <q-card-section class="column q-gutter-md">
-          <q-input
-            v-model="createForm.username"
-            data-test="create-admin-username"
-            outlined
-            label="Логин"
-          />
-          <q-input
-            v-model="createForm.email"
-            data-test="create-admin-email"
-            outlined
-            label="Email"
-            type="email"
-          />
-          <q-input
-            v-model="createForm.password"
-            data-test="create-admin-password"
-            outlined
-            label="Пароль"
-            type="password"
-          />
+        <q-card-section>
+          <q-form class="column q-gutter-md" @submit.prevent="submitCreateAdmin">
+            <q-input
+              v-model.trim="createForm.username"
+              data-test="create-admin-username"
+              outlined
+              label="Логин"
+              :rules="[(v) => !!v || 'Обязательное поле']"
+            />
+            <q-input
+              v-model.trim="createForm.email"
+              data-test="create-admin-email"
+              outlined
+              label="Email"
+              type="email"
+              :rules="[(v) => !!v || 'Обязательное поле']"
+            />
+            <q-input
+              v-model="createForm.password"
+              data-test="create-admin-password"
+              outlined
+              label="Пароль"
+              type="password"
+              :rules="[(v) => (v?.length ?? 0) >= 8 || 'Минимум 8 символов']"
+            />
+            <q-card-actions align="right">
+              <q-btn flat label="Отмена" @click="createDialog = false" />
+              <q-btn
+                data-test="submit-create-admin"
+                type="submit"
+                color="primary"
+                label="Сохранить"
+                :loading="submittingCreate"
+                :disable="submittingCreate"
+              />
+            </q-card-actions>
+          </q-form>
         </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Отмена" @click="createDialog = false" />
-          <q-btn
-            data-test="submit-create-admin"
-            color="primary"
-            label="Сохранить"
-            :loading="submittingCreate"
-            @click="submitCreateAdmin"
-          />
-        </q-card-actions>
       </q-card>
     </q-dialog>
 
@@ -240,6 +246,10 @@ function openCreateDialog() {
 }
 
 async function submitCreateAdmin() {
+  if (submittingCreate.value) {
+    return;
+  }
+
   submittingCreate.value = true;
   try {
     const response = await api.post<AdminRow>('/api/admin/add', {

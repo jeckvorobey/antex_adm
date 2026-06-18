@@ -71,7 +71,8 @@ describe('AdminsPage', () => {
     await wrapper.get('[data-test="create-admin-username"] input').setValue('alice');
     await wrapper.get('[data-test="create-admin-email"] input').setValue('alice@example.com');
     await wrapper.get('[data-test="create-admin-password"] input').setValue('Secret123');
-    await wrapper.get('[data-test="submit-create-admin"]').trigger('click');
+    await flushPromises();
+    await wrapper.get('form').trigger('submit');
     await flushPromises();
 
     expect(api.post).toHaveBeenCalledWith('/api/admin/add', {

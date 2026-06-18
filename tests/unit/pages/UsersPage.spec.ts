@@ -79,7 +79,7 @@ describe('UsersPage', () => {
     expect(wrapper.findComponent({ name: 'QPopupEdit' }).exists()).toBe(true);
     expect(wrapper.html()).toContain('Пользователь');
     expect(wrapper.html()).toContain('Менеджер');
-    expect(wrapper.html()).toContain('Администратор');
+    expect(wrapper.html()).not.toContain('Администратор');
     expect(wrapper.html()).not.toContain('Оператор');
   });
 
@@ -147,7 +147,7 @@ describe('UsersPage', () => {
     const popup = wrapper.findComponent({ name: 'QPopupEdit' });
     popup.vm.$emit('save', 2);
     await nextTick();
-    popup.vm.$emit('save', 1);
+    popup.vm.$emit('save', 9);
     await nextTick();
 
     expect(api.patch).toHaveBeenCalledTimes(1);

@@ -164,7 +164,6 @@ async function fetchUsers() {
   try {
     const params = search.value ? { search: search.value } : undefined;
     const res = await api.get<UserRow[]>('/api/admin/users', { params });
-    const res = await api.get<UserRow[]>('/api/admin/users');
     users.value = res.data;
   } catch {
     users.value = [];
@@ -176,7 +175,6 @@ async function fetchUsers() {
 onMounted(fetchUsers);
 
 watch(search, fetchUsers);
-});
 
 function getRoleTitle(row: UserRow) {
   return row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`;

@@ -4,7 +4,7 @@ import { Quasar, Notify } from 'quasar';
 import SettingsPage from '@pages/SettingsPage.vue';
 
 vi.mock('src/boot/axios', () => ({
-  api: { get: vi.fn(), post: vi.fn() },
+  api: { get: vi.fn(), patch: vi.fn() },
 }));
 
 import { api } from '@boot/axios';
@@ -39,20 +39,20 @@ describe('SettingsPage', () => {
     expect(wrapper.html()).toContain('Бот включён');
   });
 
-  it('toggleBot вызывает POST /api/admin/config/toggle', async () => {
+  it('toggleBot вызывает PATCH /api/admin/config', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { enabled: true } });
-    vi.mocked(api.post).mockResolvedValue({ data: { enabled: false } });
+    vi.mocked(api.patch).mockResolvedValue({ data: { enabled: false } });
     const wrapper = mountPage();
     await flushPromises();
     const toggle = wrapper.find('.q-toggle');
     await toggle.trigger('click');
     await flushPromises();
-    expect(api.post).toHaveBeenCalledWith('/api/admin/config/toggle');
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', { enabled: false });
   });
 
   it('toggleBot показывает positive уведомление при успехе', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { enabled: true } });
-    vi.mocked(api.post).mockResolvedValue({ data: { enabled: false } });
+    vi.mocked(api.patch).mockResolvedValue({ data: { enabled: false } });
     const notifySpy = vi.spyOn(Notify, 'create');
     const wrapper = mountPage();
     await flushPromises();
@@ -66,7 +66,7 @@ describe('SettingsPage', () => {
 
   it('toggleBot показывает error уведомление при ошибке', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { enabled: true } });
-    vi.mocked(api.post).mockRejectedValue(new Error('500'));
+    vi.mocked(api.patch).mockRejectedValue(new Error('500'));
     const notifySpy = vi.spyOn(Notify, 'create');
     const wrapper = mountPage();
     await flushPromises();

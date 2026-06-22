@@ -1,5 +1,5 @@
 import { config } from '@vue/test-utils';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, reactive } from 'vue';
 import { vi } from 'vitest';
 
 const notifyCreate = vi.fn();
@@ -62,7 +62,10 @@ const QBtnStub = defineComponent({
           loading: props.loading ? 'true' : undefined,
           onClick: (event: MouseEvent) => emit('click', event),
         },
-        props.label || slotChildren(slots),
+        [
+          props.label ? h('span', { class: 'q-btn__label' }, props.label) : null,
+          ...slotChildren(slots),
+        ],
       );
   },
 });
@@ -106,6 +109,76 @@ const QInputStub = defineComponent({
             const nextValue =
               props.type === 'number' ? Number(target.value || '0') : target.value;
             emit('update:modelValue', nextValue);
+          },
+        }),
+      ]);
+  },
+});
+
+const QSelectStub = defineComponent({
+  name: 'QSelectStub',
+  props: {
+    modelValue: { type: [String, Number, Object, null], default: null },
+    options: { type: Array, default: () => [] },
+    optionValue: { type: String, default: 'value' },
+    optionLabel: { type: String, default: 'label' },
+    emitValue: { type: Boolean, default: false },
+    mapOptions: { type: Boolean, default: false },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit, attrs }) {
+    return () =>
+      h(
+        'label',
+        { class: 'q-select' },
+        [
+          h(
+            'select',
+            {
+              ...attrs,
+              value: String(props.modelValue ?? ''),
+              onChange: (event: Event) => {
+                const target = event.target as HTMLSelectElement;
+                const selected = (props.options as Array<Record<string, unknown>>).find(
+                  (option) => String(option[props.optionValue]) === target.value,
+                );
+                emit(
+                  'update:modelValue',
+                  props.emitValue ? Number(target.value) : selected ?? target.value,
+                );
+              },
+            },
+            (props.options as Array<Record<string, unknown>>).map((option) =>
+              h(
+                'option',
+                {
+                  value: String(option[props.optionValue]),
+                },
+                String(option[props.optionLabel]),
+              ),
+            ),
+          ),
+        ],
+      );
+  },
+});
+
+const QEditorStub = defineComponent({
+  name: 'QEditorStub',
+  props: {
+    modelValue: { type: String, default: '' },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit, attrs, slots }) {
+    return () =>
+      h('label', { class: 'q-editor' }, [
+        ...Object.values(slots).flatMap((slot) => slot?.() ?? []),
+        h('textarea', {
+          ...attrs,
+          value: props.modelValue,
+          onInput: (event: Event) => {
+            const target = event.target as HTMLTextAreaElement;
+            emit('update:modelValue', target.value);
           },
         }),
       ]);
@@ -162,14 +235,18 @@ const QTableStub = defineComponent({
       const children = [...slotChildren(slots)];
 
       for (const row of props.rows as Array<Record<string, unknown>>) {
-        if (slots['body-cell-isActive']) {
-          children.push(
-            ...(slots['body-cell-isActive']({
-              row,
-              value: row.isActive,
-            }) ?? []),
-          );
+      for (const [slotName, slot] of Object.entries(slots)) {
+        if (!slotName.startsWith('body-cell-')) {
+          continue;
         }
+        const columnName = slotName.replace('body-cell-', '');
+        children.push(
+          ...(slot?.({
+            row,
+            value: row[columnName],
+          }) ?? []),
+        );
+      }
 
         children.push(
           h(
@@ -187,6 +264,39 @@ const QTableStub = defineComponent({
   },
 });
 
+const QDialogStub = defineComponent({
+  name: 'QDialogStub',
+  props: {
+    modelValue: { type: Boolean, default: false },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { slots, attrs }) {
+    return () =>
+      props.modelValue
+        ? h('div', { ...attrs, class: 'q-dialog' }, slotChildren(slots))
+        : null;
+  },
+});
+
+const QMenuStub = defineComponent({
+  name: 'QMenuStub',
+  setup(_props, { slots, attrs }) {
+    return () => h('div', { ...attrs, class: 'q-menu' }, slotChildren(slots));
+  },
+});
+
+const QPopupEditStub = defineComponent({
+  name: 'QPopupEdit',
+  props: {
+    modelValue: { type: [String, Number], default: '' },
+  },
+  emits: ['save'],
+  setup(props, { slots, attrs }) {
+    const scope = reactive({ value: props.modelValue });
+    return () => h('div', { ...attrs, class: 'q-popup-edit' }, slots.default?.(scope) ?? []);
+  },
+});
+
 config.global.plugins = [];
 config.global.stubs = {
   'q-page': wrapTag('div', 'q-page'),
@@ -201,13 +311,19 @@ config.global.stubs = {
   'q-page-container': wrapTag('div', 'q-page-container'),
   'q-card': wrapTag('div', 'q-card'),
   'q-card-section': wrapTag('div', 'q-card-section'),
+  'q-card-actions': wrapTag('div', 'q-card-actions'),
   'q-space': wrapTag('div', 'q-space'),
   'q-td': wrapTag('td', 'q-td'),
   'q-icon': wrapTag('span', 'q-icon'),
+  'q-dialog': QDialogStub,
+  'q-menu': QMenuStub,
+  'q-popup-edit': QPopupEditStub,
   'router-view': wrapTag('div', 'router-view'),
   'q-btn': QBtnStub,
   'q-form': QFormStub,
   'q-input': QInputStub,
+  'q-select': QSelectStub,
+  'q-editor': QEditorStub,
   'q-toggle': QToggleStub,
   'q-badge': QBadgeStub,
   'q-table': QTableStub,

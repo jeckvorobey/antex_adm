@@ -34,18 +34,20 @@ describe('MainLayout', () => {
     vi.clearAllMocks();
   });
 
-  it('рендерит 7 пунктов навигации', () => {
+  it('рендерит 8 пунктов навигации', () => {
     const wrapper = mountLayout();
     const items = wrapper.findAll('.q-item');
-    expect(items.length).toBe(7);
+    expect(items.length).toBe(8);
   });
 
-  it('меню содержит все ожидаемые роуты', () => {
+  it('меню не содержит удалённые routes cards и banks', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
-    for (const route of ['/dashboard', '/orders', '/users', '/cards', '/banks', '/rates', '/settings']) {
+    for (const route of ['/dashboard', '/orders', '/site-leads', '/users', '/admins', '/rates', '/broadcasts', '/settings']) {
       expect(html).toContain(route);
     }
+    expect(html).not.toContain('/cards');
+    expect(html).not.toContain('/banks');
   });
 
   it('logout кнопка вызывает authStore.logout', async () => {

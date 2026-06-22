@@ -99,7 +99,6 @@
 import { api } from '@boot/axios';
 import type { QTableColumn } from 'quasar';
 import { onMounted, ref, watch } from 'vue';
-import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
 import { getRoleOptionsForUser } from '@pages/users/role-options';

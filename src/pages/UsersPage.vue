@@ -1,6 +1,19 @@
 <template>
   <q-page class="q-pa-md">
     <div class="text-h5 q-mb-md">Пользователи</div>
+    <q-input
+      v-model="search"
+      debounce="300"
+      dense
+      outlined
+      placeholder="Поиск по ID, username, имени..."
+      class="q-mb-md"
+      style="max-width: 400px"
+    >
+      <template #prepend>
+        <q-icon name="search" />
+      </template>
+    </q-input>
     <AppResponsiveTable
       :rows="users"
       :columns="columns"
@@ -85,6 +98,7 @@
 <script setup lang="ts">
 import { api } from '@boot/axios';
 import type { QTableColumn } from 'quasar';
+import { onMounted, ref, watch } from 'vue';
 import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
@@ -111,6 +125,7 @@ const roleTitles: Record<number, string> = {
 const users = ref<UserRow[]>([]);
 const loading = ref(false);
 const savingRoleIds = ref<number[]>([]);
+const search = ref('');
 
 const columns: QTableColumn<UserRow>[] = [
   { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'width: 8%' },
@@ -145,9 +160,11 @@ const mobileConfig = {
   ],
 };
 
-onMounted(async () => {
+async function fetchUsers() {
   loading.value = true;
   try {
+    const params = search.value ? { search: search.value } : undefined;
+    const res = await api.get<UserRow[]>('/api/admin/users', { params });
     const res = await api.get<UserRow[]>('/api/admin/users');
     users.value = res.data;
   } catch {
@@ -155,6 +172,11 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+}
+
+onMounted(fetchUsers);
+
+watch(search, fetchUsers);
 });
 
 function getRoleTitle(row: UserRow) {

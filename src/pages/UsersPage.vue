@@ -14,6 +14,15 @@
         <q-icon name="search" />
       </template>
     </q-input>
+    <q-btn
+      v-if="hasUsersWithoutReferralCode"
+      label="Сгенерировать коды"
+      color="primary"
+      icon="vpn_key"
+      class="q-mb-md"
+      :loading="generatingCodes"
+      @click="generateReferralCodes"
+    />
     <AppResponsiveTable
       :rows="users"
       :columns="columns"
@@ -98,7 +107,7 @@
 <script setup lang="ts">
 import { api } from '@boot/axios';
 import type { QTableColumn } from 'quasar';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 
 import { getRoleOptionsForUser } from '@pages/users/role-options';
@@ -112,6 +121,7 @@ type UserRow = {
   role: number;
   role_name?: string;
   createdAt: string;
+  referralCode?: string | null;
 };
 
 const $q = useQuasar();
@@ -124,7 +134,12 @@ const roleTitles: Record<number, string> = {
 const users = ref<UserRow[]>([]);
 const loading = ref(false);
 const savingRoleIds = ref<number[]>([]);
+const generatingCodes = ref(false);
 const search = ref('');
+
+const hasUsersWithoutReferralCode = computed(() =>
+  users.value.some((u) => u.referralCode == null),
+);
 
 const columns: QTableColumn<UserRow>[] = [
   { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'width: 8%' },
@@ -234,5 +249,31 @@ async function updateRole(row: UserRow, role: number) {
   } finally {
     savingRoleIds.value = savingRoleIds.value.filter((id) => id !== row.id)
   }
+}
+
+function generateReferralCodes() {
+  $q.dialog({
+    title: 'Генерация реферальных кодов',
+    message: 'Сгенерировать referral_code для всех пользователей без кода?',
+    cancel: { label: 'Отмена', flat: true },
+    ok: { label: 'Сгенерировать', color: 'primary' },
+  }).onOk(async () => {
+    generatingCodes.value = true;
+    try {
+      const res = await api.post<{ generated: number }>('/api/admin/aex/generate-referral-codes');
+      $q.notify({
+        type: 'positive',
+        message: `Сгенерировано кодов: ${res.data.generated}`,
+      });
+      await fetchUsers();
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: getErrorMessage(error, 'Не удалось сгенерировать коды'),
+      });
+    } finally {
+      generatingCodes.value = false;
+    }
+  });
 }
 </script>

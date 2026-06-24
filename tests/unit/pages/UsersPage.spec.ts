@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import { Notify, Quasar } from 'quasar';
+import { Notify, Quasar, Dialog } from 'quasar';
 import { nextTick } from 'vue';
 import UsersPage from '@pages/UsersPage.vue';
 
@@ -214,5 +214,289 @@ describe('UsersPage', () => {
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.exists()).toBe(true);
+  });
+
+  describe('генерация referral_code', () => {
+    it('показывает кнопку «Сгенерировать коды» если есть пользователи без referral_code', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: [
+          {
+            id: 1,
+            username: 'alice',
+            first_name: 'Alice',
+            role: 9,
+            role_name: 'Пользователь',
+            createdAt: '2024-01-01',
+            referralCode: null,
+          },
+          {
+            id: 2,
+            username: 'bob',
+            first_name: 'Bob',
+            role: 9,
+            role_name: 'Пользователь',
+            createdAt: '2024-01-01',
+            referralCode: 'ABC12345',
+          },
+        ],
+      });
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      expect(btn).toBeTruthy();
+    });
+
+    it('не показывает кнопку если у всех пользователей есть referral_code', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: [
+          {
+            id: 1,
+            username: 'alice',
+            first_name: 'Alice',
+            role: 9,
+            role_name: 'Пользователь',
+            createdAt: '2024-01-01',
+            referralCode: 'ABC12345',
+          },
+        ],
+      });
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      expect(btn).toBeFalsy();
+    });
+
+    it('не показывает кнопку если нет пользователей', async () => {
+      vi.mocked(api.get).mockResolvedValue({ data: [] });
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      expect(btn).toBeFalsy();
+    });
+
+    it('при нажатии вызывает confirm dialog', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: [
+          {
+            id: 1,
+            username: 'alice',
+            first_name: 'Alice',
+            role: 9,
+            role_name: 'Пользователь',
+            createdAt: '2024-01-01',
+            referralCode: null,
+          },
+        ],
+      });
+      const onOk = vi.fn();
+      const dialogSpy = vi.spyOn(Dialog, 'create').mockReturnValue({
+        onOk: () => ({ onCancel: vi.fn() }),
+      } as ReturnType<typeof Dialog.create>);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      expect(btn).toBeTruthy();
+      await btn!.trigger('click');
+      await nextTick();
+
+      expect(dialogSpy).toHaveBeenCalled();
+      dialogSpy.mockRestore();
+    });
+
+    it('после подтверждения вызывает POST /api/admin/aex/generate-referral-codes', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: [
+          {
+            id: 1,
+            username: 'alice',
+            first_name: 'Alice',
+            role: 9,
+            role_name: 'Пользователь',
+            createdAt: '2024-01-01',
+            referralCode: null,
+          },
+        ],
+      });
+      vi.mocked(api.post).mockResolvedValue({ data: { generated: 1 } });
+
+      let okCallback: (() => void) | undefined;
+      const dialogSpy = vi.spyOn(Dialog, 'create').mockReturnValue({
+        onOk: (cb: () => void) => {
+          okCallback = cb;
+          return { onCancel: vi.fn() };
+        },
+      } as ReturnType<typeof Dialog.create>);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      await btn!.trigger('click');
+      await nextTick();
+
+      // Simulate user confirming the dialog
+      okCallback?.();
+      await flushPromises();
+
+      expect(api.post).toHaveBeenCalledWith('/api/admin/aex/generate-referral-codes');
+      dialogSpy.mockRestore();
+    });
+
+    it('после успешной генерации показывает notification и обновляет таблицу', async () => {
+      vi.mocked(api.get)
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 1,
+              username: 'alice',
+              first_name: 'Alice',
+              role: 9,
+              role_name: 'Пользователь',
+              createdAt: '2024-01-01',
+              referralCode: null,
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 1,
+              username: 'alice',
+              first_name: 'Alice',
+              role: 9,
+              role_name: 'Пользователь',
+              createdAt: '2024-01-01',
+              referralCode: 'ABC12345',
+            },
+          ],
+        });
+      vi.mocked(api.post).mockResolvedValue({ data: { generated: 1 } });
+
+      let okCallback: (() => void) | undefined;
+      const dialogSpy = vi.spyOn(Dialog, 'create').mockReturnValue({
+        onOk: (cb: () => void) => {
+          okCallback = cb;
+          return { onCancel: vi.fn() };
+        },
+      } as ReturnType<typeof Dialog.create>);
+
+      const notifySpy = vi.spyOn(Notify, 'create');
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      await btn!.trigger('click');
+      await nextTick();
+
+      okCallback?.();
+      await flushPromises();
+
+      expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
+      // Table should have refreshed — GET called twice (mount + after generate)
+      expect(api.get).toHaveBeenCalledTimes(2);
+      dialogSpy.mockRestore();
+    });
+
+    it('при ошибке генерации показывает negative notification', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: [
+          {
+            id: 1,
+            username: 'alice',
+            first_name: 'Alice',
+            role: 9,
+            role_name: 'Пользователь',
+            createdAt: '2024-01-01',
+            referralCode: null,
+          },
+        ],
+      });
+      vi.mocked(api.post).mockRejectedValue({
+        response: { data: { detail: 'Generation failed' } },
+      });
+
+      let okCallback: (() => void) | undefined;
+      const dialogSpy = vi.spyOn(Dialog, 'create').mockReturnValue({
+        onOk: (cb: () => void) => {
+          okCallback = cb;
+          return { onCancel: vi.fn() };
+        },
+      } as ReturnType<typeof Dialog.create>);
+
+      const notifySpy = vi.spyOn(Notify, 'create');
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      await btn!.trigger('click');
+      await nextTick();
+
+      okCallback?.();
+      await flushPromises();
+
+      expect(notifySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'negative',
+          message: 'Generation failed',
+        }),
+      );
+      dialogSpy.mockRestore();
+    });
+
+    it('кнопка в состоянии loading во время запроса генерации', async () => {
+      vi.mocked(api.get).mockResolvedValue({
+        data: [
+          {
+            id: 1,
+            username: 'alice',
+            first_name: 'Alice',
+            role: 9,
+            role_name: 'Пользователь',
+            createdAt: '2024-01-01',
+            referralCode: null,
+          },
+        ],
+      });
+
+      let resolvePost: ((value: { data: Record<string, unknown> }) => void) | undefined;
+      vi.mocked(api.post).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolvePost = resolve;
+          }) as ReturnType<typeof api.post>,
+      );
+
+      let okCallback: (() => void) | undefined;
+      const dialogSpy = vi.spyOn(Dialog, 'create').mockReturnValue({
+        onOk: (cb: () => void) => {
+          okCallback = cb;
+          return { onCancel: vi.fn() };
+        },
+      } as ReturnType<typeof Dialog.create>);
+
+      const wrapper = mountPage();
+      await flushPromises();
+
+      const btn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      await btn!.trigger('click');
+      await nextTick();
+
+      okCallback?.();
+      await nextTick();
+
+      // Button should be in loading state
+      const btnAfterClick = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      expect(btnAfterClick?.attributes('loading')).toBe('true');
+
+      resolvePost?.({ data: { generated: 1 } });
+      await flushPromises();
+
+      dialogSpy.mockRestore();
+    });
   });
 });

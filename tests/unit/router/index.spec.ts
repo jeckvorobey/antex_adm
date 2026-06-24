@@ -19,6 +19,10 @@ describe('router/index', () => {
     expect(paths).toContain('/admins');
     expect(paths).toContain('/broadcasts');
     expect(paths).toContain('/site-leads');
+    expect(paths).toContain('/aex/rates');
+    expect(paths).toContain('/aex/wallets');
+    expect(paths).toContain('/aex/journal');
+    expect(paths).toContain('/aex/manual-ops');
     expect(paths).not.toContain('/cards');
     expect(paths).not.toContain('/banks');
   });

@@ -11,6 +11,7 @@ vi.mock('src/boot/axios', () => ({
 const mockPush = vi.fn();
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush }),
+  useRoute: () => ({ path: '/dashboard' }),
   RouterView: { template: '<div />' },
 }));
 
@@ -34,13 +35,19 @@ describe('MainLayout', () => {
     vi.clearAllMocks();
   });
 
-  it('рендерит 8 пунктов навигации', () => {
+  it('рендерит пункты навигации включая AEX', () => {
     const wrapper = mountLayout();
+    // 7 обычных + 4 дочерних AEX (expansion item stub всегда показывает детей) + 1 header = 12
     const items = wrapper.findAll('.q-item');
-    expect(items.length).toBe(8);
+    expect(items.length).toBe(12);
   });
 
-  it('меню не содержит удалённые routes cards и banks', () => {
+  it('содержит expansion item для AEX', () => {
+    const wrapper = mountLayout();
+    expect(wrapper.find('.q-expansion-item').exists()).toBe(true);
+  });
+
+  it('меню содержит все основные routes', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
     for (const route of ['/dashboard', '/orders', '/site-leads', '/users', '/admins', '/rates', '/broadcasts', '/settings']) {
@@ -48,6 +55,15 @@ describe('MainLayout', () => {
     }
     expect(html).not.toContain('/cards');
     expect(html).not.toContain('/banks');
+  });
+
+  it('меню содержит ссылки на AEX подстраницы', () => {
+    const wrapper = mountLayout();
+    const html = wrapper.html();
+    expect(html).toContain('/aex/rates');
+    expect(html).toContain('/aex/wallets');
+    expect(html).toContain('/aex/journal');
+    expect(html).toContain('/aex/manual-ops');
   });
 
   it('logout кнопка вызывает authStore.logout', async () => {

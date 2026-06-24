@@ -327,6 +327,59 @@ config.global.stubs = {
   'q-toggle': QToggleStub,
   'q-badge': QBadgeStub,
   'q-table': QTableStub,
+  'q-expansion-item': defineComponent({
+    name: 'QExpansionItemStub',
+    props: {
+      icon: { type: String, default: undefined },
+      label: { type: String, default: '' },
+      defaultOpened: { type: Boolean, default: false },
+      headerClass: { type: String, default: '' },
+    },
+    setup(_props, { slots, attrs }) {
+      return () =>
+        h('div', { ...attrs, class: 'q-expansion-item' }, slotChildren(slots));
+    },
+  }),
+  'q-pagination': defineComponent({
+    name: 'QPaginationStub',
+    props: {
+      modelValue: { type: Number, default: 1 },
+      max: { type: Number, default: 1 },
+      maxPages: { type: Number, default: 7 },
+      boundaryNumbers: { type: Boolean, default: false },
+      directionLinks: { type: Boolean, default: false },
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit, attrs }) {
+      return () =>
+        h('div', { ...attrs, class: 'q-pagination' }, [
+          h('button', { onClick: () => emit('update:modelValue', props.modelValue + 1) }, ['next']),
+        ]);
+    },
+  }),
+  'q-btn-toggle': defineComponent({
+    name: 'QBtnToggleStub',
+    props: {
+      modelValue: { type: [String, Number, Boolean], default: null },
+      options: { type: Array, default: () => [] },
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit, attrs }) {
+      return () =>
+        h('div', { ...attrs, class: 'q-btn-toggle' }, [
+          ...(props.options as Array<Record<string, unknown>>).map((opt) =>
+            h(
+              'button',
+              {
+                onClick: () => emit('update:modelValue', opt.value),
+                class: props.modelValue === opt.value ? 'active' : '',
+              },
+              String(opt.label ?? ''),
+            ),
+          ),
+        ]);
+    },
+  }),
   'q-item': defineComponent({
     name: 'QItemStub',
     props: {

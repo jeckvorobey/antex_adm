@@ -227,7 +227,7 @@ describe('UsersPage', () => {
             role: 9,
             role_name: 'Пользователь',
             createdAt: '2024-01-01',
-            referralCode: null,
+            referral_code: null,
           },
           {
             id: 2,
@@ -236,7 +236,7 @@ describe('UsersPage', () => {
             role: 9,
             role_name: 'Пользователь',
             createdAt: '2024-01-01',
-            referralCode: 'ABC12345',
+            referral_code: 'ABC12345',
           },
         ],
       });
@@ -257,7 +257,7 @@ describe('UsersPage', () => {
             role: 9,
             role_name: 'Пользователь',
             createdAt: '2024-01-01',
-            referralCode: 'ABC12345',
+            referral_code: 'ABC12345',
           },
         ],
       });
@@ -287,7 +287,7 @@ describe('UsersPage', () => {
             role: 9,
             role_name: 'Пользователь',
             createdAt: '2024-01-01',
-            referralCode: null,
+            referral_code: null,
           },
         ],
       });
@@ -318,7 +318,7 @@ describe('UsersPage', () => {
             role: 9,
             role_name: 'Пользователь',
             createdAt: '2024-01-01',
-            referralCode: null,
+            referral_code: null,
           },
         ],
       });
@@ -358,7 +358,7 @@ describe('UsersPage', () => {
               role: 9,
               role_name: 'Пользователь',
               createdAt: '2024-01-01',
-              referralCode: null,
+              referral_code: null,
             },
           ],
         })
@@ -371,7 +371,7 @@ describe('UsersPage', () => {
               role: 9,
               role_name: 'Пользователь',
               createdAt: '2024-01-01',
-              referralCode: 'ABC12345',
+              referral_code: 'ABC12345',
             },
           ],
         });
@@ -412,7 +412,7 @@ describe('UsersPage', () => {
             role: 9,
             role_name: 'Пользователь',
             createdAt: '2024-01-01',
-            referralCode: null,
+            referral_code: null,
           },
         ],
       });
@@ -458,7 +458,7 @@ describe('UsersPage', () => {
             role: 9,
             role_name: 'Пользователь',
             createdAt: '2024-01-01',
-            referralCode: null,
+            referral_code: null,
           },
         ],
       });

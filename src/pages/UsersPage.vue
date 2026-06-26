@@ -91,6 +91,13 @@
         </q-td>
       </template>
 
+      <template #body-cell-referredBy="props">
+        <q-td :props="props" class="referral-number-cell">
+          <span v-if="props.row.referred_by != null">ID {{ props.row.referred_by }}</span>
+          <span v-else class="referral-empty">—</span>
+        </q-td>
+      </template>
+
       <template #body-cell-referralBalance="props">
         <q-td :props="props" class="referral-number-cell">
           <span v-if="props.row.balance != null">
@@ -104,13 +111,12 @@
         <q-td :props="props" class="referral-action-cell">
           <q-btn
             v-if="!props.row.referral_code && !generatingForUser(props.row.id)"
-            label="Создать код"
+            icon="vpn_key"
             size="sm"
             color="primary"
             flat
-            round
             dense
-            @click="generateReferralCodeForUser(props.row.id)"
+            @click="generateReferralCodeForUser(props.row)"
           >
             <q-tooltip>
               Создать реферальный код для этого пользователя
@@ -178,6 +184,11 @@
         <span v-else class="referral-empty">—</span>
       </template>
 
+      <template #mobile-field-referredBy="{ row }">
+        <span v-if="row.referred_by != null">ID {{ row.referred_by }}</span>
+        <span v-else class="referral-empty">—</span>
+      </template>
+
       <template #mobile-field-referralBalance="{ row }">
         <span v-if="row.balance != null">
           {{ formatBalance(row.balance) }}
@@ -188,16 +199,28 @@
       <template #mobile-field-referralAction="{ row }">
         <q-btn
           v-if="!row.referral_code && !generatingForUser(row.id)"
-          label="Создать код"
+          icon="vpn_key"
           size="sm"
           color="primary"
           flat
-          round
           dense
-          @click="generateReferralCodeForUser(row.id)"
+          @click="generateReferralCodeForUser(row)"
         >
           <q-tooltip>
             Создать реферальный код для этого пользователя
+          </q-tooltip>
+        </q-btn>
+        <q-btn
+          v-else-if="row.referral_code && !generatingForUser(row.id)"
+          icon="refresh"
+          size="sm"
+          color="primary"
+          flat
+          dense
+          @click="confirmRegenerateReferralCode(row)"
+        >
+          <q-tooltip>
+            Пересоздать реферальный код этого пользователя
           </q-tooltip>
         </q-btn>
         <q-btn
@@ -234,6 +257,7 @@ type UserRow = {
   role_name?: string
   createdAt: string
   referral_code?: string | null
+  referred_by?: number | null
   referral_rate_percent?: string | null
   balance?: string | null
 }
@@ -282,6 +306,13 @@ const columns: QTableColumn<UserRow>[] = [
     style: 'width: 84px; max-width: 104px',
   },
   {
+    name: 'referredBy',
+    label: 'Реферер',
+    field: 'referred_by',
+    align: 'center',
+    style: 'width: 92px; max-width: 112px',
+  },
+  {
     name: 'referralBalance',
     label: 'Баланс',
     field: 'balance',
@@ -315,6 +346,7 @@ const mobileConfig = {
     { name: 'role', label: 'Роль' },
     { name: 'referralCode', label: 'Реф. код' },
     { name: 'referralRatePercent', label: '% начисл.' },
+    { name: 'referredBy', label: 'Реферер' },
     { name: 'referralBalance', label: 'Баланс' },
     { name: 'referralAction', label: '' },
     { name: 'createdAt', label: 'Регистрация' },
@@ -448,23 +480,43 @@ function generateReferralCodes() {
   })
 }
 
-async function generateReferralCodeForUser(userId: number) {
+async function generateReferralCodeForUser(row: UserRow, regenerate = false) {
+  const userId = row.id
   if (generatingForUser(userId)) {
     return
   }
   generatingForUserIds.value.add(userId)
   try {
-    await api.post(`/api/admin/users/${userId}/generate-referral-code`)
-    $q.notify({ type: 'positive', message: 'Реферальный код создан' })
+    await api.post(`/api/admin/users/${userId}/generate-referral-code`, null, {
+      params: regenerate ? { regenerate: true } : undefined,
+    })
+    $q.notify({
+      type: 'positive',
+      message: regenerate ? 'Реферальный код обновлён' : 'Реферальный код создан',
+    })
     await fetchUsers()
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: getErrorMessage(error, 'Не удалось создать реферальный код'),
+      message: getErrorMessage(
+        error,
+        regenerate ? 'Не удалось обновить реферальный код' : 'Не удалось создать реферальный код',
+      ),
     })
   } finally {
     generatingForUserIds.value.delete(userId)
   }
+}
+
+function confirmRegenerateReferralCode(row: UserRow) {
+  $q.dialog({
+    title: 'Пересоздание реферального кода',
+    message: 'Пересоздать referral_code только для выбранного пользователя?',
+    cancel: { label: 'Отмена', flat: true },
+    ok: { label: 'Пересоздать', color: 'primary' },
+  }).onOk(() => {
+    void generateReferralCodeForUser(row, true)
+  })
 }
 </script>
 

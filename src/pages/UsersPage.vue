@@ -286,7 +286,7 @@ const columns: QTableColumn<UserRow>[] = [
     name: 'referralBalance',
     label: 'Баланс',
     field: 'balance',
-    align: 'right',
+    align: 'center',
     style: 'width: 112px; max-width: 140px',
   },
   {
@@ -340,7 +340,7 @@ function formatBalance(value: string | null | undefined): string {
   // Format with two decimal places and space as thousand separator
   const formatted = num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
   // Using ruble symbol as per common usage in the app
-  return `₽ ${formatted}`
+  return `${formatted}`
 }
 
 async function fetchUsers() {

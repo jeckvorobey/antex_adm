@@ -15,7 +15,6 @@
       </template>
     </q-input>
     <q-btn
-      v-if="hasUsersWithoutReferralCode"
       label="Сгенерировать коды"
       color="primary"
       icon="vpn_key"

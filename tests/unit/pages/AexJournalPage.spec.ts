@@ -25,7 +25,7 @@ describe('AexJournalPage', () => {
     mountPage();
     await flushPromises();
     expect(api.get).toHaveBeenCalledWith('/api/admin/aex/operations', {
-      params: { page: 1, limit: 20 },
+      params: { offset: 0, limit: 20 },
     });
   });
 
@@ -79,7 +79,7 @@ describe('AexJournalPage', () => {
     expect(wrapper.html()).toContain('Начисление');
   });
 
-  it('отображает пагинацию при большом количестве', async () => {
+  it('для большого total использует серверную пагинацию таблицы', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: {
         data: [{ id: 1, userId: 100, type: 'credit', amount: 50, balanceBefore: 100, balanceAfter: 150, createdAt: '2026-06-24T10:00:00Z' }],
@@ -88,10 +88,10 @@ describe('AexJournalPage', () => {
     });
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.find('.q-pagination').exists()).toBe(true);
+    expect(wrapper.find('.q-table').attributes('pagination')).toContain('[object Object]');
   });
 
-  it('не показывает пагинацию при малом количестве', async () => {
+  it('без данных не рендерит отдельный q-pagination', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: {
         data: [{ id: 1, userId: 100, type: 'credit', amount: 50, balanceBefore: 100, balanceAfter: 150, createdAt: '2026-06-24T10:00:00Z' }],

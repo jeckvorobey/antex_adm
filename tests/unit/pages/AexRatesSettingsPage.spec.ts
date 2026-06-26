@@ -34,13 +34,17 @@ describe('AexRatesSettingsPage', () => {
   it('загружает персональные ставки при монтировании', async () => {
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/rates/personal');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/rates/personal', {
+      params: { limit: 10, offset: 0 },
+    });
   });
 
   it('загружает партнёрские ставки при монтировании', async () => {
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/rates/partner');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/rates/partner', {
+      params: { limit: 10, offset: 0 },
+    });
   });
 
   it('отображает персональные ставки из API', async () => {

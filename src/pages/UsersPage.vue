@@ -28,10 +28,16 @@
       :columns="columns"
       row-key="id"
       :loading="loading"
+      :loading-more="loadingMore"
+      :has-more="hasMore"
+      :pagination="pagination"
       :mobile="mobileConfig"
       table-style="table-layout: fixed; width: 100%"
       flat
       bordered
+      @request="handleTableRequest"
+      @update:pagination="handlePaginationUpdate"
+      @load-more="handleLoadMore"
     >
       <template #body-cell-role="props">
         <q-td :props="props">
@@ -259,10 +265,19 @@ const roleTitles: Record<number, string> = {
 
 const users = ref<UserRow[]>([])
 const loading = ref(false)
+const loadingMore = ref(false)
+const hasMore = ref(false)
 const savingRoleIds = ref<number[]>([])
 const generatingCodes = ref(false)
 const generatingForUserIds = ref<Set<number>>(new Set())
 const search = ref('')
+const pagination = ref({
+  sortBy: null,
+  descending: false,
+  page: 1,
+  rowsPerPage: 20,
+  rowsNumber: 0,
+})
 
 const hasUsersWithoutReferralCode = computed(() =>
   users.value.some((u) => u.referral_code == null)
@@ -363,20 +378,86 @@ function formatBalance(value: string | null | undefined): string {
 }
 
 async function fetchUsers() {
+  const limit = pagination.value.rowsPerPage
+  const offset = (pagination.value.page - 1) * limit
   loading.value = true
   try {
-    const params = search.value ? { search: search.value } : undefined
-    const res = await api.get<UserRow[]>('/api/admin/users', { params })
-    users.value = res.data
+    const params: Record<string, unknown> = { limit, offset }
+    if (search.value) {
+      params.search = search.value
+    }
+    const res = await api.get<{
+      items: UserRow[]
+      total: number
+      limit: number
+      offset: number
+    }>('/api/admin/users', { params })
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit, offset }
+      : res.data
+    users.value = payload.items
+    pagination.value = {
+      ...pagination.value,
+      rowsNumber: payload.total,
+      rowsPerPage: payload.limit,
+      page: Math.floor(payload.offset / payload.limit) + 1,
+    }
+    hasMore.value = payload.offset + payload.items.length < payload.total
   } catch {
     users.value = []
+    pagination.value = { ...pagination.value, rowsNumber: 0 }
+    hasMore.value = false
   } finally {
     loading.value = false
   }
 }
 
 onMounted(fetchUsers)
-watch(search, fetchUsers)
+watch(search, async () => {
+  pagination.value = { ...pagination.value, page: 1 }
+  await fetchUsers()
+})
+
+async function handleTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+  pagination.value = { ...pagination.value, ...payload.pagination }
+  await fetchUsers()
+}
+
+function handlePaginationUpdate(value: Record<string, unknown>) {
+  pagination.value = { ...pagination.value, ...value }
+}
+
+async function handleLoadMore({ done }: { done: () => void }) {
+  if (loadingMore.value || !hasMore.value) {
+    done()
+    return
+  }
+  loadingMore.value = true
+  try {
+    const params: Record<string, unknown> = {
+      limit: pagination.value.rowsPerPage,
+      offset: users.value.length,
+    }
+    if (search.value) {
+      params.search = search.value
+    }
+    const res = await api.get<{
+      items: UserRow[]
+      total: number
+      limit: number
+      offset: number
+    }>('/api/admin/users', { params })
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit: pagination.value.rowsPerPage, offset: users.value.length }
+      : res.data
+    users.value = [...users.value, ...payload.items]
+    pagination.value = { ...pagination.value, rowsNumber: payload.total }
+    hasMore.value = payload.offset + payload.items.length < payload.total
+  } finally {
+    loadingMore.value = false
+    done()
+  }
+}
 
 function getRoleTitle(row: UserRow) {
   return row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`

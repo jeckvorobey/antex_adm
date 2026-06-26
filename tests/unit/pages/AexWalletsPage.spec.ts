@@ -24,7 +24,9 @@ describe('AexWalletsPage', () => {
   it('вызывает /api/admin/aex/wallets при монтировании', async () => {
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/wallets', { params: undefined });
+    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/wallets', {
+      params: { limit: 20, offset: 0 },
+    });
   });
 
   it('отображает список кошельков', async () => {
@@ -62,7 +64,9 @@ describe('AexWalletsPage', () => {
     // debounce 300ms, подождём
     await new Promise((r) => setTimeout(r, 350));
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/wallets', { params: { search: 'alice' } });
+    expect(api.get).toHaveBeenLastCalledWith('/api/admin/aex/wallets', {
+      params: { limit: 20, offset: 0, search: 'alice' },
+    });
   });
 
   it('не падает при ошибке загрузки', async () => {

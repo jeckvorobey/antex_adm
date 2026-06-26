@@ -23,7 +23,9 @@ describe('UsersPage', () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/users', { params: undefined });
+    expect(api.get).toHaveBeenCalledWith('/api/admin/users', {
+      params: { limit: 20, offset: 0 },
+    });
   });
 
   it('рендерит таблицу пользователей', async () => {

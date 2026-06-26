@@ -2,7 +2,6 @@
   <q-page class="q-pa-md">
     <div class="text-h5 q-mb-md">Журнал операций AEX</div>
 
-    <!-- Фильтры -->
     <div class="row q-gutter-sm q-mb-md items-end">
       <q-input
         v-model="filterUserId"
@@ -65,10 +64,16 @@
       :columns="columns"
       row-key="id"
       :loading="loading"
+      :loading-more="loadingMore"
+      :has-more="hasMore"
+      :pagination="pagination"
       :mobile="mobileConfig"
       table-style="table-layout: fixed; width: 100%"
       flat
       bordered
+      @request="handleTableRequest"
+      @update:pagination="handlePaginationUpdate"
+      @load-more="handleLoadMore"
     >
       <template #body-cell-amount="props">
         <q-td :props="props">
@@ -98,18 +103,6 @@
         </q-badge>
       </template>
     </AppResponsiveTable>
-
-    <!-- Пагинация -->
-    <div v-if="totalPages > 1" class="row justify-center q-mt-md">
-      <q-pagination
-        v-model="currentPage"
-        :max="totalPages"
-        :max-pages="7"
-        boundary-numbers
-        direction-links
-        @update:model-value="fetchOperations"
-      />
-    </div>
   </q-page>
 </template>
 
@@ -134,13 +127,25 @@ interface AexOperationRow {
   createdAt: string;
 }
 
+type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
 const operations = ref<AexOperationRow[]>([]);
 const loading = ref(false);
-const currentPage = ref(1);
-const totalPages = ref(1);
-const pageSize = 20;
+const loadingMore = ref(false);
+const hasMore = ref(false);
+const pagination = ref({
+  sortBy: null,
+  descending: false,
+  page: 1,
+  rowsPerPage: 20,
+  rowsNumber: 0,
+});
 
-// Фильтры
 const filterUserId = ref<string>('');
 const filterType = ref<string | null>(null);
 const filterDateFrom = ref<string>('');
@@ -149,10 +154,8 @@ const filterDateTo = ref<string>('');
 const typeOptions = [
   { value: 'credit', label: 'Начисление' },
   { value: 'debit', label: 'Списание' },
-  { value: 'referral', label: 'Реферальное' },
-  { value: 'partner', label: 'Партнёрское' },
-  { value: 'manual_credit', label: 'Ручное начисление' },
-  { value: 'manual_debit', label: 'Ручное списание' },
+  { value: 'hold', label: 'Холд' },
+  { value: 'release', label: 'Разморозка' },
 ];
 
 const columns: QTableColumn<AexOperationRow>[] = [
@@ -165,22 +168,8 @@ const columns: QTableColumn<AexOperationRow>[] = [
     align: 'left',
     style: 'width: 18%',
   },
-  {
-    name: 'type',
-    label: 'Тип',
-    field: 'type',
-    align: 'left',
-    sortable: true,
-    style: 'width: 13%',
-  },
-  {
-    name: 'amount',
-    label: 'Сумма',
-    field: 'amount',
-    align: 'right',
-    sortable: true,
-    style: 'width: 12%',
-  },
+  { name: 'type', label: 'Тип', field: 'type', align: 'left', sortable: true, style: 'width: 13%' },
+  { name: 'amount', label: 'Сумма', field: 'amount', align: 'right', sortable: true, style: 'width: 12%' },
   {
     name: 'balanceBefore',
     label: 'До',
@@ -224,51 +213,86 @@ const mobileConfig = {
   ],
 };
 
-async function fetchOperations() {
-  loading.value = true;
+onMounted(fetchOperations);
+
+watch([filterUserId, filterType, filterDateFrom, filterDateTo], async () => {
+  pagination.value = { ...pagination.value, page: 1 };
+  await fetchOperations();
+});
+
+async function fetchOperations(options?: { append?: boolean; offset?: number; limit?: number }) {
+  const append = options?.append ?? false;
+  const limit = options?.limit ?? pagination.value.rowsPerPage;
+  const offset = options?.offset ?? (pagination.value.page - 1) * limit;
+  if (append) {
+    loadingMore.value = true;
+  } else {
+    loading.value = true;
+  }
   try {
-    const params: Record<string, unknown> = {
-      page: currentPage.value,
-      limit: pageSize,
-    };
-    if (filterUserId.value) params.userId = filterUserId.value;
+    const params: Record<string, unknown> = { limit, offset };
+    if (filterUserId.value) params.userId = Number(filterUserId.value);
     if (filterType.value) params.type = filterType.value;
     if (filterDateFrom.value) params.dateFrom = filterDateFrom.value;
     if (filterDateTo.value) params.dateTo = filterDateTo.value;
 
-    const res = await api.get<{ data: AexOperationRow[]; total: number }>('/api/admin/aex/operations', { params });
-    operations.value = Array.isArray(res.data.data) ? res.data.data : [];
-    totalPages.value = Math.ceil((res.data.total || 0) / pageSize);
+    const res = await api.get<PaginatedResponse<AexOperationRow>>('/api/admin/aex/operations', { params });
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit, offset }
+      : ('data' in res.data && Array.isArray((res.data as { data?: AexOperationRow[] }).data))
+        ? { items: (res.data as { data: AexOperationRow[]; total: number }).data, total: (res.data as { total: number }).total, limit, offset }
+        : res.data;
+    const nextRows = Array.isArray(payload.items) ? payload.items : [];
+    operations.value = append ? [...operations.value, ...nextRows] : nextRows;
+    pagination.value = {
+      ...pagination.value,
+      rowsNumber: payload.total,
+      rowsPerPage: payload.limit,
+      page: Math.floor(payload.offset / payload.limit) + 1,
+    };
+    hasMore.value = payload.offset + nextRows.length < payload.total;
   } catch {
-    operations.value = [];
-    totalPages.value = 1;
+    if (!append) {
+      operations.value = [];
+      pagination.value = { ...pagination.value, rowsNumber: 0 };
+      hasMore.value = false;
+    }
   } finally {
     loading.value = false;
+    loadingMore.value = false;
   }
 }
 
-onMounted(fetchOperations);
+async function handleTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+  pagination.value = { ...pagination.value, ...payload.pagination };
+  await fetchOperations();
+}
 
-// Сброс на первую страницу при изменении фильтров
-watch([filterUserId, filterType, filterDateFrom, filterDateTo], () => {
-  currentPage.value = 1;
-  fetchOperations();
-});
+function handlePaginationUpdate(value: Record<string, unknown>) {
+  pagination.value = { ...pagination.value, ...value };
+}
+
+async function handleLoadMore({ done }: { done: () => void }) {
+  await fetchOperations({
+    append: true,
+    offset: operations.value.length,
+    limit: pagination.value.rowsPerPage,
+  });
+  done();
+}
 
 function getTypeLabel(type: string): string {
-  const found = typeOptions.find((t) => t.value === type);
+  const found = typeOptions.find((item) => item.value === type);
   return found?.label ?? type;
 }
 
 function getTypeColor(type: string): string {
   switch (type) {
     case 'credit':
-    case 'manual_credit':
-    case 'referral':
-    case 'partner':
+    case 'release':
       return 'positive';
     case 'debit':
-    case 'manual_debit':
+    case 'hold':
       return 'negative';
     default:
       return 'grey';

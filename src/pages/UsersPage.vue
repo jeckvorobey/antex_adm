@@ -212,19 +212,6 @@
           </q-tooltip>
         </q-btn>
         <q-btn
-          v-else-if="row.referral_code && !generatingForUser(row.id)"
-          icon="refresh"
-          size="sm"
-          color="primary"
-          flat
-          dense
-          @click="confirmRegenerateReferralCode(row)"
-        >
-          <q-tooltip>
-            Пересоздать реферальный код этого пользователя
-          </q-tooltip>
-        </q-btn>
-        <q-btn
           v-else-if="generatingForUser(row.id)"
           size="sm"
           color="primary"

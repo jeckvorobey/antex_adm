@@ -350,6 +350,16 @@ interface AexRateRow {
   updatedAt: string;
 }
 
+interface AexRateRowApi {
+  id: number;
+  userId: number;
+  username?: string | null;
+  firstName?: string | null;
+  rate: string | number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const $q = useQuasar();
 
 // --- Глобальная ставка ---
@@ -483,8 +493,8 @@ onMounted(async () => {
 // --- API: Глобальная ставка ---
 async function loadGlobalRate() {
   try {
-    const res = await api.get<{ rate: number; updatedAt: string }>('/api/admin/aex/rate');
-    globalRate.value = res.data.rate;
+    const res = await api.get<{ rate: string | number; updatedAt: string }>('/api/admin/aex/rate');
+    globalRate.value = parseRateNumber(res.data.rate);
     globalRateUpdatedAt.value = res.data.updatedAt;
   } catch {
     // fallback to default
@@ -494,10 +504,10 @@ async function loadGlobalRate() {
 async function saveGlobalRate() {
   savingGlobal.value = true;
   try {
-    const res = await api.put<{ rate: number; updatedAt: string }>('/api/admin/aex/rate', {
+    const res = await api.put<{ rate: string | number; updatedAt: string }>('/api/admin/aex/rate', {
       rate: globalRate.value,
     });
-    globalRate.value = res.data.rate;
+    globalRate.value = parseRateNumber(res.data.rate);
     globalRateUpdatedAt.value = res.data.updatedAt;
     $q.notify({ type: 'positive', message: 'Глобальная ставка сохранена' });
   } catch {
@@ -514,7 +524,7 @@ async function loadPersonalRates() {
   loadingPersonal.value = true;
   try {
     const res = await api.get<{
-      items: AexRateRow[];
+      items: AexRateRowApi[];
       total: number;
       limit: number;
       offset: number;
@@ -522,7 +532,7 @@ async function loadPersonalRates() {
     const payload = Array.isArray(res.data)
       ? { items: res.data, total: res.data.length, limit, offset }
       : res.data;
-    personalRates.value = Array.isArray(payload.items) ? payload.items : [];
+    personalRates.value = Array.isArray(payload.items) ? payload.items.map(mapRateRow) : [];
     personalPagination.value = {
       ...personalPagination.value,
       rowsNumber: payload.total,
@@ -589,7 +599,7 @@ async function loadPartnerRates() {
   loadingPartner.value = true;
   try {
     const res = await api.get<{
-      items: AexRateRow[];
+      items: AexRateRowApi[];
       total: number;
       limit: number;
       offset: number;
@@ -597,7 +607,7 @@ async function loadPartnerRates() {
     const payload = Array.isArray(res.data)
       ? { items: res.data, total: res.data.length, limit, offset }
       : res.data;
-    partnerRates.value = Array.isArray(payload.items) ? payload.items : [];
+    partnerRates.value = Array.isArray(payload.items) ? payload.items.map(mapRateRow) : [];
     partnerPagination.value = {
       ...partnerPagination.value,
       rowsNumber: payload.total,
@@ -631,7 +641,7 @@ async function handlePersonalLoadMore({ done }: { done: () => void }) {
   loadingMorePersonal.value = true;
   try {
     const res = await api.get<{
-      items: AexRateRow[];
+      items: AexRateRowApi[];
       total: number;
       limit: number;
       offset: number;
@@ -644,7 +654,7 @@ async function handlePersonalLoadMore({ done }: { done: () => void }) {
     const payload = Array.isArray(res.data)
       ? { items: res.data, total: res.data.length, limit: personalPagination.value.rowsPerPage, offset: personalRates.value.length }
       : res.data;
-    personalRates.value = [...personalRates.value, ...payload.items];
+    personalRates.value = [...personalRates.value, ...payload.items.map(mapRateRow)];
     personalPagination.value = { ...personalPagination.value, rowsNumber: payload.total };
     hasMorePersonal.value = payload.offset + payload.items.length < payload.total;
   } finally {
@@ -670,7 +680,7 @@ async function handlePartnerLoadMore({ done }: { done: () => void }) {
   loadingMorePartner.value = true;
   try {
     const res = await api.get<{
-      items: AexRateRow[];
+      items: AexRateRowApi[];
       total: number;
       limit: number;
       offset: number;
@@ -683,7 +693,7 @@ async function handlePartnerLoadMore({ done }: { done: () => void }) {
     const payload = Array.isArray(res.data)
       ? { items: res.data, total: res.data.length, limit: partnerPagination.value.rowsPerPage, offset: partnerRates.value.length }
       : res.data;
-    partnerRates.value = [...partnerRates.value, ...payload.items];
+    partnerRates.value = [...partnerRates.value, ...payload.items.map(mapRateRow)];
     partnerPagination.value = { ...partnerPagination.value, rowsNumber: payload.total };
     hasMorePartner.value = payload.offset + payload.items.length < payload.total;
   } finally {
@@ -738,5 +748,16 @@ async function deletePartnerRate(row: AexRateRow) {
 // --- Утилиты ---
 function formatRate(value: number) {
   return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
+}
+
+function parseRateNumber(value: string | number): number {
+  return typeof value === 'number' ? value : Number(value);
+}
+
+function mapRateRow(row: AexRateRowApi): AexRateRow {
+  return {
+    ...row,
+    rate: parseRateNumber(row.rate),
+  };
 }
 </script>

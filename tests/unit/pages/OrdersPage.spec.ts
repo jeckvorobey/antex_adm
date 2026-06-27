@@ -22,7 +22,9 @@ describe('OrdersPage', () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/orders');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/orders', {
+      params: { limit: 20, offset: 0 },
+    });
   });
 
   it('показывает loading=true во время загрузки', () => {

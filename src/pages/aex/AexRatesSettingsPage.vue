@@ -61,11 +61,16 @@
         :columns="personalColumns"
         row-key="id"
         :loading="loadingPersonal"
+        :loading-more="loadingMorePersonal"
+        :has-more="hasMorePersonal"
+        :pagination="personalPagination"
         :mobile="personalMobileConfig"
         table-style="table-layout: fixed; width: 100%"
         flat
         dense
-        :pagination="{ rowsPerPage: 10 }"
+        @request="handlePersonalTableRequest"
+        @update:pagination="handlePersonalPaginationUpdate"
+        @load-more="handlePersonalLoadMore"
       >
         <template #body-cell-rate="props">
           <q-td :props="props">
@@ -161,11 +166,16 @@
         :columns="partnerColumns"
         row-key="id"
         :loading="loadingPartner"
+        :loading-more="loadingMorePartner"
+        :has-more="hasMorePartner"
+        :pagination="partnerPagination"
         :mobile="partnerMobileConfig"
         table-style="table-layout: fixed; width: 100%"
         flat
         dense
-        :pagination="{ rowsPerPage: 10 }"
+        @request="handlePartnerTableRequest"
+        @update:pagination="handlePartnerPaginationUpdate"
+        @load-more="handlePartnerLoadMore"
       >
         <template #body-cell-rate="props">
           <q-td :props="props">
@@ -340,6 +350,16 @@ interface AexRateRow {
   updatedAt: string;
 }
 
+interface AexRateRowApi {
+  id: number;
+  userId: number;
+  username?: string | null;
+  firstName?: string | null;
+  rate: string | number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const $q = useQuasar();
 
 // --- Глобальная ставка ---
@@ -350,8 +370,17 @@ const savingGlobal = ref(false);
 // --- Персональные ставки ---
 const personalRates = ref<AexRateRow[]>([]);
 const loadingPersonal = ref(false);
+const loadingMorePersonal = ref(false);
+const hasMorePersonal = ref(false);
 const personalDialog = ref(false);
 const savingPersonal = ref(false);
+const personalPagination = ref({
+  sortBy: null,
+  descending: false,
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+});
 const personalForm = ref<{ userId: number | null; rate: number }>({
   userId: null,
   rate: 0,
@@ -400,8 +429,17 @@ const personalMobileConfig = {
 // --- Партнёрские ставки ---
 const partnerRates = ref<AexRateRow[]>([]);
 const loadingPartner = ref(false);
+const loadingMorePartner = ref(false);
+const hasMorePartner = ref(false);
 const partnerDialog = ref(false);
 const savingPartner = ref(false);
+const partnerPagination = ref({
+  sortBy: null,
+  descending: false,
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+});
 const partnerForm = ref<{ userId: number | null; rate: number }>({
   userId: null,
   rate: 0,
@@ -455,8 +493,8 @@ onMounted(async () => {
 // --- API: Глобальная ставка ---
 async function loadGlobalRate() {
   try {
-    const res = await api.get<{ rate: number; updatedAt: string }>('/api/admin/aex/rate');
-    globalRate.value = res.data.rate;
+    const res = await api.get<{ rate: string | number; updatedAt: string }>('/api/admin/aex/rate');
+    globalRate.value = parseRateNumber(res.data.rate);
     globalRateUpdatedAt.value = res.data.updatedAt;
   } catch {
     // fallback to default
@@ -466,10 +504,10 @@ async function loadGlobalRate() {
 async function saveGlobalRate() {
   savingGlobal.value = true;
   try {
-    const res = await api.put<{ rate: number; updatedAt: string }>('/api/admin/aex/rate', {
+    const res = await api.put<{ rate: string | number; updatedAt: string }>('/api/admin/aex/rate', {
       rate: globalRate.value,
     });
-    globalRate.value = res.data.rate;
+    globalRate.value = parseRateNumber(res.data.rate);
     globalRateUpdatedAt.value = res.data.updatedAt;
     $q.notify({ type: 'positive', message: 'Глобальная ставка сохранена' });
   } catch {
@@ -481,12 +519,31 @@ async function saveGlobalRate() {
 
 // --- API: Персональные ставки ---
 async function loadPersonalRates() {
+  const limit = personalPagination.value.rowsPerPage;
+  const offset = (personalPagination.value.page - 1) * limit;
   loadingPersonal.value = true;
   try {
-    const res = await api.get<AexRateRow[]>('/api/admin/aex/rates/personal');
-    personalRates.value = Array.isArray(res.data) ? res.data : [];
+    const res = await api.get<{
+      items: AexRateRowApi[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/aex/rates/personal', { params: { limit, offset } });
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit, offset }
+      : res.data;
+    personalRates.value = Array.isArray(payload.items) ? payload.items.map(mapRateRow) : [];
+    personalPagination.value = {
+      ...personalPagination.value,
+      rowsNumber: payload.total,
+      rowsPerPage: payload.limit,
+      page: Math.floor(payload.offset / payload.limit) + 1,
+    };
+    hasMorePersonal.value = payload.offset + personalRates.value.length < payload.total;
   } catch {
     personalRates.value = [];
+    personalPagination.value = { ...personalPagination.value, rowsNumber: 0 };
+    hasMorePersonal.value = false;
   } finally {
     loadingPersonal.value = false;
   }
@@ -537,14 +594,111 @@ async function deletePersonalRate(row: AexRateRow) {
 
 // --- API: Партнёрские ставки ---
 async function loadPartnerRates() {
+  const limit = partnerPagination.value.rowsPerPage;
+  const offset = (partnerPagination.value.page - 1) * limit;
   loadingPartner.value = true;
   try {
-    const res = await api.get<AexRateRow[]>('/api/admin/aex/rates/partner');
-    partnerRates.value = Array.isArray(res.data) ? res.data : [];
+    const res = await api.get<{
+      items: AexRateRowApi[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/aex/rates/partner', { params: { limit, offset } });
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit, offset }
+      : res.data;
+    partnerRates.value = Array.isArray(payload.items) ? payload.items.map(mapRateRow) : [];
+    partnerPagination.value = {
+      ...partnerPagination.value,
+      rowsNumber: payload.total,
+      rowsPerPage: payload.limit,
+      page: Math.floor(payload.offset / payload.limit) + 1,
+    };
+    hasMorePartner.value = payload.offset + partnerRates.value.length < payload.total;
   } catch {
     partnerRates.value = [];
+    partnerPagination.value = { ...partnerPagination.value, rowsNumber: 0 };
+    hasMorePartner.value = false;
   } finally {
     loadingPartner.value = false;
+  }
+}
+
+async function handlePersonalTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+  personalPagination.value = { ...personalPagination.value, ...payload.pagination };
+  await loadPersonalRates();
+}
+
+function handlePersonalPaginationUpdate(value: Record<string, unknown>) {
+  personalPagination.value = { ...personalPagination.value, ...value };
+}
+
+async function handlePersonalLoadMore({ done }: { done: () => void }) {
+  if (loadingMorePersonal.value || !hasMorePersonal.value) {
+    done();
+    return;
+  }
+  loadingMorePersonal.value = true;
+  try {
+    const res = await api.get<{
+      items: AexRateRowApi[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/aex/rates/personal', {
+      params: {
+        limit: personalPagination.value.rowsPerPage,
+        offset: personalRates.value.length,
+      },
+    });
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit: personalPagination.value.rowsPerPage, offset: personalRates.value.length }
+      : res.data;
+    personalRates.value = [...personalRates.value, ...payload.items.map(mapRateRow)];
+    personalPagination.value = { ...personalPagination.value, rowsNumber: payload.total };
+    hasMorePersonal.value = payload.offset + payload.items.length < payload.total;
+  } finally {
+    loadingMorePersonal.value = false;
+    done();
+  }
+}
+
+async function handlePartnerTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+  partnerPagination.value = { ...partnerPagination.value, ...payload.pagination };
+  await loadPartnerRates();
+}
+
+function handlePartnerPaginationUpdate(value: Record<string, unknown>) {
+  partnerPagination.value = { ...partnerPagination.value, ...value };
+}
+
+async function handlePartnerLoadMore({ done }: { done: () => void }) {
+  if (loadingMorePartner.value || !hasMorePartner.value) {
+    done();
+    return;
+  }
+  loadingMorePartner.value = true;
+  try {
+    const res = await api.get<{
+      items: AexRateRowApi[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/aex/rates/partner', {
+      params: {
+        limit: partnerPagination.value.rowsPerPage,
+        offset: partnerRates.value.length,
+      },
+    });
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit: partnerPagination.value.rowsPerPage, offset: partnerRates.value.length }
+      : res.data;
+    partnerRates.value = [...partnerRates.value, ...payload.items.map(mapRateRow)];
+    partnerPagination.value = { ...partnerPagination.value, rowsNumber: payload.total };
+    hasMorePartner.value = payload.offset + payload.items.length < payload.total;
+  } finally {
+    loadingMorePartner.value = false;
+    done();
   }
 }
 
@@ -594,5 +748,16 @@ async function deletePartnerRate(row: AexRateRow) {
 // --- Утилиты ---
 function formatRate(value: number) {
   return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
+}
+
+function parseRateNumber(value: string | number): number {
+  return typeof value === 'number' ? value : Number(value);
+}
+
+function mapRateRow(row: AexRateRowApi): AexRateRow {
+  return {
+    ...row,
+    rate: parseRateNumber(row.rate),
+  };
 }
 </script>

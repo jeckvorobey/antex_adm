@@ -202,33 +202,6 @@
         </span>
         <span v-else class="referral-empty">—</span>
       </template>
-
-      <template #mobile-field-referralAction="{ row }">
-        <q-btn
-          v-if="!row.referral_code && !generatingForUser(row.id)"
-          icon="vpn_key"
-          size="sm"
-          color="primary"
-          flat
-          dense
-          @click="generateReferralCodeForUser(row)"
-        >
-          <q-tooltip>
-            Создать реферальный код для этого пользователя
-          </q-tooltip>
-        </q-btn>
-        <q-btn
-          v-else-if="generatingForUser(row.id)"
-          size="sm"
-          color="primary"
-          flat
-          round
-          dense
-          disable
-        >
-          <q-spinner size="sm" color="white" />
-        </q-btn>
-      </template>
     </AppResponsiveTable>
   </q-page>
 </template>
@@ -351,7 +324,6 @@ const mobileConfig = {
     { name: 'referralRatePercent', label: '% начисл.' },
     { name: 'referredBy', label: 'Реферер' },
     { name: 'referralBalance', label: 'Баланс' },
-    { name: 'referralAction', label: '' },
     { name: 'createdAt', label: 'Регистрация' },
   ],
 }

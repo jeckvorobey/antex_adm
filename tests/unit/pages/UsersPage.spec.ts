@@ -62,6 +62,43 @@ describe('UsersPage', () => {
     expect(wrapper.find('.q-table').attributes('table-style')).toContain('table-layout: fixed');
   });
 
+  it('на mobile-карточке не рендерит лишний referralAction-ряд', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          username: 'johndoe',
+          first_name: 'John',
+          role: 9,
+          role_name: 'Пользователь',
+          createdAt: '2024-01-01',
+          referral_code: 'ABC12345',
+          referral_rate_percent: '0.2',
+          referred_by: 2,
+          balance: '1240.5',
+        },
+      ],
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const mobileLabels = wrapper
+      .find('.app-responsive-table__mobile')
+      .findAll('.app-responsive-table__field-label')
+      .map((node) => node.text());
+
+    expect(mobileLabels).toEqual([
+      'ID',
+      'Имя',
+      'Роль',
+      'Реф. код',
+      '% начисл.',
+      'Реферер',
+      'Баланс',
+      'Регистрация',
+    ]);
+  });
+
   it('показывает popup-edit для смены роли без оператора', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: [

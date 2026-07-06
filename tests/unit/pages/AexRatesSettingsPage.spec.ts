@@ -24,11 +24,26 @@ describe('AexRatesSettingsPage', () => {
   it('загружает глобальную ставку при монтировании', async () => {
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: '2026-06-24T10:00:00Z' } });
+      if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '100', updatedAt: '2026-06-24T10:00:00Z' } });
       return Promise.resolve({ data: [] });
     });
     mountPage();
     await flushPromises();
     expect(api.get).toHaveBeenCalledWith('/api/admin/aex/rate');
+  });
+
+  it('загружает лимит вывода AEX из admin config', async () => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
+      if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: null } });
+      if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '750', updatedAt: '2026-06-24T10:00:00Z' } });
+      return Promise.resolve({ data: [] });
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(api.get).toHaveBeenCalledWith('/api/admin/config');
+    expect(wrapper.html()).toContain('Лимит вывода AEX');
+    expect(wrapper.find('[data-testid="aex-withdraw-limit-input"] input').attributes('value')).toBe('750');
   });
 
   it('загружает персональные ставки при монтировании', async () => {
@@ -85,6 +100,7 @@ describe('AexRatesSettingsPage', () => {
   it('сохраняет глобальную ставку через PUT', async () => {
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: null } });
+      if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '100', updatedAt: null } });
       return Promise.resolve({ data: [] });
     });
     vi.mocked(api.put).mockResolvedValue({ data: { rate: 0.3, updatedAt: '2026-06-24T12:00:00Z' } });
@@ -98,6 +114,45 @@ describe('AexRatesSettingsPage', () => {
 
     expect(api.put).toHaveBeenCalledWith('/api/admin/aex/rate', { rate: 0.2 });
     expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
+  });
+
+  it('сохраняет лимит вывода AEX через PATCH admin config', async () => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
+      if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: null } });
+      if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '750', updatedAt: null } });
+      return Promise.resolve({ data: [] });
+    });
+    vi.mocked(api.patch).mockResolvedValue({
+      data: { aexWithdrawLimit: '900', updatedAt: '2026-06-24T12:00:00Z' },
+    });
+    const notifySpy = vi.spyOn(Notify, 'create');
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.find('[data-testid="aex-withdraw-limit-input"] input').setValue(900);
+    await wrapper.find('[data-testid="save-aex-withdraw-limit"]').trigger('click');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', { aexWithdrawLimit: 900 });
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
+  });
+
+  it('не отправляет отрицательный лимит вывода AEX', async () => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
+      if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: null } });
+      if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '100', updatedAt: null } });
+      return Promise.resolve({ data: [] });
+    });
+    const notifySpy = vi.spyOn(Notify, 'create');
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.find('[data-testid="aex-withdraw-limit-input"] input').setValue(-1);
+    await wrapper.find('[data-testid="save-aex-withdraw-limit"]').trigger('click');
+    await flushPromises();
+
+    expect(api.patch).not.toHaveBeenCalledWith('/api/admin/config', expect.anything());
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'negative' }));
   });
 
   it('не падает при ошибке загрузки', async () => {

@@ -37,6 +37,43 @@
       </q-card-section>
     </q-card>
 
+    <!-- Лимит вывода AEX -->
+    <q-card class="q-mb-md">
+      <q-card-section>
+        <div class="text-subtitle1">Лимит вывода AEX</div>
+        <div class="text-caption text-grey-7 q-mt-xs">
+          Порог доступного баланса, после которого AEX показывается в miniapp рядом с RUB и USDT
+        </div>
+      </q-card-section>
+      <q-card-section>
+        <div class="row items-start q-gutter-md">
+          <q-input
+            v-model.number="aexWithdrawLimit"
+            data-testid="aex-withdraw-limit-input"
+            type="number"
+            min="0"
+            step="0.01"
+            dense
+            outlined
+            label="Лимит вывода (AEX)"
+            style="max-width: 220px"
+            :disable="savingAexWithdrawLimit"
+            :rules="[(val) => Number(val) >= 0 || 'Лимит не может быть отрицательным']"
+          />
+          <q-btn
+            data-testid="save-aex-withdraw-limit"
+            color="primary"
+            label="Сохранить"
+            :loading="savingAexWithdrawLimit"
+            @click="saveAexWithdrawLimit"
+          />
+          <span v-if="aexWithdrawLimitUpdatedAt" class="text-caption text-grey-7 q-pt-sm">
+            Обновлено: {{ formatAdminDateTime(aexWithdrawLimitUpdatedAt) }}
+          </span>
+        </div>
+      </q-card-section>
+    </q-card>
+
     <!-- Персональные ставки -->
     <q-card class="q-mb-md">
       <q-card-section>
@@ -360,12 +397,22 @@ interface AexRateRowApi {
   updatedAt: string;
 }
 
+interface AdminConfigApi {
+  aexWithdrawLimit?: string | number;
+  updatedAt?: string | null;
+}
+
 const $q = useQuasar();
 
 // --- Глобальная ставка ---
 const globalRate = ref<number>(0.2);
 const globalRateUpdatedAt = ref<string | null>(null);
 const savingGlobal = ref(false);
+
+// --- Лимит вывода AEX ---
+const aexWithdrawLimit = ref<number>(100);
+const aexWithdrawLimitUpdatedAt = ref<string | null>(null);
+const savingAexWithdrawLimit = ref(false);
 
 // --- Персональные ставки ---
 const personalRates = ref<AexRateRow[]>([]);
@@ -487,7 +534,12 @@ const partnerMobileConfig = {
 
 // --- Lifecycle ---
 onMounted(async () => {
-  await Promise.all([loadGlobalRate(), loadPersonalRates(), loadPartnerRates()]);
+  await Promise.all([
+    loadGlobalRate(),
+    loadAexWithdrawLimit(),
+    loadPersonalRates(),
+    loadPartnerRates(),
+  ]);
 });
 
 // --- API: Глобальная ставка ---
@@ -514,6 +566,44 @@ async function saveGlobalRate() {
     $q.notify({ type: 'negative', message: 'Не удалось сохранить ставку' });
   } finally {
     savingGlobal.value = false;
+  }
+}
+
+// --- API: Лимит вывода AEX ---
+/** Загружает глобальный AEX-порог из общего admin config. */
+async function loadAexWithdrawLimit() {
+  try {
+    const res = await api.get<AdminConfigApi>('/api/admin/config');
+    if (res.data.aexWithdrawLimit !== undefined) {
+      aexWithdrawLimit.value = parseRateNumber(res.data.aexWithdrawLimit);
+    }
+    aexWithdrawLimitUpdatedAt.value = res.data.updatedAt ?? null;
+  } catch {
+    // fallback to default
+  }
+}
+
+/** Сохраняет AEX-порог, не затрагивая настройки ставок начисления. */
+async function saveAexWithdrawLimit() {
+  if (aexWithdrawLimit.value < 0 || Number.isNaN(aexWithdrawLimit.value)) {
+    $q.notify({ type: 'negative', message: 'Лимит вывода не может быть отрицательным' });
+    return;
+  }
+
+  savingAexWithdrawLimit.value = true;
+  try {
+    const res = await api.patch<AdminConfigApi>('/api/admin/config', {
+      aexWithdrawLimit: aexWithdrawLimit.value,
+    });
+    if (res.data.aexWithdrawLimit !== undefined) {
+      aexWithdrawLimit.value = parseRateNumber(res.data.aexWithdrawLimit);
+    }
+    aexWithdrawLimitUpdatedAt.value = res.data.updatedAt ?? null;
+    $q.notify({ type: 'positive', message: 'Лимит вывода AEX сохранён' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Не удалось сохранить лимит вывода AEX' });
+  } finally {
+    savingAexWithdrawLimit.value = false;
   }
 }
 

@@ -29,7 +29,6 @@
             <q-btn-toggle
               v-model="form.operationType"
               no-caps
-              rounded
               unelevated
               spread
               toggle-color="primary"

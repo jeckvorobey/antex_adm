@@ -15,8 +15,6 @@
         <q-select
           v-model="filterType"
           :options="typeOptions"
-          option-value="value"
-          option-label="label"
           emit-value
           map-options
           dense
@@ -24,14 +22,14 @@
           clearable
           label="Тип операции"
         >
-          <template #option="{ opt }">
-            <q-item>
+          <template #option="scope">
+            <q-item v-bind="scope.itemProps">
               <q-item-section>
                 <div class="row items-center no-wrap">
-                  <q-icon :name="opt.icon" :color="opt.color" class="q-mr-sm" />
-                  <span>{{ opt.label }}</span>
+                  <q-icon :name="scope.opt.icon" :color="scope.opt.color" class="q-mr-sm" />
+                  <span>{{ scope.opt.label }}</span>
                 </div>
-                <div class="text-caption text-grey-7">{{ opt.description }}</div>
+                <div class="text-caption text-grey-7">{{ scope.opt.description }}</div>
               </q-item-section>
             </q-item>
           </template>

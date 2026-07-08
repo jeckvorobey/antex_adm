@@ -88,6 +88,7 @@ describe('AexManualOpsPage', () => {
 
     await wrapper.find('.q-select__input').setValue('alice');
     await flushPromises();
+
     await wrapper.find('select').setValue('42');
     await flushPromises();
 

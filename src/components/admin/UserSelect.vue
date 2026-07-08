@@ -6,7 +6,6 @@
     :placeholder="placeholder"
     :loading="loading"
     :rules="rules"
-    option-value="id"
     :option-label="formatUserLabel"
     use-input
     clearable

@@ -72,7 +72,9 @@ describe('UserSelect', () => {
 
     await wrapper.find('.q-select__input').setValue('alice');
     await flushPromises();
+
     await wrapper.find('select').setValue('42');
+    await flushPromises();
 
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([42]);
   });

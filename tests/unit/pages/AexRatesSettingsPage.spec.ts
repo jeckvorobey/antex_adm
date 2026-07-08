@@ -32,7 +32,7 @@ describe('AexRatesSettingsPage', () => {
     expect(api.get).toHaveBeenCalledWith('/api/admin/aex/rate');
   });
 
-  it('загружает лимит вывода AEX из admin config', async () => {
+  it('загружает лимит вывода ATXG из admin config', async () => {
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: null } });
       if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '750', updatedAt: '2026-06-24T10:00:00Z' } });
@@ -42,7 +42,7 @@ describe('AexRatesSettingsPage', () => {
     await flushPromises();
 
     expect(api.get).toHaveBeenCalledWith('/api/admin/config');
-    expect(wrapper.html()).toContain('Лимит вывода AEX');
+    expect(wrapper.html()).toContain('Лимит вывода ATXG');
     expect(wrapper.find('[data-testid="aex-withdraw-limit-input"] input').attributes('value')).toBe('750');
   });
 
@@ -116,7 +116,7 @@ describe('AexRatesSettingsPage', () => {
     expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
   });
 
-  it('сохраняет лимит вывода AEX через PATCH admin config', async () => {
+  it('сохраняет лимит вывода ATXG через PATCH admin config', async () => {
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: null } });
       if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '750', updatedAt: null } });
@@ -137,7 +137,7 @@ describe('AexRatesSettingsPage', () => {
     expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
   });
 
-  it('не отправляет отрицательный лимит вывода AEX', async () => {
+  it('не отправляет отрицательный лимит вывода ATXG', async () => {
     vi.mocked(api.get).mockImplementation((url: string) => {
       if (url === '/api/admin/aex/rate') return Promise.resolve({ data: { rate: 0.2, updatedAt: null } });
       if (url === '/api/admin/config') return Promise.resolve({ data: { aexWithdrawLimit: '100', updatedAt: null } });

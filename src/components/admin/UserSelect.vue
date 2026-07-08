@@ -202,7 +202,7 @@ function formatUserDetails(user: AdminUserOption): string {
     telegramId ? `TG ${telegramId}` : '',
     user.phone ? `Телефон ${user.phone}` : '',
     user.email ? `Email ${user.email}` : '',
-    getAexBalance(user) ? `AEX ${getAexBalance(user)}` : '',
+    getAexBalance(user) ? `ATXG ${getAexBalance(user)}` : '',
   ].filter(Boolean);
   return details.length > 0 ? details.join(' · ') : '';
 }

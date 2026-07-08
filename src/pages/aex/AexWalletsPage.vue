@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Кошельки AEX</div>
+    <div class="text-h5 q-mb-md">Кошельки ATXG</div>
 
     <q-input
       v-model="search"

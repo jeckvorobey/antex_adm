@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Журнал операций AEX</div>
+    <div class="text-h5 q-mb-md">Журнал операций ATXG</div>
 
     <div class="row q-col-gutter-sm q-mb-md items-end">
       <div class="col-12 col-sm-6 col-md-3">
@@ -175,10 +175,10 @@ const filterDateFrom = ref<string>('');
 const filterDateTo = ref<string>('');
 
 const typeOptions = [
-  { value: 'credit', label: 'Начисление', icon: 'add_circle', color: 'positive', description: 'Пополнение AEX баланса' },
-  { value: 'debit', label: 'Списание', icon: 'remove_circle', color: 'negative', description: 'Списание AEX баланса' },
-  { value: 'hold', label: 'Холд', icon: 'lock', color: 'warning', description: 'Резервирование AEX' },
-  { value: 'release', label: 'Разморозка', icon: 'lock_open', color: 'positive', description: 'Возврат зарезервированных AEX' },
+  { value: 'credit', label: 'Начисление', icon: 'add_circle', color: 'positive', description: 'Пополнение ATXG баланса' },
+  { value: 'debit', label: 'Списание', icon: 'remove_circle', color: 'negative', description: 'Списание ATXG баланса' },
+  { value: 'hold', label: 'Холд', icon: 'lock', color: 'warning', description: 'Резервирование ATXG' },
+  { value: 'release', label: 'Разморозка', icon: 'lock_open', color: 'positive', description: 'Возврат зарезервированных ATXG' },
 ];
 
 const columns: QTableColumn<AexOperationRow>[] = [

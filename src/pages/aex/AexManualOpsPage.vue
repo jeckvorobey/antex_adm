@@ -1,12 +1,12 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Ручные операции AEX</div>
+    <div class="text-h5 q-mb-md">Ручные операции ATXG</div>
 
     <q-card>
       <q-card-section>
-        <div class="text-subtitle1">Начисление / списание AEX</div>
+        <div class="text-subtitle1">Начисление / списание ATXG</div>
         <div class="text-caption text-grey-7 q-mt-xs">
-          Ручное начисление или списание AEX пользователю с указанием причины
+          Ручное начисление или списание ATXG пользователю с указанием причины
         </div>
       </q-card-section>
 
@@ -43,7 +43,7 @@
 
           <q-input
             v-model.number="form.amount"
-            :label="form.operationType === 'credit' ? 'Сумма начисления (AEX)' : 'Сумма списания (AEX)'"
+            :label="form.operationType === 'credit' ? 'Сумма начисления (ATXG)' : 'Сумма списания (ATXG)'"
             type="number"
             min="0.01"
             step="0.01"
@@ -70,7 +70,7 @@
             <q-btn
               type="submit"
               :color="form.operationType === 'credit' ? 'positive' : 'negative'"
-              :label="form.operationType === 'credit' ? 'Начислить AEX' : 'Списать AEX'"
+              :label="form.operationType === 'credit' ? 'Начислить ATXG' : 'Списать ATXG'"
               :icon="form.operationType === 'credit' ? 'add_circle' : 'remove_circle'"
               :loading="submitting"
               :disable="!selectedUser"
@@ -110,7 +110,7 @@
                 class="text-weight-medium q-ml-sm"
                 :class="form.operationType === 'credit' ? 'text-positive' : 'text-negative'"
               >
-                {{ form.operationType === 'credit' ? '+' : '-' }}{{ formatAmount(form.amount) }} AEX
+                {{ form.operationType === 'credit' ? '+' : '-' }}{{ formatAmount(form.amount) }} ATXG
               </span>
             </div>
             <div>

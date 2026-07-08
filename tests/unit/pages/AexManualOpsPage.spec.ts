@@ -31,7 +31,7 @@ describe('AexManualOpsPage', () => {
   it('по умолчанию выбрано начисление', async () => {
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.html()).toContain('Начислить AEX');
+    expect(wrapper.html()).toContain('Начислить ATXG');
   });
 
   it('отображает кнопки переключения типа операции', async () => {
@@ -41,7 +41,7 @@ describe('AexManualOpsPage', () => {
     expect(wrapper.html()).toContain('Списание');
   });
 
-  it('кнопка отправки содержит текст Начислить AEX по умолчанию', async () => {
+  it('кнопка отправки содержит текст Начислить ATXG по умолчанию', async () => {
     const wrapper = mountPage();
     await flushPromises();
     const submitBtn = wrapper.findAll('button').find((b) => b.text().includes('Начислить'));
@@ -57,7 +57,7 @@ describe('AexManualOpsPage', () => {
   it('отображает заголовок страницы', async () => {
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.html()).toContain('Ручные операции AEX');
+    expect(wrapper.html()).toContain('Ручные операции ATXG');
   });
 
   it('содержит q-form для валидации', async () => {
@@ -126,7 +126,7 @@ describe('AexManualOpsPage', () => {
     await debitButton?.trigger('click');
     await flushPromises();
 
-    expect(wrapper.html()).toContain('Списать AEX');
+    expect(wrapper.html()).toContain('Списать ATXG');
     expect(wrapper.html()).toContain('Сумма списания');
   });
 });

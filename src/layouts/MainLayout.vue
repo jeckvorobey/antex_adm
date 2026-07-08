@@ -81,7 +81,7 @@ const menu: MenuItem[] = [
   { to: '/rates', icon: 'trending_up', label: 'Курсы' },
   {
     icon: 'token',
-    label: 'AEX',
+    label: 'ATXG',
     children: [
       { to: '/aex/rates', icon: 'tune', label: 'Настройки ставок' },
       { to: '/aex/wallets', icon: 'account_balance_wallet', label: 'Кошельки' },

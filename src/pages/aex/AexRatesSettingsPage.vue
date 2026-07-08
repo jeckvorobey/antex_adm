@@ -1,13 +1,13 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Настройки ставок AEX</div>
+    <div class="text-h5 q-mb-md">Настройки ставок ATXG</div>
 
     <!-- Глобальная ставка -->
     <q-card class="q-mb-md">
       <q-card-section>
-        <div class="text-subtitle1">Глобальная ставка AEX</div>
+        <div class="text-subtitle1">Глобальная ставка ATXG</div>
         <div class="text-caption text-grey-7 q-mt-xs">
-          Базовая ставка начисления AEX для всех пользователей
+          Базовая ставка начисления ATXG для всех пользователей
         </div>
       </q-card-section>
       <q-card-section>
@@ -37,12 +37,12 @@
       </q-card-section>
     </q-card>
 
-    <!-- Лимит вывода AEX -->
+    <!-- Лимит вывода ATXG -->
     <q-card class="q-mb-md">
       <q-card-section>
-        <div class="text-subtitle1">Лимит вывода AEX</div>
+        <div class="text-subtitle1">Лимит вывода ATXG</div>
         <div class="text-caption text-grey-7 q-mt-xs">
-          Порог доступного баланса, после которого AEX показывается в miniapp рядом с RUB и USDT
+          Порог доступного баланса, после которого ATXG показывается в miniapp рядом с RUB и USDT
         </div>
       </q-card-section>
       <q-card-section>
@@ -55,7 +55,7 @@
             step="0.01"
             dense
             outlined
-            label="Лимит вывода (AEX)"
+            label="Лимит вывода (ATXG)"
             style="max-width: 220px"
             :disable="savingAexWithdrawLimit"
             :rules="[(val) => Number(val) >= 0 || 'Лимит не может быть отрицательным']"
@@ -409,7 +409,7 @@ const globalRate = ref<number>(0.2);
 const globalRateUpdatedAt = ref<string | null>(null);
 const savingGlobal = ref(false);
 
-// --- Лимит вывода AEX ---
+// --- Лимит вывода ATXG ---
 const aexWithdrawLimit = ref<number>(100);
 const aexWithdrawLimitUpdatedAt = ref<string | null>(null);
 const savingAexWithdrawLimit = ref(false);
@@ -569,8 +569,8 @@ async function saveGlobalRate() {
   }
 }
 
-// --- API: Лимит вывода AEX ---
-/** Загружает глобальный AEX-порог из общего admin config. */
+// --- API: Лимит вывода ATXG ---
+/** Загружает глобальный ATXG-порог из общего admin config. */
 async function loadAexWithdrawLimit() {
   try {
     const res = await api.get<AdminConfigApi>('/api/admin/config');
@@ -583,7 +583,7 @@ async function loadAexWithdrawLimit() {
   }
 }
 
-/** Сохраняет AEX-порог, не затрагивая настройки ставок начисления. */
+/** Сохраняет ATXG-порог, не затрагивая настройки ставок начисления. */
 async function saveAexWithdrawLimit() {
   if (aexWithdrawLimit.value < 0 || Number.isNaN(aexWithdrawLimit.value)) {
     $q.notify({ type: 'negative', message: 'Лимит вывода не может быть отрицательным' });
@@ -599,9 +599,9 @@ async function saveAexWithdrawLimit() {
       aexWithdrawLimit.value = parseRateNumber(res.data.aexWithdrawLimit);
     }
     aexWithdrawLimitUpdatedAt.value = res.data.updatedAt ?? null;
-    $q.notify({ type: 'positive', message: 'Лимит вывода AEX сохранён' });
+    $q.notify({ type: 'positive', message: 'Лимит вывода ATXG сохранён' });
   } catch {
-    $q.notify({ type: 'negative', message: 'Не удалось сохранить лимит вывода AEX' });
+    $q.notify({ type: 'negative', message: 'Не удалось сохранить лимит вывода ATXG' });
   } finally {
     savingAexWithdrawLimit.value = false;
   }

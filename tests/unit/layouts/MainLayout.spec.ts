@@ -35,14 +35,14 @@ describe('MainLayout', () => {
     vi.clearAllMocks();
   });
 
-  it('рендерит пункты навигации включая AEX', () => {
+  it('рендерит пункты навигации включая ATXG', () => {
     const wrapper = mountLayout();
-    // 7 обычных + 4 дочерних AEX (expansion item stub всегда показывает детей) + 1 header = 12
+    // 7 обычных + 4 дочерних ATXG (expansion item stub всегда показывает детей) + 1 header = 12
     const items = wrapper.findAll('.q-item');
     expect(items.length).toBe(12);
   });
 
-  it('содержит expansion item для AEX', () => {
+  it('содержит expansion item для ATXG', () => {
     const wrapper = mountLayout();
     expect(wrapper.find('.q-expansion-item').exists()).toBe(true);
   });
@@ -57,7 +57,7 @@ describe('MainLayout', () => {
     expect(html).not.toContain('/banks');
   });
 
-  it('меню содержит ссылки на AEX подстраницы', () => {
+  it('меню содержит ссылки на ATXG подстраницы', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
     expect(html).toContain('/aex/rates');

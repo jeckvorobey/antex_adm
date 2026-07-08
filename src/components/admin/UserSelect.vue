@@ -8,32 +8,23 @@
     :rules="rules"
     emit-value
     map-options
-    option-value="value"
-    option-label="label"
     use-input
     clearable
-    hide-selected
-    fill-input
     dense
     outlined
     input-debounce="300"
     @filter="filterUsers"
-    @update:model-value="handleSelected"
     @clear="handleClear"
   >
     <template #prepend>
       <q-icon name="person_search" />
     </template>
 
-    <template #option="{ opt }">
-      <q-item>
+    <template #option="scope">
+      <q-item v-bind="scope.itemProps">
         <q-item-section>
-          <div class="text-body2 text-weight-medium">
-            {{ formatUserLabel(opt.raw ?? opt) }}
-          </div>
-          <div class="text-caption text-grey-7">
-            {{ formatUserDetails(opt.raw ?? opt) }}
-          </div>
+          <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label caption>{{ formatUserDetails(scope.opt.raw) }}</q-item-label>
         </q-item-section>
       </q-item>
     </template>
@@ -87,7 +78,6 @@ const emit = defineEmits<{
 
 const options = ref<SelectOption[]>([]);
 const selectedId = ref<number | null>(null);
-const selectedUser = ref<AdminUserOption | null>(null);
 const loading = ref(false);
 
 let searchAbortController: AbortController | null = null;
@@ -100,7 +90,6 @@ watch(
     selectedId.value = value;
 
     if (!value) {
-      selectedUser.value = null;
       emit('update:selectedUser', null);
       return;
     }
@@ -109,6 +98,13 @@ watch(
   },
   { immediate: true },
 );
+
+watch(selectedId, (value) => {
+  if (value === props.modelValue) return;
+  emit('update:modelValue', value);
+  const option = options.value.find((o) => o.value === value);
+  emit('update:selectedUser', option?.raw ?? null);
+});
 
 onBeforeUnmount(() => {
   searchAbortController?.abort();
@@ -127,7 +123,7 @@ async function filterUsers(
   const query = search.trim();
   if (!query) {
     update(() => {
-      options.value = selectedUser.value ? [toOption(selectedUser.value)] : [];
+      options.value = [];
     });
     return;
   }
@@ -158,17 +154,8 @@ async function filterUsers(
   }
 }
 
-function handleSelected(value: number | null) {
-  selectedId.value = value;
-  const option = options.value.find((o) => o.value === value);
-  selectedUser.value = option?.raw ?? null;
-  emit('update:modelValue', value);
-  emit('update:selectedUser', selectedUser.value);
-}
-
 function handleClear() {
   selectedId.value = null;
-  selectedUser.value = null;
   options.value = [];
   emit('update:modelValue', null);
   emit('update:selectedUser', null);
@@ -184,12 +171,10 @@ async function hydrateUser(userId: number) {
       signal: hydrateAbortController.signal,
     });
     const opt = toOption(response.data);
-    selectedUser.value = response.data;
     options.value = [opt];
     emit('update:selectedUser', response.data);
   } catch (error: unknown) {
     if (!isAbortError(error)) {
-      selectedUser.value = null;
       emit('update:selectedUser', null);
     }
   } finally {
@@ -219,7 +204,7 @@ function formatUserDetails(user: AdminUserOption): string {
     user.email ? `Email ${user.email}` : '',
     getAexBalance(user) ? `AEX ${getAexBalance(user)}` : '',
   ].filter(Boolean);
-  return details.length > 0 ? details.join(' · ') : 'Нет дополнительных данных';
+  return details.length > 0 ? details.join(' · ') : '';
 }
 
 function getUserFullName(user: AdminUserOption): string {

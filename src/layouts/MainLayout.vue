@@ -37,7 +37,7 @@
               clickable
               :to="child.to"
               active-class="text-primary"
-              inset-level="1"
+              :inset-level="1"
             >
               <q-item-section avatar><q-icon :name="child.icon" /></q-item-section>
               <q-item-section>{{ child.label }}</q-item-section>

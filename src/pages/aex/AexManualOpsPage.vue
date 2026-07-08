@@ -12,48 +12,26 @@
 
       <q-card-section>
         <q-form @submit.prevent="onSubmit" class="q-gutter-md">
-          <div style="max-width: 400px">
-            <q-input
-              v-model.number="form.userId"
-              label="ID пользователя"
-              type="number"
-              dense
-              outlined
-              :rules="[(val) => !!val || 'Обязательное поле']"
-              @update:model-value="onUserIdChange"
-            />
-            <!-- Информация о пользователе -->
-            <div v-if="userLookup.loading" class="q-mt-xs">
-              <q-spinner-dots size="16px" color="primary" />
-              <span class="text-caption text-grey-7 q-ml-xs">Поиск пользователя...</span>
-            </div>
-            <div
-              v-else-if="userLookup.name"
-              class="q-mt-xs q-pa-xs bg-green-1 rounded-borders"
-            >
-              <q-icon name="check_circle" color="positive" size="16px" class="q-mr-xs" />
-              <span class="text-caption text-weight-medium">
-                {{ userLookup.name }}
-                <span v-if="userLookup.username" class="text-grey-7">
-                  (@{{ userLookup.username }})
-                </span>
-              </span>
-            </div>
-            <div
-              v-else-if="userLookup.error"
-              class="q-mt-xs q-pa-xs bg-red-1 rounded-borders"
-            >
-              <q-icon name="error" color="negative" size="16px" class="q-mr-xs" />
-              <span class="text-caption text-negative">{{ userLookup.error }}</span>
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-md-6">
+              <UserSelect
+                v-model="form.userId"
+                v-model:selected-user="selectedUser"
+                label="Пользователь"
+                placeholder="ID, username, имя, телефон"
+                :rules="[(val) => !!val || 'Обязательное поле']"
+              />
             </div>
           </div>
 
-          <div class="row q-gutter-sm">
+          <div class="column q-gutter-xs">
+            <div class="text-caption text-grey-7">Тип операции</div>
             <q-btn-toggle
               v-model="form.operationType"
               no-caps
               rounded
               unelevated
+              spread
               toggle-color="primary"
               color="grey-3"
               text-color="grey-8"
@@ -96,7 +74,7 @@
               :label="form.operationType === 'credit' ? 'Начислить AEX' : 'Списать AEX'"
               :icon="form.operationType === 'credit' ? 'add_circle' : 'remove_circle'"
               :loading="submitting"
-              :disable="!userLookup.name"
+              :disable="!selectedUser"
             />
           </div>
         </q-form>
@@ -117,10 +95,7 @@
             <div>
               <span class="text-grey-7">Пользователь:</span>
               <span class="text-weight-medium q-ml-sm">
-                {{ userLookup.name }}
-                <span v-if="userLookup.username" class="text-grey-7">
-                  (@{{ userLookup.username }})
-                </span>
+                {{ selectedUser ? formatSelectedUser(selectedUser) : '—' }}
                 (ID: {{ form.userId }})
               </span>
             </div>
@@ -162,10 +137,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 
 import { api } from '@boot/axios';
+import UserSelect from '@components/admin/UserSelect.vue';
+import type { AdminUserOption } from '@/types/admin-user';
 
 const $q = useQuasar();
 
@@ -178,68 +155,11 @@ const form = ref({
 
 const submitting = ref(false);
 const confirmDialog = ref(false);
-
-const userLookup = reactive({
-  loading: false,
-  name: '',
-  username: '',
-  error: '',
-});
-
-let lookupAbortController: AbortController | null = null;
-let lookupTimeout: ReturnType<typeof setTimeout> | null = null;
-
-function onUserIdChange() {
-  // Сбрасываем предыдущий таймер
-  if (lookupTimeout) {
-    clearTimeout(lookupTimeout);
-  }
-
-  // Сбрасываем состояние поиска при изменении ID
-  userLookup.name = '';
-  userLookup.username = '';
-  userLookup.error = '';
-
-  const userId = form.value.userId;
-  if (!userId || userId <= 0) return;
-
-  // Debounce 500ms
-  lookupTimeout = setTimeout(() => {
-    void lookupUser(userId);
-  }, 500);
-}
-
-async function lookupUser(userId: number) {
-  // Отменяем предыдущий запрос
-  if (lookupAbortController) {
-    lookupAbortController.abort();
-  }
-  lookupAbortController = new AbortController();
-
-  userLookup.loading = true;
-  userLookup.error = '';
-  userLookup.name = '';
-  userLookup.username = '';
-
-  try {
-    const response = await api.get(`/api/admin/users/${userId}`, {
-      signal: lookupAbortController.signal,
-    });
-    const userData = response.data;
-    userLookup.name = userData.name || userData.full_name || 'Без имени';
-    userLookup.username = userData.username || '';
-  } catch (err: unknown) {
-    if (err instanceof Error && err.name === 'CanceledError') return;
-    if (err instanceof Error && err.name === 'AbortError') return;
-    userLookup.error = 'Пользователь не найден';
-  } finally {
-    userLookup.loading = false;
-  }
-}
+const selectedUser = ref<AdminUserOption | null>(null);
 
 function onSubmit() {
   if (!form.value.userId || form.value.amount <= 0 || !form.value.description.trim()) return;
-  if (!userLookup.name) return;
+  if (!selectedUser.value) return;
   confirmDialog.value = true;
 }
 
@@ -258,9 +178,7 @@ async function executeOperation() {
     });
     confirmDialog.value = false;
     form.value = { userId: null, operationType: 'credit', amount: 0, description: '' };
-    userLookup.name = '';
-    userLookup.username = '';
-    userLookup.error = '';
+    selectedUser.value = null;
     $q.notify({
       type: 'positive',
       message: 'Операция выполнена успешно',
@@ -277,5 +195,18 @@ async function executeOperation() {
 
 function formatAmount(value: number) {
   return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatSelectedUser(user: AdminUserOption): string {
+  const firstName = user.first_name ?? user.firstName ?? '';
+  const lastName = user.last_name ?? user.lastName ?? '';
+  const name = user.fullName ?? user.name ?? [firstName, lastName].filter(Boolean).join(' ');
+  if (user.username && name) {
+    return `${name} (@${user.username})`;
+  }
+  if (user.username) {
+    return `@${user.username}`;
+  }
+  return name || `ID ${user.id}`;
 }
 </script>

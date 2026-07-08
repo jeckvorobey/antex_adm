@@ -110,6 +110,59 @@ describe('AexJournalPage', () => {
     expect(btns.some((t) => t.includes('Обновить'))).toBe(true);
   });
 
+  it('фильтрует операции по выбранному пользователю из autocomplete', async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+    vi.mocked(api.get).mockClear();
+
+    wrapper.findComponent({ name: 'UserSelect' }).vm.$emit('update:modelValue', 100);
+    await flushPromises();
+
+    expect(api.get).toHaveBeenCalledWith('/api/admin/aex/operations', {
+      params: { offset: 0, limit: 20, userId: 100 },
+    });
+  });
+
+  it('отправляет даты в backend-safe формате после выбора через QDate', async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+    vi.mocked(api.get).mockClear();
+
+    const dates = wrapper.findAll('.q-date');
+    await dates[0]?.setValue('16.04.2026');
+    await flushPromises();
+    await dates[1]?.setValue('18.04.2026');
+    await flushPromises();
+
+    expect(api.get).toHaveBeenLastCalledWith('/api/admin/aex/operations', {
+      params: {
+        offset: 0,
+        limit: 20,
+        dateFrom: '2026-04-16',
+        dateTo: '2026-04-18',
+      },
+    });
+  });
+
+  it('отображает hold как warning badge', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        items: [
+          { id: 1, userId: 100, username: 'alice', type: 'hold', amount: 50, balanceBefore: 100, balanceAfter: 100, createdAt: '2026-06-24T10:00:00Z' },
+        ],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.html()).toContain('Холд');
+    expect(wrapper.find('.bg-warning').exists()).toBe(true);
+  });
+
   it('не падает при ошибке загрузки', async () => {
     vi.mocked(api.get).mockRejectedValue(new Error('500'));
     const wrapper = mountPage();

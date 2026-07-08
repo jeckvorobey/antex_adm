@@ -2,61 +2,91 @@
   <q-page class="q-pa-md">
     <div class="text-h5 q-mb-md">Журнал операций AEX</div>
 
-    <div class="row q-gutter-sm q-mb-md items-end">
-      <q-input
-        v-model="filterUserId"
-        debounce="300"
-        dense
-        outlined
-        placeholder="ID пользователя"
-        type="number"
-        style="max-width: 160px"
-      >
-        <template #prepend>
-          <q-icon name="person" />
-        </template>
-      </q-input>
+    <div class="row q-col-gutter-sm q-mb-md items-end">
+      <div class="col-12 col-sm-6 col-md-3">
+        <UserSelect
+          v-model="filterUserId"
+          label="Пользователь"
+          placeholder="ID, username, имя, телефон"
+        />
+      </div>
 
-      <q-select
-        v-model="filterType"
-        :options="typeOptions"
-        option-value="value"
-        option-label="label"
-        emit-value
-        map-options
-        dense
-        outlined
-        clearable
-        placeholder="Тип операции"
-        style="max-width: 220px"
-      />
+      <div class="col-12 col-sm-6 col-md-2">
+        <q-select
+          v-model="filterType"
+          :options="typeOptions"
+          option-value="value"
+          option-label="label"
+          emit-value
+          map-options
+          dense
+          outlined
+          clearable
+          label="Тип операции"
+        >
+          <template #option="{ opt }">
+            <q-item>
+              <q-item-section>
+                <div class="row items-center no-wrap">
+                  <q-icon :name="opt.icon" :color="opt.color" class="q-mr-sm" />
+                  <span>{{ opt.label }}</span>
+                </div>
+                <div class="text-caption text-grey-7">{{ opt.description }}</div>
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
+      </div>
 
-      <q-input
-        v-model="filterDateFrom"
-        dense
-        outlined
-        type="date"
-        label="С даты"
-        style="max-width: 170px"
-      />
+      <div class="col-12 col-sm-6 col-md-2">
+        <q-input
+          v-model="filterDateFrom"
+          dense
+          outlined
+          clearable
+          mask="##.##.####"
+          label="С даты"
+        >
+          <template #append>
+            <q-icon name="event" class="cursor-pointer">
+              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                <q-date v-model="filterDateFrom" mask="DD.MM.YYYY" />
+              </q-popup-proxy>
+            </q-icon>
+          </template>
+        </q-input>
+      </div>
 
-      <q-input
-        v-model="filterDateTo"
-        dense
-        outlined
-        type="date"
-        label="По дату"
-        style="max-width: 170px"
-      />
+      <div class="col-12 col-sm-6 col-md-2">
+        <q-input
+          v-model="filterDateTo"
+          dense
+          outlined
+          clearable
+          mask="##.##.####"
+          label="По дату"
+        >
+          <template #append>
+            <q-icon name="event" class="cursor-pointer">
+              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                <q-date v-model="filterDateTo" mask="DD.MM.YYYY" />
+              </q-popup-proxy>
+            </q-icon>
+          </template>
+        </q-input>
+      </div>
 
-      <q-btn
-        color="secondary"
-        icon="refresh"
-        label="Обновить"
-        dense
-        :loading="loading"
-        @click="fetchOperations"
-      />
+      <div class="col-12 col-md-auto">
+        <q-btn
+          color="secondary"
+          icon="refresh"
+          label="Обновить"
+          dense
+          :loading="loading"
+          class="full-width"
+          @click="fetchOperations"
+        />
+      </div>
     </div>
 
     <AppResponsiveTable
@@ -96,12 +126,6 @@
           {{ row.amount >= 0 ? '+' : '' }}{{ formatAmount(row.amount) }}
         </span>
       </template>
-
-      <template #mobile-field-type="{ row }">
-        <q-badge :color="getTypeColor(row.type)">
-          {{ getTypeLabel(row.type) }}
-        </q-badge>
-      </template>
     </AppResponsiveTable>
   </q-page>
 </template>
@@ -111,8 +135,9 @@ import type { QTableColumn } from 'quasar';
 import { onMounted, ref, watch } from 'vue';
 
 import { api } from '@boot/axios';
+import UserSelect from '@components/admin/UserSelect.vue';
 import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue';
-import { formatAdminDateTime } from '@utils/date';
+import { formatAdminDateTime, serializeAdminDateForApi } from '@utils/date';
 
 interface AexOperationRow {
   id: number;
@@ -146,16 +171,16 @@ const pagination = ref({
   rowsNumber: 0,
 });
 
-const filterUserId = ref<string>('');
+const filterUserId = ref<number | null>(null);
 const filterType = ref<string | null>(null);
 const filterDateFrom = ref<string>('');
 const filterDateTo = ref<string>('');
 
 const typeOptions = [
-  { value: 'credit', label: 'Начисление' },
-  { value: 'debit', label: 'Списание' },
-  { value: 'hold', label: 'Холд' },
-  { value: 'release', label: 'Разморозка' },
+  { value: 'credit', label: 'Начисление', icon: 'add_circle', color: 'positive', description: 'Пополнение AEX баланса' },
+  { value: 'debit', label: 'Списание', icon: 'remove_circle', color: 'negative', description: 'Списание AEX баланса' },
+  { value: 'hold', label: 'Холд', icon: 'lock', color: 'warning', description: 'Резервирование AEX' },
+  { value: 'release', label: 'Разморозка', icon: 'lock_open', color: 'positive', description: 'Возврат зарезервированных AEX' },
 ];
 
 const columns: QTableColumn<AexOperationRow>[] = [
@@ -231,10 +256,12 @@ async function fetchOperations(options?: { append?: boolean; offset?: number; li
   }
   try {
     const params: Record<string, unknown> = { limit, offset };
-    if (filterUserId.value) params.userId = Number(filterUserId.value);
+    if (filterUserId.value) params.userId = filterUserId.value;
     if (filterType.value) params.type = filterType.value;
-    if (filterDateFrom.value) params.dateFrom = filterDateFrom.value;
-    if (filterDateTo.value) params.dateTo = filterDateTo.value;
+    const dateFrom = serializeAdminDateForApi(filterDateFrom.value);
+    const dateTo = serializeAdminDateForApi(filterDateTo.value);
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
 
     const res = await api.get<PaginatedResponse<AexOperationRow>>('/api/admin/aex/operations', { params });
     const payload = Array.isArray(res.data)
@@ -291,8 +318,9 @@ function getTypeColor(type: string): string {
     case 'credit':
     case 'release':
       return 'positive';
-    case 'debit':
     case 'hold':
+      return 'warning';
+    case 'debit':
       return 'negative';
     default:
       return 'grey';

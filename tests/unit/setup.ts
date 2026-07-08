@@ -173,15 +173,14 @@ const QSelectStub = defineComponent({
               onChange: (event: Event) => {
                 const target = event.target as HTMLSelectElement;
                 const selected = (props.options as Array<Record<string, unknown>>).find(
-                  (option) =>
-                    String(option[props.optionValue]) === target.value ||
-                    String(option.id ?? '') === target.value ||
-                    String(option.value ?? '') === target.value,
+                  (option) => String(getOptionValue(option)) === target.value,
                 );
-                emit(
-                  'update:modelValue',
-                  props.emitValue ? Number(target.value) : selected ?? target.value,
-                );
+                if (props.emitValue) {
+                  const val = selected ? getOptionValue(selected) : target.value;
+                  emit('update:modelValue', typeof val === 'number' ? val : val);
+                } else {
+                  emit('update:modelValue', selected ?? target.value);
+                }
               },
             },
             (props.options as Array<Record<string, unknown>>).map((option) =>

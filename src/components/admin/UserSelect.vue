@@ -1,12 +1,15 @@
 <template>
   <q-select
-    :model-value="selectedUser"
+    v-model="selectedId"
     :options="options"
     :label="label"
     :placeholder="placeholder"
     :loading="loading"
     :rules="rules"
-    :option-label="formatUserLabel"
+    emit-value
+    map-options
+    option-value="value"
+    option-label="label"
     use-input
     clearable
     hide-selected
@@ -15,7 +18,7 @@
     outlined
     input-debounce="300"
     @filter="filterUsers"
-    @update:model-value="handleSelectedUser"
+    @update:model-value="handleSelected"
     @clear="handleClear"
   >
     <template #prepend>
@@ -26,10 +29,10 @@
       <q-item>
         <q-item-section>
           <div class="text-body2 text-weight-medium">
-            {{ formatUserLabel(opt) }}
+            {{ formatUserLabel(opt.raw ?? opt) }}
           </div>
           <div class="text-caption text-grey-7">
-            {{ formatUserDetails(opt) }}
+            {{ formatUserDetails(opt.raw ?? opt) }}
           </div>
         </q-item-section>
       </q-item>
@@ -50,6 +53,8 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 
 import { api } from '@boot/axios';
 import type { AdminUserOption } from '@/types/admin-user';
+
+type SelectOption = { value: number; label: string; raw: AdminUserOption };
 
 type UsersResponse =
   | AdminUserOption[]
@@ -80,7 +85,8 @@ const emit = defineEmits<{
   (event: 'update:selectedUser', value: AdminUserOption | null): void;
 }>();
 
-const options = ref<AdminUserOption[]>([]);
+const options = ref<SelectOption[]>([]);
+const selectedId = ref<number | null>(null);
 const selectedUser = ref<AdminUserOption | null>(null);
 const loading = ref(false);
 
@@ -90,14 +96,12 @@ let hydrateAbortController: AbortController | null = null;
 watch(
   () => props.modelValue,
   async (value) => {
+    if (selectedId.value === value) return;
+    selectedId.value = value;
+
     if (!value) {
       selectedUser.value = null;
       emit('update:selectedUser', null);
-      return;
-    }
-
-    const current = selectedUser.value;
-    if (current?.id === value) {
       return;
     }
 
@@ -111,6 +115,10 @@ onBeforeUnmount(() => {
   hydrateAbortController?.abort();
 });
 
+function toOption(user: AdminUserOption): SelectOption {
+  return { value: user.id, label: formatUserLabel(user), raw: user };
+}
+
 async function filterUsers(
   search: string,
   update: (callback: () => void) => void,
@@ -119,7 +127,7 @@ async function filterUsers(
   const query = search.trim();
   if (!query) {
     update(() => {
-      options.value = selectedUser.value ? [selectedUser.value] : [];
+      options.value = selectedUser.value ? [toOption(selectedUser.value)] : [];
     });
     return;
   }
@@ -135,7 +143,7 @@ async function filterUsers(
     });
     const users = normalizeUsersResponse(response.data);
     update(() => {
-      options.value = users;
+      options.value = users.map(toOption);
     });
   } catch (error: unknown) {
     if (isAbortError(error)) {
@@ -150,17 +158,20 @@ async function filterUsers(
   }
 }
 
-function handleSelectedUser(value: AdminUserOption | null) {
-  selectedUser.value = value;
-  emit('update:selectedUser', value);
-  emit('update:modelValue', value?.id ?? null);
+function handleSelected(value: number | null) {
+  selectedId.value = value;
+  const option = options.value.find((o) => o.value === value);
+  selectedUser.value = option?.raw ?? null;
+  emit('update:modelValue', value);
+  emit('update:selectedUser', selectedUser.value);
 }
 
 function handleClear() {
+  selectedId.value = null;
   selectedUser.value = null;
   options.value = [];
-  emit('update:selectedUser', null);
   emit('update:modelValue', null);
+  emit('update:selectedUser', null);
 }
 
 async function hydrateUser(userId: number) {
@@ -172,8 +183,9 @@ async function hydrateUser(userId: number) {
     const response = await api.get<AdminUserOption>(`/api/admin/users/${userId}`, {
       signal: hydrateAbortController.signal,
     });
+    const opt = toOption(response.data);
     selectedUser.value = response.data;
-    options.value = [response.data];
+    options.value = [opt];
     emit('update:selectedUser', response.data);
   } catch (error: unknown) {
     if (!isAbortError(error)) {
@@ -186,15 +198,9 @@ async function hydrateUser(userId: number) {
 }
 
 function normalizeUsersResponse(payload: UsersResponse): AdminUserOption[] {
-  if (Array.isArray(payload)) {
-    return payload;
-  }
-  if (Array.isArray(payload.items)) {
-    return payload.items;
-  }
-  if (Array.isArray(payload.data)) {
-    return payload.data;
-  }
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.items)) return payload.items;
+  if (Array.isArray(payload.data)) return payload.data;
   return [];
 }
 

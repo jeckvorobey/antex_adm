@@ -1,6 +1,6 @@
 <template>
   <div class="app-responsive-table">
-    <div class="app-responsive-table__desktop gt-xs">
+    <div v-if="!isMobileCardMode" class="app-responsive-table__desktop gt-xs">
       <q-table
         v-bind="tableAttrs"
         :rows="rows"
@@ -21,7 +21,7 @@
       </q-table>
     </div>
 
-    <div class="app-responsive-table__mobile xs">
+    <div v-else class="app-responsive-table__mobile xs">
       <div v-if="loading" class="text-grey-7 q-pa-md text-center">
         Загрузка...
       </div>
@@ -159,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-import type { QTableColumn } from 'quasar';
+import { useQuasar, type QTableColumn } from 'quasar';
 import { computed, useAttrs, useSlots } from 'vue';
 
 type TableRow = Record<string, unknown>;
@@ -211,9 +211,11 @@ const emit = defineEmits<{
 
 const attrs = useAttrs();
 const slots = useSlots();
+const $q = useQuasar();
 
 const tableAttrs = computed(() => attrs);
 const resolvedPagination = computed(() => props.pagination);
+const isMobileCardMode = computed(() => $q.screen.xs);
 const tableSlotNames = computed(() =>
   Object.keys(slots).filter((slotName) => !slotName.startsWith('mobile-')),
 );

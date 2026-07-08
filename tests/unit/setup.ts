@@ -6,6 +6,19 @@ const notifyCreate = vi.fn();
 const dialogCreate = vi.fn();
 
 vi.mock('quasar', () => {
+  const screen = reactive({
+    xs: false,
+    sm: false,
+    md: true,
+    lg: false,
+    xl: false,
+    lt: { sm: false, md: false, lg: true, xl: true },
+    gt: { xs: true, sm: true, md: false, lg: false },
+    name: 'md',
+    width: 1024,
+    height: 768,
+  });
+
   const Quasar = {
     install() {
       return undefined;
@@ -21,11 +34,12 @@ vi.mock('quasar', () => {
   };
 
   const useQuasar = () => ({
+    screen,
     notify: (...args: unknown[]) => Notify.create(...args),
     dialog: (...args: unknown[]) => Dialog.create(...args),
   });
 
-  return { Quasar, Notify, Dialog, useQuasar };
+  return { Quasar, Notify, Dialog, Screen: screen, useQuasar };
 });
 
 function slotChildren(slots: Record<string, (() => unknown) | undefined>, name = 'default') {
@@ -298,32 +312,50 @@ const QTableStub = defineComponent({
   name: 'QTableStub',
   props: {
     rows: { type: Array, default: () => [] },
+    columns: { type: Array, default: () => [] },
   },
   setup(props, { slots, attrs }) {
+    function resolveColumnValue(row: Record<string, unknown>, column: Record<string, unknown>) {
+      const field = column.field ?? column.name;
+      const rawValue =
+        typeof field === 'function' ? field(row) : row[String(field)];
+
+      if (typeof column.format === 'function') {
+        return column.format(rawValue, row);
+      }
+
+      return rawValue;
+    }
+
     return () => {
       const children = [...slotChildren(slots)];
 
-      for (const row of props.rows as Array<Record<string, unknown>>) {
-      for (const [slotName, slot] of Object.entries(slots)) {
-        if (!slotName.startsWith('body-cell-')) {
-          continue;
-        }
-        const columnName = slotName.replace('body-cell-', '');
-        children.push(
-          ...(slot?.({
-            row,
-            value: row[columnName],
-          }) ?? []),
-        );
+      if ((props.rows as Array<Record<string, unknown>>).length === 0) {
+        children.push(h('div', { class: 'q-table__no-data' }, 'Нет данных'));
       }
+
+      for (const row of props.rows as Array<Record<string, unknown>>) {
+        for (const [slotName, slot] of Object.entries(slots)) {
+          if (!slotName.startsWith('body-cell-')) {
+            continue;
+          }
+          const columnName = slotName.replace('body-cell-', '');
+          children.push(
+            ...(slot?.({
+              row,
+              value: row[columnName],
+            }) ?? []),
+          );
+        }
 
         children.push(
           h(
             'div',
             { class: 'q-table-row' },
-            Object.values(row).map((value) =>
-              h('span', { class: 'q-table-cell' }, String(value)),
-            ),
+            (props.columns as Array<Record<string, unknown>>).map((column) => {
+              const value = resolveColumnValue(row, column);
+              return h('span', { class: 'q-table-cell' }, String(value ?? ''));
+            }),
           ),
         );
       }
@@ -391,6 +423,8 @@ config.global.stubs = {
   'q-space': wrapTag('div', 'q-space'),
   'q-td': wrapTag('td', 'q-td'),
   'q-icon': wrapTag('span', 'q-icon'),
+  'q-tooltip': wrapTag('span', 'q-tooltip'),
+  'q-spinner': wrapTag('span', 'q-spinner'),
   'q-spinner-dots': wrapTag('span', 'q-spinner-dots'),
   'q-infinite-scroll': wrapTag('div', 'q-infinite-scroll'),
   'q-dialog': QDialogStub,

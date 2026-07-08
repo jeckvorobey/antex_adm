@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
-import { Notify, Quasar, Dialog } from 'quasar';
+import { Notify, Quasar, Dialog, Screen } from 'quasar';
 import { nextTick } from 'vue';
 import UsersPage from '@pages/UsersPage.vue';
 
@@ -16,8 +16,19 @@ function mountPage() {
   });
 }
 
+function setScreenXs(value: boolean) {
+  const screen = Screen as unknown as { xs: boolean; md: boolean; name: string; width: number };
+  screen.xs = value;
+  screen.md = !value;
+  screen.name = value ? 'xs' : 'md';
+  screen.width = value ? 390 : 1280;
+}
+
 describe('UsersPage', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setScreenXs(false);
+  });
 
   it('вызывает /api/admin/users при монтировании', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
@@ -63,6 +74,7 @@ describe('UsersPage', () => {
   });
 
   it('на mobile-карточке не рендерит лишний referralAction-ряд', async () => {
+    setScreenXs(true);
     vi.mocked(api.get).mockResolvedValue({
       data: [
         {

@@ -23,7 +23,7 @@ describe('UsersPage', () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/users');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/users', { params: undefined });
   });
 
   it('рендерит таблицу пользователей', async () => {
@@ -138,7 +138,7 @@ describe('UsersPage', () => {
       () =>
         new Promise((resolve) => {
           resolvePatch = resolve;
-        }) as ReturnType<typeof api.patch>
+        }) as ReturnType<typeof api.patch>,
     );
 
     const wrapper = mountPage();
@@ -198,7 +198,7 @@ describe('UsersPage', () => {
       expect.objectContaining({
         type: 'negative',
         message: 'Role update failed',
-      })
+      }),
     );
   });
 

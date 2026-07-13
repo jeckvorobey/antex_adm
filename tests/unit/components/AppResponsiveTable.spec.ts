@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { Quasar } from 'quasar';
+import { Quasar, Screen } from 'quasar';
 
 import AppResponsiveTable from '@/components/ui/AppResponsiveTable.vue';
 
@@ -46,16 +46,18 @@ function mountTable() {
 
 describe('AppResponsiveTable', () => {
   it('оставляет QTable для desktop-версии', () => {
+    Screen.xs = false;
     const wrapper = mountTable();
 
     expect(wrapper.find('.app-responsive-table__desktop .q-table').exists()).toBe(true);
-    expect(wrapper.find('.app-responsive-table__desktop').classes()).toContain('gt-xs');
+    expect(wrapper.find('.app-responsive-table__mobile').exists()).toBe(false);
   });
 
   it('рендерит мобильные строки как карточки', () => {
+    Screen.xs = true;
     const wrapper = mountTable();
 
-    expect(wrapper.find('.app-responsive-table__mobile').classes()).toContain('xs');
+    expect(wrapper.find('.app-responsive-table__desktop').exists()).toBe(false);
     expect(wrapper.findAll('.app-responsive-table__card')).toHaveLength(1);
     expect(wrapper.html()).toContain('Заявка 2026050001');
     expect(wrapper.html()).toContain('Сумма');

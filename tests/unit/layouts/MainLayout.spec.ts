@@ -9,18 +9,17 @@ vi.mock('src/boot/axios', () => ({
 }));
 
 const mockPush = vi.fn();
+const mockRoute = { path: '/dashboard' };
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush }),
+  useRoute: () => mockRoute,
   RouterView: { template: '<div />' },
 }));
 
 function mountLayout() {
   return mount(MainLayout, {
     global: {
-      plugins: [
-        [Quasar, {}],
-        createTestingPinia({ createSpy: vi.fn, stubActions: true }),
-      ],
+      plugins: [[Quasar, {}], createTestingPinia({ createSpy: vi.fn, stubActions: true })],
       stubs: {
         'router-view': true,
         'q-page-container': { template: '<div><slot /></div>' },
@@ -34,16 +33,30 @@ describe('MainLayout', () => {
     vi.clearAllMocks();
   });
 
-  it('рендерит 8 пунктов навигации', () => {
+  it('показывает Менеджмент сразу после Дашборда', () => {
     const wrapper = mountLayout();
-    const items = wrapper.findAll('.q-item');
-    expect(items.length).toBe(8);
+    const html = wrapper.html();
+    expect(html.indexOf('Менеджмент')).toBeGreaterThan(html.indexOf('Дашборд'));
+    expect(html.indexOf('Менеджмент')).toBeLessThan(html.indexOf('Заявки'));
+    expect(html).toContain('Dashboard');
+    expect(html).toContain('Кампании');
+    expect(html).toContain('Заявки по кампаниям');
+    expect(html).toContain('Генератор ссылок');
   });
 
   it('меню не содержит удалённые routes cards и banks', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
-    for (const route of ['/dashboard', '/orders', '/site-leads', '/users', '/admins', '/rates', '/broadcasts', '/settings']) {
+    for (const route of [
+      '/dashboard',
+      '/orders',
+      '/site-leads',
+      '/users',
+      '/admins',
+      '/rates',
+      '/broadcasts',
+      '/settings',
+    ]) {
       expect(html).toContain(route);
     }
     expect(html).not.toContain('/cards');
@@ -66,5 +79,11 @@ describe('MainLayout', () => {
     await logoutBtn.trigger('click');
     await flushPromises();
     expect(mockPush).toHaveBeenCalledWith('/login');
+  });
+
+  it('клик по заголовку Менеджмент открывает dashboard', async () => {
+    const wrapper = mountLayout();
+    await wrapper.get('[data-testid="management-menu"]').trigger('click');
+    expect(mockPush).toHaveBeenCalledWith('/management/dashboard');
   });
 });

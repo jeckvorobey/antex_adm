@@ -1,6 +1,6 @@
 <template>
   <div class="app-responsive-table">
-    <div class="app-responsive-table__desktop gt-xs">
+    <div v-if="!Screen.xs" class="app-responsive-table__desktop">
       <q-table
         v-bind="tableAttrs"
         :rows="rows"
@@ -8,26 +8,24 @@
         :row-key="rowKey"
         :loading="loading"
       >
-        <template
-          v-for="slotName in tableSlotNames"
-          #[slotName]="scope"
-          :key="slotName"
-        >
+        <template v-for="slotName in tableSlotNames" #[slotName]="scope" :key="slotName">
           <slot :name="slotName" v-bind="scope || {}" />
         </template>
       </q-table>
     </div>
 
-    <div class="app-responsive-table__mobile xs">
-      <div v-if="loading" class="text-grey-7 q-pa-md text-center">
-        Загрузка...
-      </div>
+    <div v-else class="app-responsive-table__mobile">
+      <div v-if="loading" class="text-grey-7 q-pa-md text-center">Загрузка...</div>
 
-      <div v-else-if="rows.length === 0" class="text-grey-7 q-pa-md text-center">
-        Нет данных
-      </div>
+      <div v-else-if="rows.length === 0" class="text-grey-7 q-pa-md text-center">Нет данных</div>
 
-      <div v-else class="column q-gutter-sm">
+      <q-infinite-scroll
+        v-else
+        :disable="!hasMore"
+        :offset="160"
+        class="column q-gutter-sm"
+        @load="loadMore"
+      >
         <q-card
           v-for="row in rows"
           :key="getRowKey(row)"
@@ -81,13 +79,16 @@
             </div>
           </q-card-section>
         </q-card>
-      </div>
+        <template #loading>
+          <div v-if="loadingMore" class="text-grey-7 q-pa-sm text-center">Загрузка...</div>
+        </template>
+      </q-infinite-scroll>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { QTableColumn } from 'quasar';
+import { Screen, type QTableColumn } from 'quasar';
 import { computed, useAttrs, useSlots } from 'vue';
 
 type TableRow = Record<string, unknown>;
@@ -118,15 +119,20 @@ const props = withDefaults(
     rowKey?: string | ((row: TableRow) => string | number);
     loading?: boolean;
     mobile: MobileConfig;
+    hasMore?: boolean;
+    loadingMore?: boolean;
   }>(),
   {
     rowKey: 'id',
     loading: false,
+    hasMore: false,
+    loadingMore: false,
   },
 );
 
 const attrs = useAttrs();
 const slots = useSlots();
+const emit = defineEmits<{ loadMore: [done: () => void] }>();
 
 const tableAttrs = computed(() => attrs);
 const tableSlotNames = computed(() =>
@@ -161,15 +167,16 @@ function getMobileFieldValue(row: TableRow, field: MobileField) {
   return String(value);
 }
 
-function resolveFieldValue(
-  row: TableRow,
-  field: string | ((row: TableRow) => unknown),
-) {
+function resolveFieldValue(row: TableRow, field: string | ((row: TableRow) => unknown)) {
   if (typeof field === 'function') {
     return field(row);
   }
 
   return row[field];
+}
+
+function loadMore(_index: number, done: () => void) {
+  emit('loadMore', done);
 }
 </script>
 

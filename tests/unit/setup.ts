@@ -25,7 +25,10 @@ vi.mock('quasar', () => {
     dialog: (...args: unknown[]) => Dialog.create(...args),
   });
 
-  return { Quasar, Notify, Dialog, useQuasar };
+  const copyToClipboard = vi.fn().mockResolvedValue(undefined);
+  const Screen = reactive({ xs: false });
+
+  return { Quasar, Notify, Dialog, Screen, useQuasar, copyToClipboard };
 });
 
 function slotChildren(slots: Record<string, (() => unknown) | undefined>, name = 'default') {
@@ -106,8 +109,7 @@ const QInputStub = defineComponent({
           value: String(props.modelValue ?? ''),
           onInput: (event: Event) => {
             const target = event.target as HTMLInputElement;
-            const nextValue =
-              props.type === 'number' ? Number(target.value || '0') : target.value;
+            const nextValue = props.type === 'number' ? Number(target.value || '0') : target.value;
             emit('update:modelValue', nextValue);
           },
         }),
@@ -128,38 +130,34 @@ const QSelectStub = defineComponent({
   emits: ['update:modelValue'],
   setup(props, { emit, attrs }) {
     return () =>
-      h(
-        'label',
-        { class: 'q-select' },
-        [
-          h(
-            'select',
-            {
-              ...attrs,
-              value: String(props.modelValue ?? ''),
-              onChange: (event: Event) => {
-                const target = event.target as HTMLSelectElement;
-                const selected = (props.options as Array<Record<string, unknown>>).find(
-                  (option) => String(option[props.optionValue]) === target.value,
-                );
-                emit(
-                  'update:modelValue',
-                  props.emitValue ? Number(target.value) : selected ?? target.value,
-                );
-              },
+      h('label', { class: 'q-select' }, [
+        h(
+          'select',
+          {
+            ...attrs,
+            value: String(props.modelValue ?? ''),
+            onChange: (event: Event) => {
+              const target = event.target as HTMLSelectElement;
+              const selected = (props.options as Array<Record<string, unknown>>).find(
+                (option) => String(option[props.optionValue]) === target.value,
+              );
+              emit(
+                'update:modelValue',
+                props.emitValue ? Number(target.value) : (selected ?? target.value),
+              );
             },
-            (props.options as Array<Record<string, unknown>>).map((option) =>
-              h(
-                'option',
-                {
-                  value: String(option[props.optionValue]),
-                },
-                String(option[props.optionLabel]),
-              ),
+          },
+          (props.options as Array<Record<string, unknown>>).map((option) =>
+            h(
+              'option',
+              {
+                value: String(option[props.optionValue]),
+              },
+              String(option[props.optionLabel]),
             ),
           ),
-        ],
-      );
+        ),
+      ]);
   },
 });
 
@@ -229,32 +227,43 @@ const QTableStub = defineComponent({
   name: 'QTableStub',
   props: {
     rows: { type: Array, default: () => [] },
+    columns: { type: Array, default: () => [] },
   },
   setup(props, { slots, attrs }) {
     return () => {
       const children = [...slotChildren(slots)];
 
       for (const row of props.rows as Array<Record<string, unknown>>) {
-      for (const [slotName, slot] of Object.entries(slots)) {
-        if (!slotName.startsWith('body-cell-')) {
-          continue;
+        for (const [slotName, slot] of Object.entries(slots)) {
+          if (!slotName.startsWith('body-cell-')) {
+            continue;
+          }
+          const columnName = slotName.replace('body-cell-', '');
+          children.push(
+            ...(slot?.({
+              row,
+              value: row[columnName],
+            }) ?? []),
+          );
         }
-        const columnName = slotName.replace('body-cell-', '');
-        children.push(
-          ...(slot?.({
-            row,
-            value: row[columnName],
-          }) ?? []),
-        );
-      }
+
+        const columns = props.columns as Array<{
+          field?: string | ((row: Record<string, unknown>) => unknown);
+          format?: (value: unknown, row: Record<string, unknown>) => unknown;
+        }>;
+        const values = columns.length
+          ? columns.map((column) => {
+              const raw =
+                typeof column.field === 'function' ? column.field(row) : row[column.field ?? ''];
+              return column.format ? column.format(raw, row) : raw;
+            })
+          : Object.values(row);
 
         children.push(
           h(
             'div',
             { class: 'q-table-row' },
-            Object.values(row).map((value) =>
-              h('span', { class: 'q-table-cell' }, String(value)),
-            ),
+            values.map((value) => h('span', { class: 'q-table-cell' }, String(value))),
           ),
         );
       }
@@ -272,9 +281,7 @@ const QDialogStub = defineComponent({
   emits: ['update:modelValue'],
   setup(props, { slots, attrs }) {
     return () =>
-      props.modelValue
-        ? h('div', { ...attrs, class: 'q-dialog' }, slotChildren(slots))
-        : null;
+      props.modelValue ? h('div', { ...attrs, class: 'q-dialog' }, slotChildren(slots)) : null;
   },
 });
 
@@ -306,6 +313,33 @@ config.global.stubs = {
   'q-toolbar-title': wrapTag('div', 'q-toolbar-title'),
   'q-drawer': wrapTag('aside', 'q-drawer'),
   'q-list': wrapTag('div', 'q-list'),
+  'q-banner': wrapTag('div', 'q-banner'),
+  'q-linear-progress': wrapTag('div', 'q-linear-progress'),
+  'q-separator': wrapTag('hr', 'q-separator'),
+  'q-infinite-scroll': wrapTag('div', 'q-infinite-scroll'),
+  'q-expansion-item': defineComponent({
+    name: 'QExpansionItemStub',
+    props: {
+      modelValue: { type: Boolean, default: false },
+      label: { type: String, default: '' },
+    },
+    emits: ['click', 'update:modelValue'],
+    setup(props, { slots, attrs, emit }) {
+      return () =>
+        h(
+          'div',
+          {
+            ...attrs,
+            class: 'q-expansion-item',
+            onClick: () => {
+              emit('click');
+              emit('update:modelValue', !props.modelValue);
+            },
+          },
+          [h('span', { class: 'q-expansion-item__label' }, props.label), ...slotChildren(slots)],
+        );
+    },
+  }),
   'q-item-label': wrapTag('div', 'q-item-label'),
   'q-item-section': wrapTag('div', 'q-item-section'),
   'q-page-container': wrapTag('div', 'q-page-container'),
@@ -333,12 +367,7 @@ config.global.stubs = {
       to: { type: String, default: undefined },
     },
     setup(props, { slots, attrs }) {
-      return () =>
-        h(
-          'div',
-          { ...attrs, class: 'q-item', to: props.to },
-          slotChildren(slots),
-        );
+      return () => h('div', { ...attrs, class: 'q-item', to: props.to }, slotChildren(slots));
     },
   }),
 };

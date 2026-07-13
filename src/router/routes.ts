@@ -19,12 +19,41 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', redirect: '/dashboard' },
       { path: 'dashboard', name: 'dashboard', component: () => import('@pages/DashboardPage.vue') },
+      { path: 'management', redirect: '/management/dashboard' },
+      {
+        path: 'management/dashboard',
+        name: 'management-dashboard',
+        component: () => import('@pages/ManagementDashboardPage.vue'),
+      },
+      {
+        path: 'management/campaigns',
+        name: 'management-campaigns',
+        component: () => import('@pages/ManagementCampaignsPage.vue'),
+      },
+      {
+        path: 'management/applications',
+        name: 'management-applications',
+        component: () => import('@pages/ManagementApplicationsPage.vue'),
+      },
+      {
+        path: 'management/generator',
+        name: 'management-generator',
+        component: () => import('@pages/ManagementGeneratorPage.vue'),
+      },
       { path: 'orders', name: 'orders', component: () => import('@pages/OrdersPage.vue') },
-      { path: 'site-leads', name: 'site-leads', component: () => import('@pages/SiteLeadsPage.vue') },
+      {
+        path: 'site-leads',
+        name: 'site-leads',
+        component: () => import('@pages/SiteLeadsPage.vue'),
+      },
       { path: 'users', name: 'users', component: () => import('@pages/UsersPage.vue') },
       { path: 'admins', name: 'admins', component: () => import('@pages/AdminsPage.vue') },
       { path: 'rates', name: 'rates', component: () => import('@pages/RatesPage.vue') },
-      { path: 'broadcasts', name: 'broadcasts', component: () => import('@pages/BroadcastsPage.vue') },
+      {
+        path: 'broadcasts',
+        name: 'broadcasts',
+        component: () => import('@pages/BroadcastsPage.vue'),
+      },
       { path: 'settings', name: 'settings', component: () => import('@pages/SettingsPage.vue') },
     ],
   },

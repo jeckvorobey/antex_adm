@@ -189,7 +189,7 @@ describe('UsersPage', () => {
       () =>
         new Promise((resolve) => {
           resolvePatch = resolve;
-        }) as ReturnType<typeof api.patch>
+        }) as ReturnType<typeof api.patch>,
     );
 
     const wrapper = mountPage();
@@ -249,7 +249,7 @@ describe('UsersPage', () => {
       expect.objectContaining({
         type: 'negative',
         message: 'Role update failed',
-      })
+      }),
     );
   });
 
@@ -541,7 +541,9 @@ describe('UsersPage', () => {
       await nextTick();
 
       // Button should be in loading state
-      const btnAfterClick = wrapper.findAll('.q-btn').find((b) => b.text().includes('Сгенерировать коды'));
+      const btnAfterClick = wrapper
+        .findAll('.q-btn')
+        .find((b) => b.text().includes('Сгенерировать коды'));
       expect(btnAfterClick?.attributes('loading')).toBe('true');
 
       resolvePost?.({ data: { generated: 1 } });

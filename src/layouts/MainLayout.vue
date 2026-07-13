@@ -11,19 +11,38 @@
     <q-drawer v-model="drawer" show-if-above bordered class="sidebar">
       <q-list>
         <q-item-label header>Навигация</q-item-label>
-        <template v-for="item in menu" :key="item.to ?? item.label">
-          <!-- Обычный пункт -->
+        <q-item clickable to="/dashboard" active-class="text-primary">
+          <q-item-section avatar><q-icon name="dashboard" /></q-item-section>
+          <q-item-section>Дашборд</q-item-section>
+        </q-item>
+
+        <q-expansion-item
+          v-model="managementExpanded"
+          data-testid="management-menu"
+          icon="monitoring"
+          label="Менеджмент"
+          :header-class="isManagementRoute ? 'text-primary' : 'text-weight-medium'"
+          @click="openManagement"
+        >
           <q-item
-            v-if="!item.children"
+            v-for="item in managementMenu"
+            :key="item.to"
             clickable
             :to="item.to"
             active-class="text-primary"
+            :inset-level="1"
           >
             <q-item-section avatar><q-icon :name="item.icon" /></q-item-section>
             <q-item-section>{{ item.label }}</q-item-section>
           </q-item>
+        </q-expansion-item>
 
-          <!-- Выпадающее меню -->
+        <template v-for="item in menu" :key="item.to ?? item.label">
+          <q-item v-if="!item.children" clickable :to="item.to" active-class="text-primary">
+            <q-item-section avatar><q-icon :name="item.icon" /></q-item-section>
+            <q-item-section>{{ item.label }}</q-item-section>
+          </q-item>
+
           <q-expansion-item
             v-else
             :icon="item.icon"
@@ -54,16 +73,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { computed, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
 import { useAuthStore } from '@stores/auth';
-
-const drawer = ref(false);
-const router = useRouter();
-const route = useRoute();
-const authStore = useAuthStore();
-
-const isAexExpanded = computed(() => route.path.startsWith('/aex/'));
 
 interface MenuItem {
   to?: string;
@@ -72,8 +85,22 @@ interface MenuItem {
   children?: { to: string; icon: string; label: string }[];
 }
 
+const drawer = ref(false);
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
+
+const managementMenu = [
+  { to: '/management/dashboard', icon: 'dashboard', label: 'Dashboard' },
+  { to: '/management/campaigns', icon: 'campaign', label: 'Кампании' },
+  { to: '/management/applications', icon: 'assignment', label: 'Заявки по кампаниям' },
+  { to: '/management/generator', icon: 'link', label: 'Генератор ссылок' },
+];
+const isManagementRoute = computed(() => route.path.startsWith('/management/'));
+const managementExpanded = ref(isManagementRoute.value);
+const isAexExpanded = computed(() => route.path.startsWith('/aex/'));
+
 const menu: MenuItem[] = [
-  { to: '/dashboard', icon: 'dashboard', label: 'Дашборд' },
   { to: '/orders', icon: 'list_alt', label: 'Заявки' },
   { to: '/site-leads', icon: 'mark_email_unread', label: 'Заявки сайта' },
   { to: '/users', icon: 'people', label: 'Пользователи' },
@@ -92,6 +119,15 @@ const menu: MenuItem[] = [
   { to: '/broadcasts', icon: 'campaign', label: 'Рассылка' },
   { to: '/settings', icon: 'settings', label: 'Настройки' },
 ];
+
+watch(isManagementRoute, (active) => {
+  if (active) managementExpanded.value = true;
+});
+
+async function openManagement() {
+  managementExpanded.value = true;
+  if (!isManagementRoute.value) await router.push('/management/dashboard');
+}
 
 async function handleLogout() {
   await authStore.logout();

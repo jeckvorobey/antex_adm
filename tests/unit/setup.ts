@@ -39,7 +39,9 @@ vi.mock('quasar', () => {
     dialog: (...args: unknown[]) => Dialog.create(...args),
   });
 
-  return { Quasar, Notify, Dialog, Screen: screen, useQuasar };
+  const copyToClipboard = vi.fn().mockResolvedValue(undefined);
+
+  return { Quasar, Notify, Dialog, Screen: screen, useQuasar, copyToClipboard };
 });
 
 function slotChildren(slots: Record<string, (() => unknown) | undefined>, name = 'default') {
@@ -124,8 +126,7 @@ const QInputStub = defineComponent({
           placeholder: props.placeholder,
           onInput: (event: Event) => {
             const target = event.target as HTMLInputElement;
-            const nextValue =
-              props.type === 'number' ? Number(target.value || '0') : target.value;
+            const nextValue = props.type === 'number' ? Number(target.value || '0') : target.value;
             emit('update:modelValue', nextValue);
           },
         }),
@@ -164,63 +165,65 @@ const QSelectStub = defineComponent({
     }
 
     return () =>
-      h(
-        'label',
-        { class: 'q-select' },
-        [
-          props.label ? h('span', { class: 'q-field__label' }, props.label) : null,
-          props.useInput
-            ? h('input', {
-                class: 'q-select__input',
-                placeholder: props.placeholder,
-                onInput: (event: Event) => {
-                  const target = event.target as HTMLInputElement;
-                  emit('filter', target.value, (fn: () => void) => fn(), () => undefined);
-                },
-              })
-            : null,
-          h(
-            'select',
-            {
-              ...attrs,
-              value: String(props.modelValue ?? ''),
-              onChange: (event: Event) => {
-                const target = event.target as HTMLSelectElement;
-                const selected = (props.options as Array<Record<string, unknown>>).find(
-                  (option) => String(getOptionValue(option)) === target.value,
+      h('label', { class: 'q-select' }, [
+        props.label ? h('span', { class: 'q-field__label' }, props.label) : null,
+        props.useInput
+          ? h('input', {
+              class: 'q-select__input',
+              placeholder: props.placeholder,
+              onInput: (event: Event) => {
+                const target = event.target as HTMLInputElement;
+                emit(
+                  'filter',
+                  target.value,
+                  (fn: () => void) => fn(),
+                  () => undefined,
                 );
-                if (props.emitValue) {
-                  const val = selected ? getOptionValue(selected) : target.value;
-                  emit('update:modelValue', typeof val === 'number' ? val : val);
-                } else {
-                  emit('update:modelValue', selected ?? target.value);
-                }
               },
+            })
+          : null,
+        h(
+          'select',
+          {
+            ...attrs,
+            value: String(props.modelValue ?? ''),
+            onChange: (event: Event) => {
+              const target = event.target as HTMLSelectElement;
+              const selected = (props.options as Array<Record<string, unknown>>).find(
+                (option) => String(getOptionValue(option)) === target.value,
+              );
+              if (props.emitValue) {
+                const val = selected ? getOptionValue(selected) : target.value;
+                emit('update:modelValue', typeof val === 'number' ? val : val);
+              } else {
+                emit('update:modelValue', selected ?? target.value);
+              }
             },
-            (props.options as Array<Record<string, unknown>>).map((option) =>
-              h(
-                'option',
-                {
-                  value: String(getOptionValue(option)),
-                },
-                getOptionLabel(option),
-              ),
+          },
+          (props.options as Array<Record<string, unknown>>).map((option) =>
+            h(
+              'option',
+              {
+                value: String(getOptionValue(option)),
+              },
+              getOptionLabel(option),
             ),
           ),
-          h(
-            'div',
-            { class: 'q-select__options' },
-            (props.options as Array<Record<string, unknown>>).flatMap((option) =>
+        ),
+        h(
+          'div',
+          { class: 'q-select__options' },
+          (props.options as Array<Record<string, unknown>>).flatMap(
+            (option) =>
               slots.option?.({ opt: option, selected: false, toggleOption: () => undefined }) ?? [
                 h('div', { class: 'q-select__option' }, getOptionLabel(option)),
               ],
-            ),
           ),
-          ...(props.options as Array<Record<string, unknown>>).length === 0
-            ? slotChildren(slots, 'no-option')
-            : [],
-        ],
-      );
+        ),
+        ...((props.options as Array<Record<string, unknown>>).length === 0
+          ? slotChildren(slots, 'no-option')
+          : []),
+      ]);
   },
 });
 
@@ -317,8 +320,7 @@ const QTableStub = defineComponent({
   setup(props, { slots, attrs }) {
     function resolveColumnValue(row: Record<string, unknown>, column: Record<string, unknown>) {
       const field = column.field ?? column.name;
-      const rawValue =
-        typeof field === 'function' ? field(row) : row[String(field)];
+      const rawValue = typeof field === 'function' ? field(row) : row[String(field)];
 
       if (typeof column.format === 'function') {
         return column.format(rawValue, row);
@@ -373,9 +375,7 @@ const QDialogStub = defineComponent({
   emits: ['update:modelValue'],
   setup(props, { slots, attrs }) {
     return () =>
-      props.modelValue
-        ? h('div', { ...attrs, class: 'q-dialog' }, slotChildren(slots))
-        : null;
+      props.modelValue ? h('div', { ...attrs, class: 'q-dialog' }, slotChildren(slots)) : null;
   },
 });
 
@@ -414,6 +414,9 @@ config.global.stubs = {
   'q-toolbar-title': wrapTag('div', 'q-toolbar-title'),
   'q-drawer': wrapTag('aside', 'q-drawer'),
   'q-list': wrapTag('div', 'q-list'),
+  'q-banner': wrapTag('div', 'q-banner'),
+  'q-linear-progress': wrapTag('div', 'q-linear-progress'),
+  'q-separator': wrapTag('hr', 'q-separator'),
   'q-item-label': wrapTag('div', 'q-item-label'),
   'q-item-section': wrapTag('div', 'q-item-section'),
   'q-page-container': wrapTag('div', 'q-page-container'),
@@ -444,14 +447,27 @@ config.global.stubs = {
   'q-expansion-item': defineComponent({
     name: 'QExpansionItemStub',
     props: {
+      modelValue: { type: Boolean, default: false },
       icon: { type: String, default: undefined },
       label: { type: String, default: '' },
       defaultOpened: { type: Boolean, default: false },
       headerClass: { type: String, default: '' },
     },
-    setup(_props, { slots, attrs }) {
+    emits: ['click', 'update:modelValue'],
+    setup(props, { slots, attrs, emit }) {
       return () =>
-        h('div', { ...attrs, class: 'q-expansion-item' }, slotChildren(slots));
+        h(
+          'div',
+          {
+            ...attrs,
+            class: 'q-expansion-item',
+            onClick: () => {
+              emit('click');
+              emit('update:modelValue', !props.modelValue);
+            },
+          },
+          [h('span', { class: 'q-expansion-item__label' }, props.label), ...slotChildren(slots)],
+        );
     },
   }),
   'q-pagination': defineComponent({
@@ -500,12 +516,7 @@ config.global.stubs = {
       to: { type: String, default: undefined },
     },
     setup(props, { slots, attrs }) {
-      return () =>
-        h(
-          'div',
-          { ...attrs, class: 'q-item', to: props.to },
-          slotChildren(slots),
-        );
+      return () => h('div', { ...attrs, class: 'q-item', to: props.to }, slotChildren(slots));
     },
   }),
 };

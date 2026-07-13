@@ -11,24 +11,16 @@
         @update:pagination="emit('update:pagination', $event)"
         @request="emit('request', $event)"
       >
-        <template
-          v-for="slotName in tableSlotNames"
-          #[slotName]="scope"
-          :key="slotName"
-        >
+        <template v-for="slotName in tableSlotNames" #[slotName]="scope" :key="slotName">
           <slot :name="slotName" v-bind="scope || {}" />
         </template>
       </q-table>
     </div>
 
     <div v-else class="app-responsive-table__mobile xs">
-      <div v-if="loading" class="text-grey-7 q-pa-md text-center">
-        Загрузка...
-      </div>
+      <div v-if="loading" class="text-grey-7 q-pa-md text-center">Загрузка...</div>
 
-      <div v-else-if="rows.length === 0" class="text-grey-7 q-pa-md text-center">
-        Нет данных
-      </div>
+      <div v-else-if="rows.length === 0" class="text-grey-7 q-pa-md text-center">Нет данных</div>
 
       <div v-else class="column q-gutter-sm">
         <q-infinite-scroll
@@ -37,10 +29,7 @@
           :disable="loadingMore || !hasMore"
           @load="handleLoadMore"
         >
-          <template
-            v-for="row in rows"
-            :key="getRowKey(row)"
-          >
+          <template v-for="row in rows" :key="getRowKey(row)">
             <q-card flat bordered class="app-responsive-table__card">
               <q-card-section class="q-pa-md">
                 <div class="row items-start no-wrap q-gutter-sm">
@@ -90,9 +79,7 @@
             </q-card>
           </template>
           <template #loading>
-            <div class="row justify-center q-pa-sm text-grey-7">
-              Загрузка...
-            </div>
+            <div class="row justify-center q-pa-sm text-grey-7">Загрузка...</div>
           </template>
         </q-infinite-scroll>
         <template v-else>
@@ -150,9 +137,7 @@
             </q-card-section>
           </q-card>
         </template>
-        <div v-if="loadingMore" class="row justify-center q-pa-sm text-grey-7">
-          Загрузка...
-        </div>
+        <div v-if="loadingMore" class="row justify-center q-pa-sm text-grey-7">Загрузка...</div>
       </div>
     </div>
   </div>
@@ -256,17 +241,13 @@ function getMobileFieldValue(row: TableRow, field: MobileField) {
   return String(value);
 }
 
-function resolveFieldValue(
-  row: TableRow,
-  field: string | ((row: TableRow) => unknown),
-) {
+function resolveFieldValue(row: TableRow, field: string | ((row: TableRow) => unknown)) {
   if (typeof field === 'function') {
     return field(row);
   }
 
   return row[field];
 }
-
 </script>
 
 <style scoped>

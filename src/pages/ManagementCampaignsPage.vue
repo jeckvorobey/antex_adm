@@ -254,7 +254,7 @@ function onRequest({ pagination: value }: { pagination: typeof pagination.value 
   pagination.value = value;
   void fetchCampaigns();
 }
-function loadMore(done: () => void) {
+function loadMore({ done }: { done: () => void }) {
   void fetchCampaigns(true).finally(done);
 }
 async function copyLink(row: MarketingCampaign) {

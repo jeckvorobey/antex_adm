@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { Quasar } from 'quasar';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import MainLayout from '@layouts/MainLayout.vue';
 
 vi.mock('src/boot/axios', () => ({
@@ -31,11 +32,13 @@ function mountLayout() {
 describe('MainLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRoute.path = '/dashboard';
   });
 
   it('показывает Менеджмент сразу после Дашборда', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
+
     expect(html.indexOf('Менеджмент')).toBeGreaterThan(html.indexOf('Дашборд'));
     expect(html.indexOf('Менеджмент')).toBeLessThan(html.indexOf('Заявки'));
     expect(html).toContain('Dashboard');
@@ -44,9 +47,17 @@ describe('MainLayout', () => {
     expect(html).toContain('Генератор ссылок');
   });
 
-  it('меню не содержит удалённые routes cards и banks', () => {
+  it('содержит отдельные раскрывающиеся группы Менеджмент и ATXG', () => {
+    const wrapper = mountLayout();
+
+    expect(wrapper.findAll('.q-expansion-item')).toHaveLength(2);
+    expect(wrapper.html()).toContain('ATXG');
+  });
+
+  it('меню содержит основные и ATXG routes', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
+
     for (const route of [
       '/dashboard',
       '/orders',
@@ -56,6 +67,10 @@ describe('MainLayout', () => {
       '/rates',
       '/broadcasts',
       '/settings',
+      '/aex/rates',
+      '/aex/wallets',
+      '/aex/journal',
+      '/aex/manual-ops',
     ]) {
       expect(html).toContain(route);
     }
@@ -67,23 +82,27 @@ describe('MainLayout', () => {
     const wrapper = mountLayout();
     const { useAuthStore } = await import('src/stores/auth');
     const authStore = useAuthStore();
-    const logoutBtn = wrapper.find('[icon="logout"]');
-    await logoutBtn.trigger('click');
+
+    await wrapper.find('[icon="logout"]').trigger('click');
     await flushPromises();
+
     expect(authStore.logout).toHaveBeenCalled();
   });
 
   it('handleLogout редиректит на /login после logout', async () => {
     const wrapper = mountLayout();
-    const logoutBtn = wrapper.find('[icon="logout"]');
-    await logoutBtn.trigger('click');
+
+    await wrapper.find('[icon="logout"]').trigger('click');
     await flushPromises();
+
     expect(mockPush).toHaveBeenCalledWith('/login');
   });
 
   it('клик по заголовку Менеджмент открывает dashboard', async () => {
     const wrapper = mountLayout();
+
     await wrapper.get('[data-testid="management-menu"]').trigger('click');
+
     expect(mockPush).toHaveBeenCalledWith('/management/dashboard');
   });
 });

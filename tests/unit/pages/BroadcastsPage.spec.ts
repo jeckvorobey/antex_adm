@@ -24,7 +24,9 @@ describe('BroadcastsPage', () => {
     mountPage();
     await flushPromises();
 
-    expect(api.get).toHaveBeenCalledWith('/api/admin/broadcasts');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/broadcasts', {
+      params: { limit: 20, offset: 0 },
+    });
   });
 
   it('рендерит таблицу истории', async () => {

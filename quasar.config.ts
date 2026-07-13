@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 export default defineConfig((/* ctx */) => {
   return {
-    boot: ['axios', 'init'],
+    boot: ['axios', 'lang', 'init'],
     css: ['app.scss'],
     extras: ['roboto-font', 'fontawesome-v6', 'mdi-v7', 'material-icons'],
     build: {

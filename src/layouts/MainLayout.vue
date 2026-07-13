@@ -15,12 +15,13 @@
           <q-item-section avatar><q-icon name="dashboard" /></q-item-section>
           <q-item-section>Дашборд</q-item-section>
         </q-item>
+
         <q-expansion-item
           v-model="managementExpanded"
           data-testid="management-menu"
           icon="monitoring"
           label="Менеджмент"
-          :header-class="isManagementRoute ? 'text-primary' : ''"
+          :header-class="isManagementRoute ? 'text-primary' : 'text-weight-medium'"
           @click="openManagement"
         >
           <q-item
@@ -29,22 +30,39 @@
             clickable
             :to="item.to"
             active-class="text-primary"
-            class="q-pl-xl"
+            :inset-level="1"
           >
             <q-item-section avatar><q-icon :name="item.icon" /></q-item-section>
             <q-item-section>{{ item.label }}</q-item-section>
           </q-item>
         </q-expansion-item>
-        <q-item
-          v-for="item in menu"
-          :key="item.to"
-          clickable
-          :to="item.to"
-          active-class="text-primary"
-        >
-          <q-item-section avatar><q-icon :name="item.icon" /></q-item-section>
-          <q-item-section>{{ item.label }}</q-item-section>
-        </q-item>
+
+        <template v-for="item in menu" :key="item.to ?? item.label">
+          <q-item v-if="!item.children" clickable :to="item.to" active-class="text-primary">
+            <q-item-section avatar><q-icon :name="item.icon" /></q-item-section>
+            <q-item-section>{{ item.label }}</q-item-section>
+          </q-item>
+
+          <q-expansion-item
+            v-else
+            :icon="item.icon"
+            :label="item.label"
+            :default-opened="isAexExpanded"
+            header-class="text-weight-medium"
+          >
+            <q-item
+              v-for="child in item.children"
+              :key="child.to"
+              clickable
+              :to="child.to"
+              active-class="text-primary"
+              :inset-level="1"
+            >
+              <q-item-section avatar><q-icon :name="child.icon" /></q-item-section>
+              <q-item-section>{{ child.label }}</q-item-section>
+            </q-item>
+          </q-expansion-item>
+        </template>
       </q-list>
     </q-drawer>
 
@@ -57,22 +75,20 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+
 import { useAuthStore } from '@stores/auth';
+
+interface MenuItem {
+  to?: string;
+  icon: string;
+  label: string;
+  children?: { to: string; icon: string; label: string }[];
+}
 
 const drawer = ref(false);
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
-
-const menu = [
-  { to: '/orders', icon: 'list_alt', label: 'Заявки' },
-  { to: '/site-leads', icon: 'mark_email_unread', label: 'Заявки сайта' },
-  { to: '/users', icon: 'people', label: 'Пользователи' },
-  { to: '/admins', icon: 'admin_panel_settings', label: 'Админы' },
-  { to: '/rates', icon: 'trending_up', label: 'Курсы' },
-  { to: '/broadcasts', icon: 'campaign', label: 'Рассылка' },
-  { to: '/settings', icon: 'settings', label: 'Настройки' },
-];
 
 const managementMenu = [
   { to: '/management/dashboard', icon: 'dashboard', label: 'Dashboard' },
@@ -82,6 +98,27 @@ const managementMenu = [
 ];
 const isManagementRoute = computed(() => route.path.startsWith('/management/'));
 const managementExpanded = ref(isManagementRoute.value);
+const isAexExpanded = computed(() => route.path.startsWith('/aex/'));
+
+const menu: MenuItem[] = [
+  { to: '/orders', icon: 'list_alt', label: 'Заявки' },
+  { to: '/site-leads', icon: 'mark_email_unread', label: 'Заявки сайта' },
+  { to: '/users', icon: 'people', label: 'Пользователи' },
+  { to: '/admins', icon: 'admin_panel_settings', label: 'Админы' },
+  { to: '/rates', icon: 'trending_up', label: 'Курсы' },
+  {
+    icon: 'token',
+    label: 'ATXG',
+    children: [
+      { to: '/aex/rates', icon: 'tune', label: 'Настройки ставок' },
+      { to: '/aex/wallets', icon: 'account_balance_wallet', label: 'Кошельки' },
+      { to: '/aex/journal', icon: 'receipt_long', label: 'Журнал операций' },
+      { to: '/aex/manual-ops', icon: 'edit_note', label: 'Ручные операции' },
+    ],
+  },
+  { to: '/broadcasts', icon: 'campaign', label: 'Рассылка' },
+  { to: '/settings', icon: 'settings', label: 'Настройки' },
+];
 
 watch(isManagementRoute, (active) => {
   if (active) managementExpanded.value = true;

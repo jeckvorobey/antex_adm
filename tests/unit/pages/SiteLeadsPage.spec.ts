@@ -22,7 +22,9 @@ describe('SiteLeadsPage', () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/site-leads');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/site-leads', {
+      params: { limit: 20, offset: 0 },
+    });
   });
 
   it('показывает заявки сайта в таблице', async () => {

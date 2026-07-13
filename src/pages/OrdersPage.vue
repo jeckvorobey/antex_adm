@@ -6,10 +6,16 @@
       :columns="columns"
       row-key="id"
       :loading="loading"
+      :loading-more="loadingMore"
+      :has-more="hasMore"
+      :pagination="pagination"
       :mobile="mobileConfig"
       table-style="table-layout: fixed; width: 100%"
       flat
       bordered
+      @request="handleTableRequest"
+      @update:pagination="handlePaginationUpdate"
+      @load-more="handleLoadMore"
     >
       <template #body-cell-status="{ row }">
         <q-td>
@@ -99,8 +105,27 @@ interface AdminOrder {
   } | null;
 }
 
+type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+const PAGE_SIZE = 20;
+
 const orders = ref<AdminOrder[]>([]);
 const loading = ref(false);
+const loadingMore = ref(false);
+const hasMore = ref(false);
+const total = ref(0);
+const pagination = ref({
+  sortBy: null,
+  descending: false,
+  page: 1,
+  rowsPerPage: PAGE_SIZE,
+  rowsNumber: 0,
+});
 
 const columns: QTableColumn<AdminOrder>[] = [
   { name: 'id', label: 'Номер', field: 'publicNumber', sortable: true, align: 'left', style: 'width: 11%' },
@@ -138,20 +163,71 @@ const mobileConfig = {
 };
 
 onMounted(async () => {
-  loading.value = true;
-  try {
-    const res = await api.get('/api/admin/orders');
-    orders.value = res.data;
-  } catch {
-    orders.value = [];
-  } finally {
-    loading.value = false;
-  }
+  await fetchOrders();
 });
 
-/**
- * Меняет статус заявки и обновляет строку таблицы ответом backend.
- */
+async function fetchOrders(options?: { append?: boolean; offset?: number; limit?: number }) {
+  const append = options?.append ?? false;
+  const limit = options?.limit ?? pagination.value.rowsPerPage;
+  const offset = options?.offset ?? (pagination.value.page - 1) * limit;
+
+  if (append) {
+    loadingMore.value = true;
+  } else {
+    loading.value = true;
+  }
+
+  try {
+    const res = await api.get<PaginatedResponse<AdminOrder>>('/api/admin/orders', {
+      params: { limit, offset },
+    });
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit, offset }
+      : res.data;
+    const nextRows = payload.items ?? [];
+    orders.value = append ? [...orders.value, ...nextRows] : nextRows;
+    total.value = payload.total;
+    hasMore.value = offset + nextRows.length < payload.total;
+    pagination.value = {
+      ...pagination.value,
+      page: Math.floor(offset / limit) + 1,
+      rowsPerPage: limit,
+      rowsNumber: payload.total,
+    };
+  } catch {
+    if (!append) {
+      orders.value = [];
+      total.value = 0;
+      hasMore.value = false;
+      pagination.value = { ...pagination.value, rowsNumber: 0 };
+    }
+  } finally {
+    loading.value = false;
+    loadingMore.value = false;
+  }
+}
+
+async function handleTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+  pagination.value = { ...pagination.value, ...payload.pagination };
+  await fetchOrders({
+    offset: (payload.pagination.page - 1) * payload.pagination.rowsPerPage,
+    limit: payload.pagination.rowsPerPage,
+  });
+}
+
+function handlePaginationUpdate(value: Record<string, unknown>) {
+  pagination.value = { ...pagination.value, ...value };
+}
+
+async function handleLoadMore({ done }: { done: () => void }) {
+  await fetchOrders({
+    append: true,
+    offset: orders.value.length,
+    limit: pagination.value.rowsPerPage,
+  });
+  done();
+}
+
 async function updateStatus(orderId: number, status: number) {
   const response = await api.patch<AdminOrder>(`/api/admin/orders/${orderId}/status`, { status });
   orders.value = orders.value.map((order) => (

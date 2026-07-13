@@ -120,10 +120,16 @@
           :columns="columns"
           row-key="id"
           :loading="loading"
+          :loading-more="loadingMore"
+          :has-more="hasMore"
+          :pagination="pagination"
           :mobile="mobileConfig"
           table-style="table-layout: fixed; width: 100%"
           flat
           bordered
+          @request="handleTableRequest"
+          @update:pagination="handlePaginationUpdate"
+          @load-more="handleLoadMore"
         >
           <template #body-cell-status="props">
             <q-td :props="props">
@@ -215,9 +221,11 @@ type BroadcastRow = {
 
 const $q = useQuasar();
 const loading = ref(false);
+const loadingMore = ref(false);
 const sending = ref(false);
 const confirmOpen = ref(false);
 const broadcasts = ref<BroadcastRow[]>([]);
+const hasMore = ref(false);
 const stoppingIds = ref(new Set<number>());
 const isPaid = ref(false);
 const emojiQuery = ref('');
@@ -227,6 +235,13 @@ const form = ref({
   buttonUrl: '',
 });
 let pollTimer: number | null = null;
+const pagination = ref({
+  sortBy: null,
+  descending: false,
+  page: 1,
+  rowsPerPage: 20,
+  rowsNumber: 0,
+});
 const editorToolbar = [
   ['bold', 'italic', 'underline', 'strike'],
   ['unordered', 'ordered'],
@@ -388,17 +403,77 @@ function stopPollingIfDone() {
 }
 
 async function loadBroadcasts() {
+  const limit = pagination.value.rowsPerPage;
+  const offset = (pagination.value.page - 1) * limit;
   loading.value = true;
   try {
-    const response = await api.get('/api/admin/broadcasts');
-    broadcasts.value = response.data;
+    const response = await api.get<{
+      items: BroadcastRow[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/broadcasts', {
+      params: { limit, offset },
+    });
+    const payload = Array.isArray(response.data)
+      ? { items: response.data, total: response.data.length, limit, offset }
+      : response.data;
+    broadcasts.value = payload.items;
+    pagination.value = {
+      ...pagination.value,
+      rowsNumber: payload.total,
+      rowsPerPage: payload.limit,
+      page: Math.floor(payload.offset / payload.limit) + 1,
+    };
+    hasMore.value = payload.offset + payload.items.length < payload.total;
     startPollingIfNeeded();
     stopPollingIfDone();
   } catch {
     broadcasts.value = [];
+    pagination.value = { ...pagination.value, rowsNumber: 0 };
+    hasMore.value = false;
     stopPollingIfDone();
   } finally {
     loading.value = false;
+  }
+}
+
+async function handleTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+  pagination.value = { ...pagination.value, ...payload.pagination };
+  await loadBroadcasts();
+}
+
+function handlePaginationUpdate(value: Record<string, unknown>) {
+  pagination.value = { ...pagination.value, ...value };
+}
+
+async function handleLoadMore({ done }: { done: () => void }) {
+  if (loadingMore.value || !hasMore.value) {
+    done();
+    return;
+  }
+  loadingMore.value = true;
+  try {
+    const response = await api.get<{
+      items: BroadcastRow[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/broadcasts', {
+      params: {
+        limit: pagination.value.rowsPerPage,
+        offset: broadcasts.value.length,
+      },
+    });
+    const payload = Array.isArray(response.data)
+      ? { items: response.data, total: response.data.length, limit: pagination.value.rowsPerPage, offset: broadcasts.value.length }
+      : response.data;
+    broadcasts.value = [...broadcasts.value, ...payload.items];
+    pagination.value = { ...pagination.value, rowsNumber: payload.total };
+    hasMore.value = payload.offset + payload.items.length < payload.total;
+  } finally {
+    loadingMore.value = false;
+    done();
   }
 }
 
@@ -423,7 +498,12 @@ async function submitBroadcast() {
       button_url: form.value.buttonUrl.trim() || null,
       speed_mode: isPaid.value ? 'paid' : 'free',
     });
-    broadcasts.value = [response.data, ...broadcasts.value];
+    if (pagination.value.page === 1) {
+      broadcasts.value = [response.data, ...broadcasts.value].slice(0, pagination.value.rowsPerPage);
+      pagination.value = { ...pagination.value, rowsNumber: pagination.value.rowsNumber + 1 };
+    } else {
+      await loadBroadcasts();
+    }
     confirmOpen.value = false;
     form.value = { text: '<p></p>', buttonText: '', buttonUrl: '' };
     isPaid.value = false;

@@ -1,12 +1,15 @@
 <template>
   <div class="app-responsive-table">
-    <div v-if="!Screen.xs" class="app-responsive-table__desktop">
+    <div v-if="!isMobileCardMode" class="app-responsive-table__desktop gt-xs">
       <q-table
         v-bind="tableAttrs"
         :rows="rows"
         :columns="columns"
         :row-key="rowKey"
         :loading="loading"
+        :pagination="resolvedPagination"
+        @update:pagination="emit('update:pagination', $event)"
+        @request="emit('request', $event)"
       >
         <template v-for="slotName in tableSlotNames" #[slotName]="scope" :key="slotName">
           <slot :name="slotName" v-bind="scope || {}" />
@@ -14,81 +17,134 @@
       </q-table>
     </div>
 
-    <div v-else class="app-responsive-table__mobile">
+    <div v-else class="app-responsive-table__mobile xs">
       <div v-if="loading" class="text-grey-7 q-pa-md text-center">Загрузка...</div>
 
       <div v-else-if="rows.length === 0" class="text-grey-7 q-pa-md text-center">Нет данных</div>
 
-      <q-infinite-scroll
-        v-else
-        :disable="!hasMore"
-        :offset="160"
-        class="column q-gutter-sm"
-        @load="loadMore"
-      >
-        <q-card
-          v-for="row in rows"
-          :key="getRowKey(row)"
-          flat
-          bordered
-          class="app-responsive-table__card"
+      <div v-else class="column q-gutter-sm">
+        <q-infinite-scroll
+          v-if="hasMore"
+          :offset="96"
+          :disable="loadingMore || !hasMore"
+          @load="handleLoadMore"
         >
-          <q-card-section class="q-pa-md">
-            <div class="row items-start no-wrap q-gutter-sm">
-              <div class="col">
-                <div class="text-subtitle2 text-weight-medium">
-                  {{ mobile.title(row) }}
-                </div>
-                <div v-if="mobile.subtitle" class="text-caption text-grey-7 q-mt-xs">
-                  {{ mobile.subtitle(row) }}
-                </div>
-              </div>
+          <template v-for="row in rows" :key="getRowKey(row)">
+            <q-card flat bordered class="app-responsive-table__card">
+              <q-card-section class="q-pa-md">
+                <div class="row items-start no-wrap q-gutter-sm">
+                  <div class="col">
+                    <div class="text-subtitle2 text-weight-medium">
+                      {{ mobile.title(row) }}
+                    </div>
+                    <div v-if="mobile.subtitle" class="text-caption text-grey-7 q-mt-xs">
+                      {{ mobile.subtitle(row) }}
+                    </div>
+                  </div>
 
-              <q-badge
-                v-if="getBadge(row)"
-                :color="getBadge(row)?.color"
-                class="app-responsive-table__badge"
-              >
-                {{ getBadge(row)?.label }}
-              </q-badge>
-            </div>
-
-            <div class="app-responsive-table__fields q-mt-md">
-              <div
-                v-for="field in mobile.fields"
-                :key="field.name"
-                class="app-responsive-table__field row items-start no-wrap q-py-xs"
-              >
-                <div class="app-responsive-table__field-label text-caption text-grey-7">
-                  {{ field.label }}
-                </div>
-                <div class="app-responsive-table__field-value text-body2 text-right">
-                  <slot
-                    :name="`mobile-field-${field.name}`"
-                    :row="row"
-                    :value="getMobileFieldValue(row, field)"
+                  <q-badge
+                    v-if="getBadge(row)"
+                    :color="getBadge(row)?.color"
+                    class="app-responsive-table__badge"
                   >
-                    {{ getMobileFieldValue(row, field) }}
-                  </slot>
+                    {{ getBadge(row)?.label }}
+                  </q-badge>
+                </div>
+
+                <div class="app-responsive-table__fields q-mt-md">
+                  <div
+                    v-for="field in mobile.fields"
+                    :key="field.name"
+                    class="app-responsive-table__field row items-start no-wrap q-py-xs"
+                  >
+                    <div class="app-responsive-table__field-label text-caption text-grey-7">
+                      {{ field.label }}
+                    </div>
+                    <div class="app-responsive-table__field-value text-body2 text-right">
+                      <slot
+                        :name="`mobile-field-${field.name}`"
+                        :row="row"
+                        :value="getMobileFieldValue(row, field)"
+                      >
+                        {{ getMobileFieldValue(row, field) }}
+                      </slot>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="$slots['mobile-actions']" class="q-mt-md">
+                  <slot name="mobile-actions" :row="row" />
+                </div>
+              </q-card-section>
+            </q-card>
+          </template>
+          <template #loading>
+            <div class="row justify-center q-pa-sm text-grey-7">Загрузка...</div>
+          </template>
+        </q-infinite-scroll>
+        <template v-else>
+          <q-card
+            v-for="row in rows"
+            :key="getRowKey(row)"
+            flat
+            bordered
+            class="app-responsive-table__card"
+          >
+            <q-card-section class="q-pa-md">
+              <div class="row items-start no-wrap q-gutter-sm">
+                <div class="col">
+                  <div class="text-subtitle2 text-weight-medium">
+                    {{ mobile.title(row) }}
+                  </div>
+                  <div v-if="mobile.subtitle" class="text-caption text-grey-7 q-mt-xs">
+                    {{ mobile.subtitle(row) }}
+                  </div>
+                </div>
+
+                <q-badge
+                  v-if="getBadge(row)"
+                  :color="getBadge(row)?.color"
+                  class="app-responsive-table__badge"
+                >
+                  {{ getBadge(row)?.label }}
+                </q-badge>
+              </div>
+
+              <div class="app-responsive-table__fields q-mt-md">
+                <div
+                  v-for="field in mobile.fields"
+                  :key="field.name"
+                  class="app-responsive-table__field row items-start no-wrap q-py-xs"
+                >
+                  <div class="app-responsive-table__field-label text-caption text-grey-7">
+                    {{ field.label }}
+                  </div>
+                  <div class="app-responsive-table__field-value text-body2 text-right">
+                    <slot
+                      :name="`mobile-field-${field.name}`"
+                      :row="row"
+                      :value="getMobileFieldValue(row, field)"
+                    >
+                      {{ getMobileFieldValue(row, field) }}
+                    </slot>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div v-if="$slots['mobile-actions']" class="q-mt-md">
-              <slot name="mobile-actions" :row="row" />
-            </div>
-          </q-card-section>
-        </q-card>
-        <template #loading>
-          <div v-if="loadingMore" class="text-grey-7 q-pa-sm text-center">Загрузка...</div>
+              <div v-if="$slots['mobile-actions']" class="q-mt-md">
+                <slot name="mobile-actions" :row="row" />
+              </div>
+            </q-card-section>
+          </q-card>
         </template>
-      </q-infinite-scroll>
+        <div v-if="loadingMore" class="row justify-center q-pa-sm text-grey-7">Загрузка...</div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Screen, type QTableColumn } from 'quasar';
+import { useQuasar, type QTableColumn } from 'quasar';
 import { computed, useAttrs, useSlots } from 'vue';
 
 type TableRow = Record<string, unknown>;
@@ -118,26 +174,44 @@ const props = withDefaults(
     columns: QTableColumn<TableRow>[];
     rowKey?: string | ((row: TableRow) => string | number);
     loading?: boolean;
-    mobile: MobileConfig;
-    hasMore?: boolean;
     loadingMore?: boolean;
+    hasMore?: boolean;
+    pagination?: Record<string, unknown>;
+    mobile: MobileConfig;
   }>(),
   {
     rowKey: 'id',
     loading: false,
-    hasMore: false,
     loadingMore: false,
+    hasMore: false,
+    pagination: () => ({ rowsPerPage: 0 }),
   },
 );
 
+const emit = defineEmits<{
+  (event: 'update:pagination', value: Record<string, unknown>): void;
+  (event: 'request', value: unknown): void;
+  (event: 'load-more', value: { done: () => void }): void;
+}>();
+
 const attrs = useAttrs();
 const slots = useSlots();
-const emit = defineEmits<{ loadMore: [done: () => void] }>();
+const $q = useQuasar();
 
 const tableAttrs = computed(() => attrs);
+const resolvedPagination = computed(() => props.pagination);
+const isMobileCardMode = computed(() => $q.screen.xs);
 const tableSlotNames = computed(() =>
   Object.keys(slots).filter((slotName) => !slotName.startsWith('mobile-')),
 );
+
+function handleLoadMore(_: number, done: () => void) {
+  if (!props.hasMore || props.loadingMore) {
+    done();
+    return;
+  }
+  emit('load-more', { done });
+}
 
 function getRowKey(row: TableRow) {
   if (typeof props.rowKey === 'function') {
@@ -173,10 +247,6 @@ function resolveFieldValue(row: TableRow, field: string | ((row: TableRow) => un
   }
 
   return row[field];
-}
-
-function loadMore(_index: number, done: () => void) {
-  emit('loadMore', done);
 }
 </script>
 

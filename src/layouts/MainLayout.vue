@@ -92,7 +92,7 @@ const authStore = useAuthStore();
 const managementMenu = [
   { to: '/management/dashboard', icon: 'dashboard', label: 'Дашборд' },
   { to: '/management/campaigns', icon: 'domain', label: 'Компании' },
-  { to: '/management/applications', icon: 'assignment', label: 'Заявки по кампаниям' },
+  { to: '/management/applications', icon: 'assignment', label: 'Заявки по компаниям' },
   { to: '/management/generator', icon: 'link', label: 'Генератор ссылок' },
 ];
 const isManagementRoute = computed(() => route.path.startsWith('/management/'));

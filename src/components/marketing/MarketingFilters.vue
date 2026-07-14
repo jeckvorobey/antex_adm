@@ -6,7 +6,7 @@
       <q-select
         v-model="local.campaignId"
         :options="campaignOptions"
-        label="Кампания"
+        label="Компания"
         outlined
         dense
         clearable

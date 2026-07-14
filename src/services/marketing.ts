@@ -20,12 +20,20 @@ export const marketingApi = {
     return (await api.post<MarketingPlatform>('/api/admin/marketing/platforms', payload)).data;
   },
 
+  async deletePlatform(slug: string): Promise<void> {
+    await api.delete(`/api/admin/marketing/platforms/${slug}`);
+  },
+
   async listCurrencies(): Promise<MarketingCurrency[]> {
     return (await api.get<MarketingCurrency[]>('/api/admin/marketing/currencies')).data;
   },
 
   async createCurrency(payload: MarketingCurrency): Promise<MarketingCurrency> {
     return (await api.post<MarketingCurrency>('/api/admin/marketing/currencies', payload)).data;
+  },
+
+  async deleteCurrency(code: string): Promise<void> {
+    await api.delete(`/api/admin/marketing/currencies/${code}`);
   },
 
   async createCampaign(payload: CampaignCreatePayload): Promise<MarketingCampaign> {

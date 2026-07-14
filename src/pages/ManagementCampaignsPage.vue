@@ -178,7 +178,7 @@ const filters = reactive({
 const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
 const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS;
 const columns: QTableColumn<MarketingCampaign>[] = [
-  { name: 'name', label: 'Кампания', field: 'name', align: 'left' },
+  { name: 'name', label: 'Компания', field: 'name', align: 'left' },
   { name: 'code', label: 'Код', field: 'code', align: 'left' },
   { name: 'provider', label: 'Платформа', field: 'provider', align: 'left' },
   { name: 'status', label: 'Статус', field: 'status', align: 'left' },

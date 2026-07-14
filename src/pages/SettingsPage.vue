@@ -23,6 +23,7 @@
               <q-item v-for="item in references.platforms" :key="item.slug">
                 <q-item-section>{{ item.name }}</q-item-section>
                 <q-item-section side>{{ item.slug }}</q-item-section>
+                <q-item-section side><q-btn flat round dense color="negative" icon="delete" @click="deletePlatform(item.slug)" /></q-item-section>
               </q-item>
             </q-list>
             <q-form class="row q-col-gutter-sm" @submit="createPlatform">
@@ -41,6 +42,7 @@
               <q-item v-for="item in references.currencies" :key="item.code">
                 <q-item-section>{{ item.code }}</q-item-section>
                 <q-item-section side>{{ item.name }}</q-item-section>
+                <q-item-section side><q-btn flat round dense color="negative" icon="delete" @click="deleteCurrency(item.code)" /></q-item-section>
               </q-item>
             </q-list>
             <q-form class="row q-col-gutter-sm" @submit="createCurrency">
@@ -101,6 +103,26 @@ async function createCurrency() {
     $q.notify({ type: 'positive', message: 'Валюта добавлена' });
   } catch {
     $q.notify({ type: 'negative', message: 'Не удалось добавить валюту' });
+  }
+}
+
+async function deletePlatform(slug: string) {
+  try {
+    await marketingApi.deletePlatform(slug);
+    await references.loadPlatforms(true);
+    $q.notify({ type: 'positive', message: 'Платформа удалена' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Не удалось удалить платформу' });
+  }
+}
+
+async function deleteCurrency(code: string) {
+  try {
+    await marketingApi.deleteCurrency(code);
+    await references.loadCurrencies(true);
+    $q.notify({ type: 'positive', message: 'Валюта удалена' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Валюта связана с компаниями или не может быть удалена' });
   }
 }
 

@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Заявки по кампаниям</div>
+    <div class="text-h5 q-mb-md">Заявки по компаниям</div>
     <q-card flat bordered class="q-mb-md"
       ><q-card-section class="row q-col-gutter-md">
         <AdminDateInput
@@ -91,7 +91,7 @@ const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS;
 const percent = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(2)}%` : '—';
 const columns: QTableColumn<MarketingApplicationRow>[] = [
-  { name: 'campaignName', label: 'Кампания', field: 'campaignName', align: 'left' },
+  { name: 'campaignName', label: 'Компания', field: 'campaignName', align: 'left' },
   { name: 'attributedUsers', label: 'Пользователи', field: 'attributedUsers', align: 'right' },
   { name: 'applications', label: 'Заявки', field: 'applications', align: 'right' },
   { name: 'uniqueApplicants', label: 'Уникальные', field: 'uniqueApplicants', align: 'right' },

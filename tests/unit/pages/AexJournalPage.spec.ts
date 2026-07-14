@@ -69,7 +69,16 @@ describe('AexJournalPage', () => {
     vi.mocked(api.get).mockResolvedValue({
       data: {
         data: [
-          { id: 1, userId: 100, username: 'alice', type: 'credit', amount: 50, balanceBefore: 100, balanceAfter: 150, createdAt: '2026-06-24T10:00:00Z' },
+          {
+            id: 1,
+            userId: 100,
+            username: 'alice',
+            type: 'credit',
+            amount: 50,
+            balanceBefore: 100,
+            balanceAfter: 150,
+            createdAt: '2026-06-24T10:00:00Z',
+          },
         ],
         total: 1,
       },
@@ -82,7 +91,17 @@ describe('AexJournalPage', () => {
   it('для большого total использует серверную пагинацию таблицы', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: {
-        data: [{ id: 1, userId: 100, type: 'credit', amount: 50, balanceBefore: 100, balanceAfter: 150, createdAt: '2026-06-24T10:00:00Z' }],
+        data: [
+          {
+            id: 1,
+            userId: 100,
+            type: 'credit',
+            amount: 50,
+            balanceBefore: 100,
+            balanceAfter: 150,
+            createdAt: '2026-06-24T10:00:00Z',
+          },
+        ],
         total: 50,
       },
     });
@@ -94,7 +113,17 @@ describe('AexJournalPage', () => {
   it('без данных не рендерит отдельный q-pagination', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: {
-        data: [{ id: 1, userId: 100, type: 'credit', amount: 50, balanceBefore: 100, balanceAfter: 150, createdAt: '2026-06-24T10:00:00Z' }],
+        data: [
+          {
+            id: 1,
+            userId: 100,
+            type: 'credit',
+            amount: 50,
+            balanceBefore: 100,
+            balanceAfter: 150,
+            createdAt: '2026-06-24T10:00:00Z',
+          },
+        ],
         total: 1,
       },
     });
@@ -148,7 +177,16 @@ describe('AexJournalPage', () => {
     vi.mocked(api.get).mockResolvedValue({
       data: {
         items: [
-          { id: 1, userId: 100, username: 'alice', type: 'hold', amount: 50, balanceBefore: 100, balanceAfter: 100, createdAt: '2026-06-24T10:00:00Z' },
+          {
+            id: 1,
+            userId: 100,
+            username: 'alice',
+            type: 'hold',
+            amount: 50,
+            balanceBefore: 100,
+            balanceAfter: 100,
+            createdAt: '2026-06-24T10:00:00Z',
+          },
         ],
         total: 1,
         limit: 20,

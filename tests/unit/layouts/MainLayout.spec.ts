@@ -35,19 +35,21 @@ describe('MainLayout', () => {
     mockRoute.path = '/dashboard';
   });
 
-  it('показывает Менеджмент сразу после Дашборда', () => {
+  it('показывает Рекламу сразу после Дашборда с уникальными иконками', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
 
-    expect(html.indexOf('Менеджмент')).toBeGreaterThan(html.indexOf('Дашборд'));
-    expect(html.indexOf('Менеджмент')).toBeLessThan(html.indexOf('Заявки'));
-    expect(html).toContain('Dashboard');
-    expect(html).toContain('Кампании');
+    expect(html.indexOf('Реклама')).toBeGreaterThan(html.indexOf('Дашборд'));
+    expect(html.indexOf('Реклама')).toBeLessThan(html.indexOf('Заявки'));
+    expect(html).toContain('Дашборд');
+    expect(html).toContain('Компании');
     expect(html).toContain('Заявки по кампаниям');
     expect(html).toContain('Генератор ссылок');
+    const management = wrapper.findComponent('[data-testid="management-menu"]');
+    expect(management.props('icon')).toBe('ads_click');
   });
 
-  it('содержит отдельные раскрывающиеся группы Менеджмент и ATXG', () => {
+  it('содержит отдельные раскрывающиеся группы Реклама и ATXG', () => {
     const wrapper = mountLayout();
 
     expect(wrapper.findAll('.q-expansion-item')).toHaveLength(2);
@@ -98,11 +100,19 @@ describe('MainLayout', () => {
     expect(mockPush).toHaveBeenCalledWith('/login');
   });
 
-  it('клик по заголовку Менеджмент открывает dashboard', async () => {
+  it('клик по заголовку Реклама только раскрывает группу без перехода', async () => {
     const wrapper = mountLayout();
 
     await wrapper.get('[data-testid="management-menu"]').trigger('click');
 
-    expect(mockPush).toHaveBeenCalledWith('/management/dashboard');
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('не раскрывает Рекламу автоматически на дочернем маршруте', () => {
+    mockRoute.path = '/management/dashboard';
+    const wrapper = mountLayout();
+    const management = wrapper.findAllComponents({ name: 'QExpansionItemStub' })[0];
+
+    expect(management?.props('modelValue')).toBe(false);
   });
 });

@@ -68,9 +68,21 @@ const columns: QTableColumn<SiteLeadRow>[] = [
     style: 'width: 14%',
     format: (value) => formatAdminDateTime(String(value)),
   },
-  { name: 'messenger', label: 'Мессенджер', field: (row) => row.messenger ?? '—', align: 'left', style: 'width: 12%' },
+  {
+    name: 'messenger',
+    label: 'Мессенджер',
+    field: (row) => row.messenger ?? '—',
+    align: 'left',
+    style: 'width: 12%',
+  },
   { name: 'contact', label: 'Контакт', field: 'contact', align: 'left', style: 'width: 15%' },
-  { name: 'topic', label: 'Тема', field: (row) => row.topic ?? '—', align: 'left', style: 'width: 15%' },
+  {
+    name: 'topic',
+    label: 'Тема',
+    field: (row) => row.topic ?? '—',
+    align: 'left',
+    style: 'width: 15%',
+  },
   { name: 'message', label: 'Сообщение', field: 'message', align: 'left', style: 'width: 30%' },
   { name: 'source', label: 'Источник', field: 'source', align: 'left', style: 'width: 14%' },
 ];

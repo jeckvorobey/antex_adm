@@ -31,9 +31,7 @@
 
     <template #no-option>
       <q-item>
-        <q-item-section class="text-grey-7">
-          Пользователи не найдены
-        </q-item-section>
+        <q-item-section class="text-grey-7"> Пользователи не найдены </q-item-section>
       </q-item>
     </template>
   </q-select>

@@ -55,9 +55,7 @@ describe('LoginPage', () => {
     const wrapper = mountLogin(false);
     await wrapper.find('form').trigger('submit');
     await flushPromises();
-    expect(notifySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'negative' })
-    );
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'negative' }));
   });
 
   it('username и password передаются в api.post', async () => {
@@ -66,7 +64,10 @@ describe('LoginPage', () => {
     });
     const wrapper = mountLogin(false);
     // Устанавливаем значения через vm
-    const vm = wrapper.vm as unknown as { username: { value: string }; password: { value: string } };
+    const vm = wrapper.vm as unknown as {
+      username: { value: string };
+      password: { value: string };
+    };
     // Находим inputs и устанавливаем значения
     const inputs = wrapper.findAll('input');
     await inputs[0].setValue('testuser');

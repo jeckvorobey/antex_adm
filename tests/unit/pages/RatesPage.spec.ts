@@ -211,9 +211,7 @@ describe('RatesPage', () => {
     const refreshBtn = wrapper.findAll('.q-btn').find((b) => b.text().includes('Обновить'));
     await refreshBtn?.trigger('click');
     await flushPromises();
-    expect(notifySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'positive' })
-    );
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
   });
 
   it('компонент не падает при ошибке загрузки курсов', async () => {

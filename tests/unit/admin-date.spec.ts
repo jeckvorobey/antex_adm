@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  formatAdminDate,
-  formatAdminDateTime,
-  serializeAdminDateForApi,
-} from '@/utils/date';
+import { formatAdminDate, formatAdminDateTime, serializeAdminDateForApi } from '@/utils/date';
 
 describe('formatAdminDateTime', () => {
   it('форматирует дату как dd.mm.yyyy hh:mm', () => {

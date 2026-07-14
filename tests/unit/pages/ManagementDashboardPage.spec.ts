@@ -41,6 +41,7 @@ describe('ManagementDashboardPage', () => {
     expect(dashboardMock).toHaveBeenCalledTimes(1);
     expect(wrapper.text()).toContain('Нет данных за выбранный период');
     expect(wrapper.text()).not.toMatch(/NaN|Infinity/);
+    expect(wrapper.text()).toContain('Рекламный дашборд');
   });
 
   it('показывает ошибку и позволяет повторить загрузку', async () => {

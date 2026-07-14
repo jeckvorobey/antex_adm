@@ -30,4 +30,19 @@ describe('DailyMetricsDialog', () => {
       expect.objectContaining({ impressions: 100, starts: 10, spend: 25 }),
     );
   });
+
+  it('отправляет выбранный день метрик в ISO-формате', async () => {
+    upsertMock.mockResolvedValue({});
+    const wrapper = mount(DailyMetricsDialog);
+    wrapper.vm.open!({ id: 7, name: 'Campaign' });
+    await wrapper.vm.$nextTick();
+
+    await wrapper
+      .findComponent({ name: 'AdminDateInput' })
+      .vm.$emit('update:modelValue', '2026-07-17');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(upsertMock).toHaveBeenCalledWith(7, '2026-07-17', expect.any(Object));
+  });
 });

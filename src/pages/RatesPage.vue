@@ -3,7 +3,13 @@
     <div class="row items-center q-mb-md">
       <div class="text-h5">Курсы и наценка</div>
       <q-space />
-      <q-btn color="secondary" icon="refresh" label="Обновить курс" :loading="refreshing" @click="refreshRates" />
+      <q-btn
+        color="secondary"
+        icon="refresh"
+        label="Обновить курс"
+        :loading="refreshing"
+        @click="refreshRates"
+      />
     </div>
 
     <q-card>
@@ -215,5 +221,4 @@ async function updateMargin(row: RateRow, margin: number) {
 function formatMargin(value: number) {
   return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
 }
-
 </script>

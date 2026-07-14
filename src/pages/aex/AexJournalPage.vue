@@ -37,41 +37,11 @@
       </div>
 
       <div class="col-12 col-sm-6 col-md-2">
-        <q-input
-          v-model="filterDateFrom"
-          dense
-          outlined
-          clearable
-          mask="##.##.####"
-          label="С даты"
-        >
-          <template #append>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="filterDateFrom" mask="DD.MM.YYYY" />
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+        <AdminDateInput v-model="filterDateFrom" label="С даты" />
       </div>
 
       <div class="col-12 col-sm-6 col-md-2">
-        <q-input
-          v-model="filterDateTo"
-          dense
-          outlined
-          clearable
-          mask="##.##.####"
-          label="По дату"
-        >
-          <template #append>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="filterDateTo" mask="DD.MM.YYYY" />
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+        <AdminDateInput v-model="filterDateTo" label="По дату" />
       </div>
 
       <div class="col-12 col-md-auto">
@@ -134,8 +104,9 @@ import { onMounted, ref, watch } from 'vue';
 
 import { api } from '@boot/axios';
 import UserSelect from '@components/admin/UserSelect.vue';
+import AdminDateInput from '@components/ui/AdminDateInput.vue';
 import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue';
-import { formatAdminDateTime, serializeAdminDateForApi } from '@utils/date';
+import { formatAdminDateTime } from '@utils/date';
 
 interface AexOperationRow {
   id: number;
@@ -175,24 +146,63 @@ const filterDateFrom = ref<string>('');
 const filterDateTo = ref<string>('');
 
 const typeOptions = [
-  { value: 'credit', label: 'Начисление', icon: 'add_circle', color: 'positive', description: 'Пополнение ATXG баланса' },
-  { value: 'debit', label: 'Списание', icon: 'remove_circle', color: 'negative', description: 'Списание ATXG баланса' },
-  { value: 'hold', label: 'Холд', icon: 'lock', color: 'warning', description: 'Резервирование ATXG' },
-  { value: 'release', label: 'Разморозка', icon: 'lock_open', color: 'positive', description: 'Возврат зарезервированных ATXG' },
+  {
+    value: 'credit',
+    label: 'Начисление',
+    icon: 'add_circle',
+    color: 'positive',
+    description: 'Пополнение ATXG баланса',
+  },
+  {
+    value: 'debit',
+    label: 'Списание',
+    icon: 'remove_circle',
+    color: 'negative',
+    description: 'Списание ATXG баланса',
+  },
+  {
+    value: 'hold',
+    label: 'Холд',
+    icon: 'lock',
+    color: 'warning',
+    description: 'Резервирование ATXG',
+  },
+  {
+    value: 'release',
+    label: 'Разморозка',
+    icon: 'lock_open',
+    color: 'positive',
+    description: 'Возврат зарезервированных ATXG',
+  },
 ];
 
 const columns: QTableColumn<AexOperationRow>[] = [
   { name: 'id', label: 'ID', field: 'id', align: 'left', sortable: true, style: 'width: 7%' },
-  { name: 'userId', label: 'User ID', field: 'userId', align: 'left', sortable: true, style: 'width: 9%' },
+  {
+    name: 'userId',
+    label: 'User ID',
+    field: 'userId',
+    align: 'left',
+    sortable: true,
+    style: 'width: 9%',
+  },
   {
     name: 'username',
     label: 'Пользователь',
-    field: (row: AexOperationRow) => row.username ? `@${row.username}` : row.firstName ?? `ID ${row.userId}`,
+    field: (row: AexOperationRow) =>
+      row.username ? `@${row.username}` : (row.firstName ?? `ID ${row.userId}`),
     align: 'left',
     style: 'width: 18%',
   },
   { name: 'type', label: 'Тип', field: 'type', align: 'left', sortable: true, style: 'width: 13%' },
-  { name: 'amount', label: 'Сумма', field: 'amount', align: 'right', sortable: true, style: 'width: 12%' },
+  {
+    name: 'amount',
+    label: 'Сумма',
+    field: 'amount',
+    align: 'right',
+    sortable: true,
+    style: 'width: 12%',
+  },
   {
     name: 'balanceBefore',
     label: 'До',
@@ -221,7 +231,8 @@ const columns: QTableColumn<AexOperationRow>[] = [
 ];
 
 const mobileConfig = {
-  title: (row: AexOperationRow) => row.username ? `@${row.username}` : row.firstName ?? `ID ${row.userId}`,
+  title: (row: AexOperationRow) =>
+    row.username ? `@${row.username}` : (row.firstName ?? `ID ${row.userId}`),
   subtitle: (row: AexOperationRow) => formatAdminDateTime(row.createdAt),
   badge: (row: AexOperationRow) => ({
     label: getTypeLabel(row.type),
@@ -256,16 +267,21 @@ async function fetchOperations(options?: { append?: boolean; offset?: number; li
     const params: Record<string, unknown> = { limit, offset };
     if (filterUserId.value) params.userId = filterUserId.value;
     if (filterType.value) params.type = filterType.value;
-    const dateFrom = serializeAdminDateForApi(filterDateFrom.value);
-    const dateTo = serializeAdminDateForApi(filterDateTo.value);
-    if (dateFrom) params.dateFrom = dateFrom;
-    if (dateTo) params.dateTo = dateTo;
+    if (filterDateFrom.value) params.dateFrom = filterDateFrom.value;
+    if (filterDateTo.value) params.dateTo = filterDateTo.value;
 
-    const res = await api.get<PaginatedResponse<AexOperationRow>>('/api/admin/aex/operations', { params });
+    const res = await api.get<PaginatedResponse<AexOperationRow>>('/api/admin/aex/operations', {
+      params,
+    });
     const payload = Array.isArray(res.data)
       ? { items: res.data, total: res.data.length, limit, offset }
-      : ('data' in res.data && Array.isArray((res.data as { data?: AexOperationRow[] }).data))
-        ? { items: (res.data as { data: AexOperationRow[]; total: number }).data, total: (res.data as { total: number }).total, limit, offset }
+      : 'data' in res.data && Array.isArray((res.data as { data?: AexOperationRow[] }).data)
+        ? {
+            items: (res.data as { data: AexOperationRow[]; total: number }).data,
+            total: (res.data as { total: number }).total,
+            limit,
+            offset,
+          }
         : res.data;
     const nextRows = Array.isArray(payload.items) ? payload.items : [];
     operations.value = append ? [...operations.value, ...nextRows] : nextRows;

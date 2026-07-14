@@ -97,7 +97,9 @@ describe('AexManualOpsPage', () => {
     await wrapper.find('form').trigger('submit');
     await flushPromises();
 
-    const confirm = wrapper.findAll('button').find((button) => button.text().includes('Подтвердить'));
+    const confirm = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('Подтвердить'));
     expect(confirm).toBeTruthy();
     await confirm?.trigger('click');
     await flushPromises();
@@ -122,7 +124,9 @@ describe('AexManualOpsPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const debitButton = wrapper.findAll('.q-btn-toggle button').find((button) => button.text() === 'Списание');
+    const debitButton = wrapper
+      .findAll('.q-btn-toggle button')
+      .find((button) => button.text() === 'Списание');
     await debitButton?.trigger('click');
     await flushPromises();
 

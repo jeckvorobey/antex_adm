@@ -34,7 +34,9 @@
     >
       <template #body-cell-available="props">
         <q-td :props="props">
-          <span class="text-weight-medium">{{ formatAmount(Number(props.row.balance_available)) }}</span>
+          <span class="text-weight-medium">{{
+            formatAmount(Number(props.row.balance_available))
+          }}</span>
         </q-td>
       </template>
 
@@ -47,7 +49,9 @@
       <template #body-cell-total="props">
         <q-td :props="props">
           <span class="text-weight-medium text-primary">
-            {{ formatAmount(Number(props.row.balance_available) + Number(props.row.balance_reserved)) }}
+            {{
+              formatAmount(Number(props.row.balance_available) + Number(props.row.balance_reserved))
+            }}
           </span>
         </q-td>
       </template>
@@ -101,11 +105,19 @@ const pagination = ref({
 });
 
 const columns: QTableColumn<AexWalletRow>[] = [
-  { name: 'userId', label: 'ID', field: 'user_id', align: 'left', sortable: true, style: 'width: 8%' },
+  {
+    name: 'userId',
+    label: 'ID',
+    field: 'user_id',
+    align: 'left',
+    sortable: true,
+    style: 'width: 8%',
+  },
   {
     name: 'username',
     label: 'Пользователь',
-    field: (row: AexWalletRow) => row.username ? `@${row.username}` : row.first_name ?? `ID ${row.user_id}`,
+    field: (row: AexWalletRow) =>
+      row.username ? `@${row.username}` : (row.first_name ?? `ID ${row.user_id}`),
     align: 'left',
     style: 'width: 24%',
   },
@@ -145,7 +157,8 @@ const columns: QTableColumn<AexWalletRow>[] = [
 ];
 
 const mobileConfig = {
-  title: (row: AexWalletRow) => row.username ? `@${row.username}` : row.first_name ?? `ID ${row.user_id}`,
+  title: (row: AexWalletRow) =>
+    row.username ? `@${row.username}` : (row.first_name ?? `ID ${row.user_id}`),
   subtitle: (row: AexWalletRow) => formatAdminDateTime(row.createdAt),
   badge: (row: AexWalletRow) => ({
     label: formatAmount(Number(row.balance_available) + Number(row.balance_reserved)),
@@ -230,7 +243,12 @@ async function handleLoadMore({ done }: { done: () => void }) {
       offset: number;
     }>('/api/admin/aex/wallets', { params });
     const payload = Array.isArray(res.data)
-      ? { items: res.data, total: res.data.length, limit: pagination.value.rowsPerPage, offset: wallets.value.length }
+      ? {
+          items: res.data,
+          total: res.data.length,
+          limit: pagination.value.rowsPerPage,
+          offset: wallets.value.length,
+        }
       : res.data;
     wallets.value = [...wallets.value, ...payload.items.map(normalizeWallet)];
     pagination.value = { ...pagination.value, rowsNumber: payload.total };
@@ -250,7 +268,10 @@ function normalizeWallet(row: Record<string, unknown>): AexWalletRow {
     id: Number(row.id),
     user_id: Number(row.user_id ?? row.userId),
     username: (row.username as string | null | undefined) ?? null,
-    first_name: (row.first_name as string | null | undefined) ?? (row.firstName as string | null | undefined) ?? null,
+    first_name:
+      (row.first_name as string | null | undefined) ??
+      (row.firstName as string | null | undefined) ??
+      null,
     balance_available: String(row.balance_available ?? row.available ?? 0),
     balance_reserved: String(row.balance_reserved ?? row.reserved ?? 0),
     createdAt: String(row.createdAt ?? row.updatedAt ?? ''),

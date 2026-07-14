@@ -4,13 +4,10 @@
       <q-card-section class="text-h6">Дневные метрики — {{ campaign?.name }}</q-card-section>
       <q-card-section>
         <q-form class="q-gutter-md" @submit="save">
-          <q-input
+          <AdminDateInput
             v-model="metricDate"
-            type="date"
-            stack-label
             label="Дата *"
-            outlined
-            :rules="[(v) => Boolean(v) || 'Укажите дату']"
+            :rules="[(value: string) => Boolean(value) || 'Укажите дату']"
           />
           <q-input
             v-model.number="form.impressions"
@@ -62,6 +59,7 @@ import { useQuasar } from 'quasar';
 
 import { marketingApi } from '@/services/marketing';
 import type { MarketingCampaign } from '@/types/marketing';
+import AdminDateInput from '@/components/ui/AdminDateInput.vue';
 
 const $q = useQuasar();
 const emit = defineEmits<{ saved: [] }>();

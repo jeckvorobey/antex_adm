@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Marketing Dashboard</div>
+    <div class="text-h5 q-mb-md">Рекламный дашборд</div>
     <MarketingFilters
       :model-value="filters"
       :campaign-options="campaignOptions"

@@ -32,8 +32,22 @@ describe('AexWalletsPage', () => {
   it('отображает список кошельков', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: [
-        { id: 1, userId: 100, username: 'alice', available: 100.5, reserved: 20.3, updatedAt: '2026-06-24T10:00:00Z' },
-        { id: 2, userId: 200, username: 'bob', available: 0, reserved: 5.0, updatedAt: '2026-06-24T11:00:00Z' },
+        {
+          id: 1,
+          userId: 100,
+          username: 'alice',
+          available: 100.5,
+          reserved: 20.3,
+          updatedAt: '2026-06-24T10:00:00Z',
+        },
+        {
+          id: 2,
+          userId: 200,
+          username: 'bob',
+          available: 0,
+          reserved: 5.0,
+          updatedAt: '2026-06-24T11:00:00Z',
+        },
       ],
     });
     const wrapper = mountPage();
@@ -45,7 +59,14 @@ describe('AexWalletsPage', () => {
   it('отображает балансы (available, reserved, total)', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: [
-        { id: 1, userId: 100, username: 'alice', available: 100.5, reserved: 20.3, updatedAt: '2026-06-24T10:00:00Z' },
+        {
+          id: 1,
+          userId: 100,
+          username: 'alice',
+          available: 100.5,
+          reserved: 20.3,
+          updatedAt: '2026-06-24T10:00:00Z',
+        },
       ],
     });
     const wrapper = mountPage();

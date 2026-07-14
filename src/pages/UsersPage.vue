@@ -79,10 +79,7 @@
 
       <template #body-cell-referralCode="props">
         <q-td :props="props" class="referral-code-cell">
-          <span
-            v-if="props.row.referral_code"
-            class="referral-code-pill"
-          >
+          <span v-if="props.row.referral_code" class="referral-code-pill">
             {{ props.row.referral_code }}
           </span>
           <span v-else class="referral-empty">—</span>
@@ -125,9 +122,7 @@
             dense
             @click="generateReferralCodeForUser(props.row)"
           >
-            <q-tooltip>
-              Создать реферальный код для этого пользователя
-            </q-tooltip>
+            <q-tooltip> Создать реферальный код для этого пользователя </q-tooltip>
           </q-btn>
           <q-btn
             v-else-if="generatingForUser(props.row.id)"
@@ -175,10 +170,7 @@
       </template>
 
       <template #mobile-field-referralCode="{ row }">
-        <span
-          v-if="row.referral_code"
-          class="referral-code-pill"
-        >
+        <span v-if="row.referral_code" class="referral-code-pill">
           {{ row.referral_code }}
         </span>
         <span v-else class="referral-empty">—</span>
@@ -207,54 +199,54 @@
 </template>
 
 <script setup lang="ts">
-import { api } from '@boot/axios'
-import type { QTableColumn } from 'quasar'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useQuasar } from 'quasar'
+import { api } from '@boot/axios';
+import type { QTableColumn } from 'quasar';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useQuasar } from 'quasar';
 
-import { getRoleOptionsForUser } from '@pages/users/role-options'
-import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue'
-import { formatAdminDateTime } from '@utils/date'
+import { getRoleOptionsForUser } from '@pages/users/role-options';
+import AppResponsiveTable from '@components/ui/AppResponsiveTable.vue';
+import { formatAdminDateTime } from '@utils/date';
 
 type UserRow = {
-  id: number
-  username: string | null
-  first_name: string | null
-  role: number
-  role_name?: string
-  createdAt: string
-  referral_code?: string | null
-  referred_by?: number | null
-  referral_rate_percent?: string | null
-  balance?: string | null
-}
+  id: number;
+  username: string | null;
+  first_name: string | null;
+  role: number;
+  role_name?: string;
+  createdAt: string;
+  referral_code?: string | null;
+  referred_by?: number | null;
+  referral_rate_percent?: string | null;
+  balance?: string | null;
+};
 
-const $q = useQuasar()
+const $q = useQuasar();
 
 const roleTitles: Record<number, string> = {
   2: 'Менеджер',
   9: 'Пользователь',
-}
+};
 
-const users = ref<UserRow[]>([])
-const loading = ref(false)
-const loadingMore = ref(false)
-const hasMore = ref(false)
-const savingRoleIds = ref<number[]>([])
-const generatingCodes = ref(false)
-const generatingForUserIds = ref<Set<number>>(new Set())
-const search = ref('')
+const users = ref<UserRow[]>([]);
+const loading = ref(false);
+const loadingMore = ref(false);
+const hasMore = ref(false);
+const savingRoleIds = ref<number[]>([]);
+const generatingCodes = ref(false);
+const generatingForUserIds = ref<Set<number>>(new Set());
+const search = ref('');
 const pagination = ref({
   sortBy: null,
   descending: false,
   page: 1,
   rowsPerPage: 20,
   rowsNumber: 0,
-})
+});
 
 const hasUsersWithoutReferralCode = computed(() =>
-  users.value.some((u) => u.referral_code == null)
-)
+  users.value.some((u) => u.referral_code == null),
+);
 
 const columns: QTableColumn<UserRow>[] = [
   { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'width: 6%' },
@@ -310,12 +302,15 @@ const columns: QTableColumn<UserRow>[] = [
     style: 'width: 14%',
     format: (value) => formatAdminDateTime(String(value)),
   },
-]
+];
 
 const mobileConfig = {
-  title: (row: UserRow) => row.username ? `@${row.username}` : row.first_name ?? `ID ${row.id}`,
+  title: (row: UserRow) => (row.username ? `@${row.username}` : (row.first_name ?? `ID ${row.id}`)),
   subtitle: (row: UserRow) => formatAdminDateTime(row.createdAt),
-  badge: (row: UserRow) => ({ label: getRoleTitle(row), color: row.role === 2 ? 'primary' : 'grey' }),
+  badge: (row: UserRow) => ({
+    label: getRoleTitle(row),
+    color: row.role === 2 ? 'primary' : 'grey',
+  }),
   fields: [
     { name: 'id', label: 'ID' },
     { name: 'first_name', label: 'Имя' },
@@ -326,132 +321,137 @@ const mobileConfig = {
     { name: 'referralBalance', label: 'Баланс' },
     { name: 'createdAt', label: 'Регистрация' },
   ],
-}
+};
 
 /** Format rate percent string like "0.200000" → "0.2%" */
 function formatRate(value: string | null | undefined): string {
-  if (value == null) return '—'
-  const num = parseFloat(value)
-  if (isNaN(num)) return '—'
+  if (value == null) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
   // Remove trailing zeros and potential trailing dot
-  const formatted = num.toFixed(2).replace(/\.?0+$/, '')
-  return `${formatted}%`
+  const formatted = num.toFixed(2).replace(/\.?0+$/, '');
+  return `${formatted}%`;
 }
 
 /** Format balance string like "1240.5" → "₽ 1 240.50" */
 function formatBalance(value: string | null | undefined): string {
-  if (value == null) return '—'
-  const num = parseFloat(value)
-  if (isNaN(num)) return '—'
+  if (value == null) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
   // Format with two decimal places and space as thousand separator
-  const formatted = num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  const formatted = num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   // Using ruble symbol as per common usage in the app
-  return `${formatted}`
+  return `${formatted}`;
 }
 
 async function fetchUsers() {
-  const limit = pagination.value.rowsPerPage
-  const offset = (pagination.value.page - 1) * limit
-  loading.value = true
+  const limit = pagination.value.rowsPerPage;
+  const offset = (pagination.value.page - 1) * limit;
+  loading.value = true;
   try {
-    const params: Record<string, unknown> = { limit, offset }
+    const params: Record<string, unknown> = { limit, offset };
     if (search.value) {
-      params.search = search.value
+      params.search = search.value;
     }
     const res = await api.get<{
-      items: UserRow[]
-      total: number
-      limit: number
-      offset: number
-    }>('/api/admin/users', { params })
+      items: UserRow[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/users', { params });
     const payload = Array.isArray(res.data)
       ? { items: res.data, total: res.data.length, limit, offset }
-      : res.data
-    users.value = payload.items
+      : res.data;
+    users.value = payload.items;
     pagination.value = {
       ...pagination.value,
       rowsNumber: payload.total,
       rowsPerPage: payload.limit,
       page: Math.floor(payload.offset / payload.limit) + 1,
-    }
-    hasMore.value = payload.offset + payload.items.length < payload.total
+    };
+    hasMore.value = payload.offset + payload.items.length < payload.total;
   } catch {
-    users.value = []
-    pagination.value = { ...pagination.value, rowsNumber: 0 }
-    hasMore.value = false
+    users.value = [];
+    pagination.value = { ...pagination.value, rowsNumber: 0 };
+    hasMore.value = false;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-onMounted(fetchUsers)
+onMounted(fetchUsers);
 watch(search, async () => {
-  pagination.value = { ...pagination.value, page: 1 }
-  await fetchUsers()
-})
+  pagination.value = { ...pagination.value, page: 1 };
+  await fetchUsers();
+});
 
 async function handleTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
-  pagination.value = { ...pagination.value, ...payload.pagination }
-  await fetchUsers()
+  pagination.value = { ...pagination.value, ...payload.pagination };
+  await fetchUsers();
 }
 
 function handlePaginationUpdate(value: Record<string, unknown>) {
-  pagination.value = { ...pagination.value, ...value }
+  pagination.value = { ...pagination.value, ...value };
 }
 
 async function handleLoadMore({ done }: { done: () => void }) {
   if (loadingMore.value || !hasMore.value) {
-    done()
-    return
+    done();
+    return;
   }
-  loadingMore.value = true
+  loadingMore.value = true;
   try {
     const params: Record<string, unknown> = {
       limit: pagination.value.rowsPerPage,
       offset: users.value.length,
-    }
+    };
     if (search.value) {
-      params.search = search.value
+      params.search = search.value;
     }
     const res = await api.get<{
-      items: UserRow[]
-      total: number
-      limit: number
-      offset: number
-    }>('/api/admin/users', { params })
+      items: UserRow[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/users', { params });
     const payload = Array.isArray(res.data)
-      ? { items: res.data, total: res.data.length, limit: pagination.value.rowsPerPage, offset: users.value.length }
-      : res.data
-    users.value = [...users.value, ...payload.items]
-    pagination.value = { ...pagination.value, rowsNumber: payload.total }
-    hasMore.value = payload.offset + payload.items.length < payload.total
+      ? {
+          items: res.data,
+          total: res.data.length,
+          limit: pagination.value.rowsPerPage,
+          offset: users.value.length,
+        }
+      : res.data;
+    users.value = [...users.value, ...payload.items];
+    pagination.value = { ...pagination.value, rowsNumber: payload.total };
+    hasMore.value = payload.offset + payload.items.length < payload.total;
   } finally {
-    loadingMore.value = false
-    done()
+    loadingMore.value = false;
+    done();
   }
 }
 
 function getRoleTitle(row: UserRow) {
-  return row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`
+  return row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`;
 }
 
 function hasAssignedManager() {
-  return users.value.some((row) => row.role === 2)
+  return users.value.some((row) => row.role === 2);
 }
 
 function getRoleOptions(row: UserRow) {
   return getRoleOptionsForUser({
     editedUserRole: row.role,
     hasAssignedManager: hasAssignedManager(),
-  })
+  });
 }
 
 function isRoleSaving(userId: number) {
-  return savingRoleIds.value.includes(userId)
+  return savingRoleIds.value.includes(userId);
 }
 
 function generatingForUser(userId: number): boolean {
-  return generatingForUserIds.value.has(userId)
+  return generatingForUserIds.value.has(userId);
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -467,31 +467,31 @@ function getErrorMessage(error: unknown, fallback: string) {
     'detail' in error.response.data &&
     typeof error.response.data.detail === 'string'
   ) {
-    return error.response.data.detail
+    return error.response.data.detail;
   }
-  return fallback
+  return fallback;
 }
 
 async function updateRole(row: UserRow, role: number) {
   if (isRoleSaving(row.id)) {
-    return
+    return;
   }
 
-  savingRoleIds.value = [...savingRoleIds.value, row.id]
+  savingRoleIds.value = [...savingRoleIds.value, row.id];
   try {
-    const res = await api.patch<UserRow>(`/api/admin/users/${row.id}`, { role })
-    const index = users.value.findIndex((item) => item.id === row.id)
+    const res = await api.patch<UserRow>(`/api/admin/users/${row.id}`, { role });
+    const index = users.value.findIndex((item) => item.id === row.id);
     if (index >= 0) {
-      users.value[index] = res.data
+      users.value[index] = res.data;
     }
-    $q.notify({ type: 'positive', message: 'Роль пользователя сохранена' })
+    $q.notify({ type: 'positive', message: 'Роль пользователя сохранена' });
   } catch (error) {
     $q.notify({
       type: 'negative',
       message: getErrorMessage(error, 'Не удалось сохранить роль пользователя'),
-    })
+    });
   } finally {
-    savingRoleIds.value = savingRoleIds.value.filter((id) => id !== row.id)
+    savingRoleIds.value = savingRoleIds.value.filter((id) => id !== row.id);
   }
 }
 
@@ -502,40 +502,40 @@ function generateReferralCodes() {
     cancel: { label: 'Отмена', flat: true },
     ok: { label: 'Сгенерировать', color: 'primary' },
   }).onOk(async () => {
-    generatingCodes.value = true
+    generatingCodes.value = true;
     try {
-      const res = await api.post<{ generated: number }>('/api/admin/aex/generate-referral-codes')
+      const res = await api.post<{ generated: number }>('/api/admin/aex/generate-referral-codes');
       $q.notify({
         type: 'positive',
         message: `Сгенерировано кодов: ${res.data.generated}`,
-      })
-      await fetchUsers()
+      });
+      await fetchUsers();
     } catch (error) {
       $q.notify({
         type: 'negative',
         message: getErrorMessage(error, 'Не удалось сгенерировать коды'),
-      })
+      });
     } finally {
-      generatingCodes.value = false
+      generatingCodes.value = false;
     }
-  })
+  });
 }
 
 async function generateReferralCodeForUser(row: UserRow, regenerate = false) {
-  const userId = row.id
+  const userId = row.id;
   if (generatingForUser(userId)) {
-    return
+    return;
   }
-  generatingForUserIds.value.add(userId)
+  generatingForUserIds.value.add(userId);
   try {
     await api.post(`/api/admin/users/${userId}/generate-referral-code`, null, {
       params: regenerate ? { regenerate: true } : undefined,
-    })
+    });
     $q.notify({
       type: 'positive',
       message: regenerate ? 'Реферальный код обновлён' : 'Реферальный код создан',
-    })
-    await fetchUsers()
+    });
+    await fetchUsers();
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -543,9 +543,9 @@ async function generateReferralCodeForUser(row: UserRow, regenerate = false) {
         error,
         regenerate ? 'Не удалось обновить реферальный код' : 'Не удалось создать реферальный код',
       ),
-    })
+    });
   } finally {
-    generatingForUserIds.value.delete(userId)
+    generatingForUserIds.value.delete(userId);
   }
 }
 
@@ -556,8 +556,8 @@ function confirmRegenerateReferralCode(row: UserRow) {
     cancel: { label: 'Отмена', flat: true },
     ok: { label: 'Пересоздать', color: 'primary' },
   }).onOk(() => {
-    void generateReferralCodeForUser(row, true)
-  })
+    void generateReferralCodeForUser(row, true);
+  });
 }
 </script>
 

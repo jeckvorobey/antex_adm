@@ -43,7 +43,9 @@
 
           <q-input
             v-model.number="form.amount"
-            :label="form.operationType === 'credit' ? 'Сумма начисления (ATXG)' : 'Сумма списания (ATXG)'"
+            :label="
+              form.operationType === 'credit' ? 'Сумма начисления (ATXG)' : 'Сумма списания (ATXG)'
+            "
             type="number"
             min="0.01"
             step="0.01"
@@ -85,7 +87,11 @@
       <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">
-            {{ form.operationType === 'credit' ? 'Подтверждение начисления' : 'Подтверждение списания' }}
+            {{
+              form.operationType === 'credit'
+                ? 'Подтверждение начисления'
+                : 'Подтверждение списания'
+            }}
           </div>
         </q-card-section>
 
@@ -110,7 +116,8 @@
                 class="text-weight-medium q-ml-sm"
                 :class="form.operationType === 'credit' ? 'text-positive' : 'text-negative'"
               >
-                {{ form.operationType === 'credit' ? '+' : '-' }}{{ formatAmount(form.amount) }} ATXG
+                {{ form.operationType === 'credit' ? '+' : '-'
+                }}{{ formatAmount(form.amount) }} ATXG
               </span>
             </div>
             <div>
@@ -166,9 +173,7 @@ async function executeOperation() {
   submitting.value = true;
   try {
     const endpoint =
-      form.value.operationType === 'credit'
-        ? '/api/admin/aex/credit'
-        : '/api/admin/aex/debit';
+      form.value.operationType === 'credit' ? '/api/admin/aex/credit' : '/api/admin/aex/debit';
 
     await api.post(endpoint, {
       user_id: form.value.userId,

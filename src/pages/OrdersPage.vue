@@ -128,12 +128,43 @@ const pagination = ref({
 });
 
 const columns: QTableColumn<AdminOrder>[] = [
-  { name: 'id', label: 'Номер', field: 'publicNumber', sortable: true, align: 'left', style: 'width: 11%' },
+  {
+    name: 'id',
+    label: 'Номер',
+    field: 'publicNumber',
+    sortable: true,
+    align: 'left',
+    style: 'width: 11%',
+  },
   { name: 'user', label: 'Пользователь', field: formatUser, align: 'left', style: 'width: 14%' },
-  { name: 'city', label: 'Город', field: (row) => row.city?.name ?? row.CityId ?? '—', align: 'left', style: 'width: 11%' },
-  { name: 'currencySell', label: 'Отдаёт', field: (row) => `${row.amountSell} ${row.currencySell}`, align: 'right', style: 'width: 12%' },
-  { name: 'currencyBuy', label: 'Получает', field: (row) => `${row.amountBuy ?? '—'} ${row.currencyBuy}`, align: 'right', style: 'width: 12%' },
-  { name: 'rate', label: 'Курс', field: (row) => row.rate ?? '—', align: 'right', style: 'width: 9%' },
+  {
+    name: 'city',
+    label: 'Город',
+    field: (row) => row.city?.name ?? row.CityId ?? '—',
+    align: 'left',
+    style: 'width: 11%',
+  },
+  {
+    name: 'currencySell',
+    label: 'Отдаёт',
+    field: (row) => `${row.amountSell} ${row.currencySell}`,
+    align: 'right',
+    style: 'width: 12%',
+  },
+  {
+    name: 'currencyBuy',
+    label: 'Получает',
+    field: (row) => `${row.amountBuy ?? '—'} ${row.currencyBuy}`,
+    align: 'right',
+    style: 'width: 12%',
+  },
+  {
+    name: 'rate',
+    label: 'Курс',
+    field: (row) => row.rate ?? '—',
+    align: 'right',
+    style: 'width: 9%',
+  },
   { name: 'status', label: 'Статус', field: 'status', align: 'left', style: 'width: 10%' },
   { name: 'actions', label: 'Действия', field: 'actions', align: 'left', style: 'width: 12%' },
   {
@@ -230,9 +261,7 @@ async function handleLoadMore({ done }: { done: () => void }) {
 
 async function updateStatus(orderId: number, status: number) {
   const response = await api.patch<AdminOrder>(`/api/admin/orders/${orderId}/status`, { status });
-  orders.value = orders.value.map((order) => (
-    order.id === orderId ? response.data : order
-  ));
+  orders.value = orders.value.map((order) => (order.id === orderId ? response.data : order));
 }
 
 function formatUser(row: AdminOrder) {

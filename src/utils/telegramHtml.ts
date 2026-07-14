@@ -65,7 +65,9 @@ function normalizeList(element: Element, ordered: boolean): string {
   const items = Array.from(element.children)
     .filter((child) => child.tagName.toLowerCase() === 'li')
     .map((item, index) => {
-      const content = cleanupTelegramHtml(normalizeChildren(item.childNodes as NodeListOf<ChildNode>));
+      const content = cleanupTelegramHtml(
+        normalizeChildren(item.childNodes as NodeListOf<ChildNode>),
+      );
       if (!content) {
         return '';
       }
@@ -77,7 +79,9 @@ function normalizeList(element: Element, ordered: boolean): string {
 }
 
 function normalizeBlockquote(element: Element): string {
-  const content = decodeHtml(cleanupTelegramHtml(normalizeChildren(element.childNodes as NodeListOf<ChildNode>)));
+  const content = decodeHtml(
+    cleanupTelegramHtml(normalizeChildren(element.childNodes as NodeListOf<ChildNode>)),
+  );
   const lines = content
     .split('\n')
     .map((line) => line.trim())
@@ -103,7 +107,9 @@ function normalizeNode(node: ChildNode): string {
   }
 
   if (tag === 'p' || tag === 'div') {
-    const content = cleanupTelegramHtml(normalizeChildren(element.childNodes as NodeListOf<ChildNode>));
+    const content = cleanupTelegramHtml(
+      normalizeChildren(element.childNodes as NodeListOf<ChildNode>),
+    );
     return content ? `${content}\n\n` : '';
   }
 
@@ -124,7 +130,9 @@ function normalizeNode(node: ChildNode): string {
 
   if (tag === 'a') {
     const href = normalizeHref(element.getAttribute('href'));
-    const content = cleanupTelegramHtml(normalizeChildren(element.childNodes as NodeListOf<ChildNode>));
+    const content = cleanupTelegramHtml(
+      normalizeChildren(element.childNodes as NodeListOf<ChildNode>),
+    );
 
     if (!content) {
       return '';
@@ -139,7 +147,9 @@ function normalizeNode(node: ChildNode): string {
 
   const inlineTag = INLINE_TAG_MAP[tag];
   if (inlineTag) {
-    const content = cleanupTelegramHtml(normalizeChildren(element.childNodes as NodeListOf<ChildNode>));
+    const content = cleanupTelegramHtml(
+      normalizeChildren(element.childNodes as NodeListOf<ChildNode>),
+    );
     return content ? `<${inlineTag}>${content}</${inlineTag}>` : '';
   }
 

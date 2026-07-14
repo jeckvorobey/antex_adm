@@ -9,9 +9,7 @@ describe('getRoleOptionsForUser', () => {
       hasAssignedManager: true,
     });
 
-    expect(options).toEqual([
-      { label: 'Пользователь', value: 9 },
-    ]);
+    expect(options).toEqual([{ label: 'Пользователь', value: 9 }]);
   });
 
   it('оставляет роль менеджера доступной для текущего менеджера', () => {

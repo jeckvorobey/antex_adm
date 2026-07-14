@@ -80,13 +80,7 @@
         <div class="row items-center">
           <div class="text-subtitle1">Персональные ставки</div>
           <q-space />
-          <q-btn
-            color="primary"
-            icon="add"
-            label="Добавить"
-            dense
-            @click="openPersonalDialog"
-          />
+          <q-btn color="primary" icon="add" label="Добавить" dense @click="openPersonalDialog" />
         </div>
         <div class="text-caption text-grey-7 q-mt-xs">
           Индивидуальные ставки для конкретных пригласивших
@@ -185,17 +179,9 @@
         <div class="row items-center">
           <div class="text-subtitle1">Партнёрские ставки</div>
           <q-space />
-          <q-btn
-            color="primary"
-            icon="add"
-            label="Добавить"
-            dense
-            @click="openPartnerDialog"
-          />
+          <q-btn color="primary" icon="add" label="Добавить" dense @click="openPartnerDialog" />
         </div>
-        <div class="text-caption text-grey-7 q-mt-xs">
-          Ставки для партнёров программы
-        </div>
+        <div class="text-caption text-grey-7 q-mt-xs">Ставки для партнёров программы</div>
       </q-card-section>
 
       <AppResponsiveTable
@@ -434,11 +420,19 @@ const personalForm = ref<{ userId: number | null; rate: number }>({
 });
 
 const personalColumns: QTableColumn<AexRateRow>[] = [
-  { name: 'userId', label: 'ID', field: 'userId', align: 'left', sortable: true, style: 'width: 12%' },
+  {
+    name: 'userId',
+    label: 'ID',
+    field: 'userId',
+    align: 'left',
+    sortable: true,
+    style: 'width: 12%',
+  },
   {
     name: 'username',
     label: 'Пользователь',
-    field: (row: AexRateRow) => row.username ? `@${row.username}` : row.firstName ?? `ID ${row.userId}`,
+    field: (row: AexRateRow) =>
+      row.username ? `@${row.username}` : (row.firstName ?? `ID ${row.userId}`),
     align: 'left',
     style: 'width: 30%',
   },
@@ -464,7 +458,8 @@ const personalColumns: QTableColumn<AexRateRow>[] = [
 ];
 
 const personalMobileConfig = {
-  title: (row: AexRateRow) => row.username ? `@${row.username}` : row.firstName ?? `ID ${row.userId}`,
+  title: (row: AexRateRow) =>
+    row.username ? `@${row.username}` : (row.firstName ?? `ID ${row.userId}`),
   subtitle: (row: AexRateRow) => formatAdminDateTime(row.updatedAt),
   badge: (row: AexRateRow) => ({ label: formatRate(row.rate), color: 'primary' }),
   fields: [
@@ -493,11 +488,19 @@ const partnerForm = ref<{ userId: number | null; rate: number }>({
 });
 
 const partnerColumns: QTableColumn<AexRateRow>[] = [
-  { name: 'userId', label: 'ID', field: 'userId', align: 'left', sortable: true, style: 'width: 12%' },
+  {
+    name: 'userId',
+    label: 'ID',
+    field: 'userId',
+    align: 'left',
+    sortable: true,
+    style: 'width: 12%',
+  },
   {
     name: 'username',
     label: 'Партнёр',
-    field: (row: AexRateRow) => row.username ? `@${row.username}` : row.firstName ?? `ID ${row.userId}`,
+    field: (row: AexRateRow) =>
+      row.username ? `@${row.username}` : (row.firstName ?? `ID ${row.userId}`),
     align: 'left',
     style: 'width: 30%',
   },
@@ -523,7 +526,8 @@ const partnerColumns: QTableColumn<AexRateRow>[] = [
 ];
 
 const partnerMobileConfig = {
-  title: (row: AexRateRow) => row.username ? `@${row.username}` : row.firstName ?? `ID ${row.userId}`,
+  title: (row: AexRateRow) =>
+    row.username ? `@${row.username}` : (row.firstName ?? `ID ${row.userId}`),
   subtitle: (row: AexRateRow) => formatAdminDateTime(row.updatedAt),
   badge: (row: AexRateRow) => ({ label: formatRate(row.rate), color: 'secondary' }),
   fields: [
@@ -714,7 +718,9 @@ async function loadPartnerRates() {
   }
 }
 
-async function handlePersonalTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+async function handlePersonalTableRequest(payload: {
+  pagination: { page: number; rowsPerPage: number };
+}) {
   personalPagination.value = { ...personalPagination.value, ...payload.pagination };
   await loadPersonalRates();
 }
@@ -742,7 +748,12 @@ async function handlePersonalLoadMore({ done }: { done: () => void }) {
       },
     });
     const payload = Array.isArray(res.data)
-      ? { items: res.data, total: res.data.length, limit: personalPagination.value.rowsPerPage, offset: personalRates.value.length }
+      ? {
+          items: res.data,
+          total: res.data.length,
+          limit: personalPagination.value.rowsPerPage,
+          offset: personalRates.value.length,
+        }
       : res.data;
     personalRates.value = [...personalRates.value, ...payload.items.map(mapRateRow)];
     personalPagination.value = { ...personalPagination.value, rowsNumber: payload.total };
@@ -753,7 +764,9 @@ async function handlePersonalLoadMore({ done }: { done: () => void }) {
   }
 }
 
-async function handlePartnerTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+async function handlePartnerTableRequest(payload: {
+  pagination: { page: number; rowsPerPage: number };
+}) {
   partnerPagination.value = { ...partnerPagination.value, ...payload.pagination };
   await loadPartnerRates();
 }
@@ -781,7 +794,12 @@ async function handlePartnerLoadMore({ done }: { done: () => void }) {
       },
     });
     const payload = Array.isArray(res.data)
-      ? { items: res.data, total: res.data.length, limit: partnerPagination.value.rowsPerPage, offset: partnerRates.value.length }
+      ? {
+          items: res.data,
+          total: res.data.length,
+          limit: partnerPagination.value.rowsPerPage,
+          offset: partnerRates.value.length,
+        }
       : res.data;
     partnerRates.value = [...partnerRates.value, ...payload.items.map(mapRateRow)];
     partnerPagination.value = { ...partnerPagination.value, rowsNumber: payload.total };

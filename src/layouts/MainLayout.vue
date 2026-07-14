@@ -19,10 +19,9 @@
         <q-expansion-item
           v-model="managementExpanded"
           data-testid="management-menu"
-          icon="monitoring"
-          label="Менеджмент"
+          icon="ads_click"
+          label="Реклама"
           :header-class="isManagementRoute ? 'text-primary' : 'text-weight-medium'"
-          @click="openManagement"
         >
           <q-item
             v-for="item in managementMenu"
@@ -73,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useAuthStore } from '@stores/auth';
@@ -91,13 +90,13 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 const managementMenu = [
-  { to: '/management/dashboard', icon: 'dashboard', label: 'Dashboard' },
-  { to: '/management/campaigns', icon: 'campaign', label: 'Кампании' },
+  { to: '/management/dashboard', icon: 'dashboard', label: 'Дашборд' },
+  { to: '/management/campaigns', icon: 'domain', label: 'Компании' },
   { to: '/management/applications', icon: 'assignment', label: 'Заявки по кампаниям' },
   { to: '/management/generator', icon: 'link', label: 'Генератор ссылок' },
 ];
 const isManagementRoute = computed(() => route.path.startsWith('/management/'));
-const managementExpanded = ref(isManagementRoute.value);
+const managementExpanded = ref(false);
 const isAexExpanded = computed(() => route.path.startsWith('/aex/'));
 
 const menu: MenuItem[] = [
@@ -119,15 +118,6 @@ const menu: MenuItem[] = [
   { to: '/broadcasts', icon: 'campaign', label: 'Рассылка' },
   { to: '/settings', icon: 'settings', label: 'Настройки' },
 ];
-
-watch(isManagementRoute, (active) => {
-  if (active) managementExpanded.value = true;
-});
-
-async function openManagement() {
-  managementExpanded.value = true;
-  if (!isManagementRoute.value) await router.push('/management/dashboard');
-}
 
 async function handleLogout() {
   await authStore.logout();

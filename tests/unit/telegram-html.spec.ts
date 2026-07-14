@@ -30,6 +30,8 @@ describe('telegramHtml', () => {
   });
 
   it('готовит preview html с переносами строк для карточки предпросмотра', () => {
-    expect(telegramPreviewHtml('Первая строка\nВторая строка')).toBe('Первая строка<br>Вторая строка');
+    expect(telegramPreviewHtml('Первая строка\nВторая строка')).toBe(
+      'Первая строка<br>Вторая строка',
+    );
   });
 });

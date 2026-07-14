@@ -12,10 +12,12 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `admin-referral-users-table`: отображение referral code, referral percent and balance in user table.
 - `admin-referral-code-generation-action`: conditional bulk generation action for null referral codes.
 
 ### Modified Capabilities
+
 - `admin-user-management-ui`: уточняется состав колонок и условия показа action-кнопки.
 - `admin-referral-data`: уточняется контракт данных для таблицы пользователей.
 

@@ -15,14 +15,7 @@
                   :toolbar="editorToolbar"
                 >
                   <template #emoji>
-                    <q-btn
-                      flat
-                      dense
-                      no-caps
-                      size="sm"
-                      color="grey-8"
-                      label="Эмодзи"
-                    >
+                    <q-btn flat dense no-caps size="sm" color="grey-8" label="Эмодзи">
                       <q-menu anchor="bottom left" self="top left">
                         <div class="emoji-picker q-pa-sm">
                           <q-input
@@ -57,16 +50,8 @@
                   class="q-mb-md"
                 />
 
-                <q-input
-                  v-model="form.buttonText"
-                  label="Текст кнопки"
-                  class="q-mb-sm"
-                />
-                <q-input
-                  v-model="form.buttonUrl"
-                  label="URL / WebApp"
-                  class="q-mb-md"
-                />
+                <q-input v-model="form.buttonText" label="Текст кнопки" class="q-mb-sm" />
+                <q-input v-model="form.buttonUrl" label="URL / WebApp" class="q-mb-md" />
 
                 <q-btn
                   color="primary"
@@ -182,9 +167,7 @@
           <div v-if="form.buttonText && form.buttonUrl" class="q-mb-md">
             Кнопка: {{ form.buttonText }}
           </div>
-          <div class="text-caption">
-            Режим: {{ isPaid ? 'paid' : 'free' }}
-          </div>
+          <div class="text-caption">Режим: {{ isPaid ? 'paid' : 'free' }}</div>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Отмена" @click="confirmOpen = false" />
@@ -260,11 +243,18 @@ const columns = [
     format: (value: string | undefined) => formatAdminDateTime(value),
   },
   { name: 'status', label: 'Статус', field: 'status', align: 'left' as const, style: 'width: 12%' },
-  { name: 'speed_mode_requested', label: 'Режим', field: 'speed_mode_requested', align: 'left' as const, style: 'width: 10%' },
+  {
+    name: 'speed_mode_requested',
+    label: 'Режим',
+    field: 'speed_mode_requested',
+    align: 'left' as const,
+    style: 'width: 10%',
+  },
   {
     name: 'counts',
     label: 'Итог',
-    field: (row: BroadcastRow) => `${row.total_count ?? 0}/${row.success_count ?? 0}/${row.failed_count ?? 0}`,
+    field: (row: BroadcastRow) =>
+      `${row.total_count ?? 0}/${row.success_count ?? 0}/${row.failed_count ?? 0}`,
     align: 'right' as const,
     style: 'width: 12%',
   },
@@ -273,14 +263,16 @@ const columns = [
     label: 'Текст',
     field: 'text',
     align: 'left' as const,
-    style: 'width: 30%; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+    style:
+      'width: 30%; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
   },
   {
     name: 'last_error',
     label: 'Ошибка',
     field: 'last_error',
     align: 'left' as const,
-    style: 'width: 20%; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+    style:
+      'width: 20%; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
   },
   {
     name: 'actions',
@@ -305,25 +297,234 @@ const mobileConfig = {
 const normalizedMessageHtml = computed(() => normalizeTelegramHtml(form.value.text));
 const previewHtml = computed(() => telegramPreviewHtml(normalizedMessageHtml.value));
 const emojiCatalog = [
-  '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😉', '😊', '🙂', '🙃',
-  '😉', '😍', '🥰', '😘', '😗', '😙', '😚', '🤗', '🤩', '🥳', '😎', '🤓',
-  '🧐', '🤠', '😏', '😌', '😇', '🥹', '😋', '😜', '🤪', '😝', '🫠', '🤭',
-  '🤫', '🤔', '🫡', '🤝', '👍', '👎', '👏', '🙌', '🙏', '💪', '👀', '❤️',
-  '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '❣️',
-  '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💯', '🔥', '✨', '⭐', '🌟',
-  '⚡', '💥', '☀️', '🌤️', '⛅', '🌈', '☁️', '❄️', '☔', '💧', '🌊', '🍀',
-  '🌹', '🌸', '🌻', '🌼', '🍎', '🍊', '🍋', '🍓', '🍒', '🍉', '🥝', '🍍',
-  '🍔', '🍕', '🌭', '🥪', '🌮', '🌯', '🍣', '🍜', '🍩', '🍪', '🎂', '🍰',
-  '☕', '🫖', '🍵', '🥤', '🍷', '🍾', '🥂', '🎉', '🎊', '🎁', '🏆', '🥇',
-  '⚽', '🏀', '🏐', '🎾', '🏓', '🎳', '🎮', '🎯', '🎲', '🧩', '🎸', '🎹',
-  '🎤', '🎧', '📣', '🔔', '📢', '🚀', '✈️', '🚗', '🛵', '🛍️', '💸', '💵',
-  '💶', '💷', '💴', '💳', '🪙', '📈', '📉', '💼', '📦', '🛒', '🏦', '🧾',
-  '📌', '📍', '📝', '✏️', '📎', '📅', '⏰', '⌛', '📱', '💻', '🖥️', '⌨️',
-  '🖱️', '🔋', '🔒', '🔓', '🛡️', '⚙️', '🧠', '👨‍💻', '👩‍💻', '🤖', '✅', '☑️',
-  '✔️', '❌', '⚠️', '❗', '❓', '⭕', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣',
-  '⚪', '⚫', '⬆️', '⬇️', '⬅️', '➡️', '↗️', '↘️', '↙️', '↖️', '🔁', '🔄',
-  '📤', '📥', '📨', '✉️', '📩', '💬', '🗨️', '📣', '👋', '🤝', '🫶', '👌',
-  '🤌', '✌️', '🤞', '🫰', '🤟', '🤘', '👑', '💎', '🧨', '🕯️', '🏁', '🚨',
+  '😀',
+  '😁',
+  '😂',
+  '🤣',
+  '😃',
+  '😄',
+  '😅',
+  '😆',
+  '😉',
+  '😊',
+  '🙂',
+  '🙃',
+  '😉',
+  '😍',
+  '🥰',
+  '😘',
+  '😗',
+  '😙',
+  '😚',
+  '🤗',
+  '🤩',
+  '🥳',
+  '😎',
+  '🤓',
+  '🧐',
+  '🤠',
+  '😏',
+  '😌',
+  '😇',
+  '🥹',
+  '😋',
+  '😜',
+  '🤪',
+  '😝',
+  '🫠',
+  '🤭',
+  '🤫',
+  '🤔',
+  '🫡',
+  '🤝',
+  '👍',
+  '👎',
+  '👏',
+  '🙌',
+  '🙏',
+  '💪',
+  '👀',
+  '❤️',
+  '🧡',
+  '💛',
+  '💚',
+  '💙',
+  '💜',
+  '🖤',
+  '🤍',
+  '🤎',
+  '💔',
+  '❤️‍🔥',
+  '❤️‍🩹',
+  '❣️',
+  '💕',
+  '💞',
+  '💓',
+  '💗',
+  '💖',
+  '💘',
+  '💝',
+  '💯',
+  '🔥',
+  '✨',
+  '⭐',
+  '🌟',
+  '⚡',
+  '💥',
+  '☀️',
+  '🌤️',
+  '⛅',
+  '🌈',
+  '☁️',
+  '❄️',
+  '☔',
+  '💧',
+  '🌊',
+  '🍀',
+  '🌹',
+  '🌸',
+  '🌻',
+  '🌼',
+  '🍎',
+  '🍊',
+  '🍋',
+  '🍓',
+  '🍒',
+  '🍉',
+  '🥝',
+  '🍍',
+  '🍔',
+  '🍕',
+  '🌭',
+  '🥪',
+  '🌮',
+  '🌯',
+  '🍣',
+  '🍜',
+  '🍩',
+  '🍪',
+  '🎂',
+  '🍰',
+  '☕',
+  '🫖',
+  '🍵',
+  '🥤',
+  '🍷',
+  '🍾',
+  '🥂',
+  '🎉',
+  '🎊',
+  '🎁',
+  '🏆',
+  '🥇',
+  '⚽',
+  '🏀',
+  '🏐',
+  '🎾',
+  '🏓',
+  '🎳',
+  '🎮',
+  '🎯',
+  '🎲',
+  '🧩',
+  '🎸',
+  '🎹',
+  '🎤',
+  '🎧',
+  '📣',
+  '🔔',
+  '📢',
+  '🚀',
+  '✈️',
+  '🚗',
+  '🛵',
+  '🛍️',
+  '💸',
+  '💵',
+  '💶',
+  '💷',
+  '💴',
+  '💳',
+  '🪙',
+  '📈',
+  '📉',
+  '💼',
+  '📦',
+  '🛒',
+  '🏦',
+  '🧾',
+  '📌',
+  '📍',
+  '📝',
+  '✏️',
+  '📎',
+  '📅',
+  '⏰',
+  '⌛',
+  '📱',
+  '💻',
+  '🖥️',
+  '⌨️',
+  '🖱️',
+  '🔋',
+  '🔒',
+  '🔓',
+  '🛡️',
+  '⚙️',
+  '🧠',
+  '👨‍💻',
+  '👩‍💻',
+  '🤖',
+  '✅',
+  '☑️',
+  '✔️',
+  '❌',
+  '⚠️',
+  '❗',
+  '❓',
+  '⭕',
+  '🔴',
+  '🟠',
+  '🟡',
+  '🟢',
+  '🔵',
+  '🟣',
+  '⚪',
+  '⚫',
+  '⬆️',
+  '⬇️',
+  '⬅️',
+  '➡️',
+  '↗️',
+  '↘️',
+  '↙️',
+  '↖️',
+  '🔁',
+  '🔄',
+  '📤',
+  '📥',
+  '📨',
+  '✉️',
+  '📩',
+  '💬',
+  '🗨️',
+  '📣',
+  '👋',
+  '🤝',
+  '🫶',
+  '👌',
+  '🤌',
+  '✌️',
+  '🤞',
+  '🫰',
+  '🤟',
+  '🤘',
+  '👑',
+  '💎',
+  '🧨',
+  '🕯️',
+  '🏁',
+  '🚨',
 ];
 const filteredEmojiOptions = computed(() => {
   const query = emojiQuery.value.trim();
@@ -466,7 +667,12 @@ async function handleLoadMore({ done }: { done: () => void }) {
       },
     });
     const payload = Array.isArray(response.data)
-      ? { items: response.data, total: response.data.length, limit: pagination.value.rowsPerPage, offset: broadcasts.value.length }
+      ? {
+          items: response.data,
+          total: response.data.length,
+          limit: pagination.value.rowsPerPage,
+          offset: broadcasts.value.length,
+        }
       : response.data;
     broadcasts.value = [...broadcasts.value, ...payload.items];
     pagination.value = { ...pagination.value, rowsNumber: payload.total };
@@ -499,7 +705,10 @@ async function submitBroadcast() {
       speed_mode: isPaid.value ? 'paid' : 'free',
     });
     if (pagination.value.page === 1) {
-      broadcasts.value = [response.data, ...broadcasts.value].slice(0, pagination.value.rowsPerPage);
+      broadcasts.value = [response.data, ...broadcasts.value].slice(
+        0,
+        pagination.value.rowsPerPage,
+      );
       pagination.value = { ...pagination.value, rowsNumber: pagination.value.rowsNumber + 1 };
     } else {
       await loadBroadcasts();
@@ -524,9 +733,7 @@ async function stopBroadcast(row: BroadcastRow) {
   stoppingIds.value = new Set(stoppingIds.value).add(row.id);
   try {
     const response = await api.post(`/api/admin/broadcasts/${row.id}/stop`);
-    broadcasts.value = broadcasts.value.map((item) => (
-      item.id === row.id ? response.data : item
-    ));
+    broadcasts.value = broadcasts.value.map((item) => (item.id === row.id ? response.data : item));
     stopPollingIfDone();
     $q.notify({ type: 'positive', message: 'Рассылка остановлена' });
   } catch {

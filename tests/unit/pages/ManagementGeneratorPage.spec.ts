@@ -19,6 +19,23 @@ describe('ManagementGeneratorPage', () => {
     previewMock.mockResolvedValue({ code: 'BDF7J9J8JH', token: 'preview-token-1' });
   });
 
+  it('использует компактную responsive-композицию общего стиля admin', async () => {
+    const wrapper = mount(ManagementGeneratorPage);
+    await flushPromises();
+
+    expect(wrapper.get('[data-testid="generator-title"]').classes()).toContain('text-h5');
+    expect(wrapper.text()).not.toContain('РЕКЛАМА');
+    expect(wrapper.text()).not.toContain('Код назначает сервер');
+    expect(wrapper.text()).not.toContain('Поля со звёздочкой обязательны');
+    expect(wrapper.get('[data-testid="campaign-fields-column"]').classes()).toEqual(
+      expect.arrayContaining(['col-12', 'col-lg-8']),
+    );
+    expect(wrapper.get('[data-testid="campaign-code-column"]').classes()).toEqual(
+      expect.arrayContaining(['col-12', 'col-lg-4']),
+    );
+    expect(wrapper.get('[data-testid="submit-campaign"]').classes()).toContain('full-width');
+  });
+
   it('показывает серверный код в read-only поле и отправляет его с метаданными', async () => {
     createMock.mockResolvedValue({
       id: 1,

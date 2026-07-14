@@ -67,4 +67,20 @@ describe('ManagementGeneratorPage', () => {
 
     expect((wrapper.find('input').element as HTMLInputElement).value).toBe('Keep me');
   });
+
+  it('отправляет даты кампании в ISO-формате', async () => {
+    postMock.mockResolvedValue({ id: 1, code: 'BDF7J9J8JH', link: 'https://t.me/antex_bot' });
+    const wrapper = mount(ManagementGeneratorPage);
+
+    await wrapper.find('input').setValue('Campaign');
+    const dates = wrapper.findAllComponents({ name: 'AdminDateInput' });
+    await dates[0]?.vm.$emit('update:modelValue', '2026-07-17');
+    await dates[1]?.vm.$emit('update:modelValue', '2026-07-31');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(postMock).toHaveBeenCalledWith(
+      expect.objectContaining({ startsAt: '2026-07-17', endsAt: '2026-07-31' }),
+    );
+  });
 });

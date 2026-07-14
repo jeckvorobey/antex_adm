@@ -1,5 +1,6 @@
 import { config } from '@vue/test-utils';
 import { defineComponent, h, reactive } from 'vue';
+import { createPinia } from 'pinia';
 import { vi } from 'vitest';
 
 const notifyCreate = vi.fn();
@@ -405,7 +406,7 @@ const QPopupEditStub = defineComponent({
   },
 });
 
-config.global.plugins = [];
+config.global.plugins = [createPinia()];
 config.global.stubs = {
   'q-page': wrapTag('div', 'q-page'),
   'q-layout': wrapTag('div', 'q-layout'),

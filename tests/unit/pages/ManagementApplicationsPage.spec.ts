@@ -43,4 +43,39 @@ describe('ManagementApplicationsPage', () => {
     expect(wrapper.text()).toContain('2');
     expect(wrapper.text()).toContain('—');
   });
+
+  it('передаёт выбранные даты фильтра в API в ISO-формате', async () => {
+    listMock.mockResolvedValue({ items: [], total: 0, limit: 20, offset: 0 });
+    const wrapper = mount(ManagementApplicationsPage);
+    await flushPromises();
+    listMock.mockClear();
+
+    const dates = wrapper.findAllComponents({ name: 'AdminDateInput' });
+    await dates[0]?.vm.$emit('update:modelValue', '2026-07-17');
+    await dates[1]?.vm.$emit('update:modelValue', '2026-07-31');
+    await wrapper.get('button').trigger('click');
+    await flushPromises();
+
+    expect(listMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ dateFrom: '2026-07-17', dateTo: '2026-07-31' }),
+    );
+  });
+
+  it('показывает русские статусы и передаёт их API value в фильтр', async () => {
+    listMock.mockResolvedValue({ items: [], total: 0, limit: 20, offset: 0 });
+    const wrapper = mount(ManagementApplicationsPage);
+    await flushPromises();
+    listMock.mockClear();
+
+    expect(wrapper.text()).toContain('Черновик');
+    expect(wrapper.text()).toContain('Активна');
+    expect(wrapper.text()).toContain('Приостановлена');
+    expect(wrapper.text()).toContain('В архиве');
+
+    await wrapper.findAll('select')[1]?.setValue('active');
+    await wrapper.get('button').trigger('click');
+    await flushPromises();
+
+    expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'active' }));
+  });
 });

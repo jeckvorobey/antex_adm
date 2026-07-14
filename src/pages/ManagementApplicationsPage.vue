@@ -3,30 +3,15 @@
     <div class="text-h5 q-mb-md">Заявки по кампаниям</div>
     <q-card flat bordered class="q-mb-md"
       ><q-card-section class="row q-col-gutter-md">
-        <q-input
+        <AdminDateInput
           v-model="filters.dateFrom"
-          type="date"
-          stack-label
           label="С даты"
-          outlined
-          dense
           class="col-12 col-sm-6 col-md-3"
         />
-        <q-input
-          v-model="filters.dateTo"
-          type="date"
-          stack-label
-          label="По дату"
-          outlined
-          dense
-          class="col-12 col-sm-6 col-md-3"
-        />
-        <q-select
+        <AdminDateInput v-model="filters.dateTo" label="По дату" class="col-12 col-sm-6 col-md-3" />
+        <MarketingPlatformSelect
           v-model="filters.provider"
-          :options="providerOptions"
           clearable
-          emit-value
-          map-options
           label="Платформа"
           outlined
           dense
@@ -84,6 +69,9 @@ import type { QTableColumn } from 'quasar';
 import { onMounted, reactive, ref } from 'vue';
 
 import AppResponsiveTable from '@/components/ui/AppResponsiveTable.vue';
+import AdminDateInput from '@/components/ui/AdminDateInput.vue';
+import MarketingPlatformSelect from '@/components/marketing/MarketingPlatformSelect.vue';
+import { MARKETING_CAMPAIGN_STATUS_OPTIONS } from '@/constants/marketing';
 import { marketingApi } from '@/services/marketing';
 import type { MarketingApplicationRow } from '@/types/marketing';
 
@@ -99,8 +87,7 @@ const filters = reactive({
 const rows = ref<MarketingApplicationRow[]>([]);
 const loading = ref(false);
 const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
-const providerOptions = [{ label: 'Telegram Ads', value: 'telegram_ads' }];
-const statusOptions = ['draft', 'active', 'paused', 'archived'];
+const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS;
 const percent = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(2)}%` : '—';
 const columns: QTableColumn<MarketingApplicationRow>[] = [

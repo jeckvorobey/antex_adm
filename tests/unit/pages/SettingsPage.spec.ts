@@ -59,9 +59,7 @@ describe('SettingsPage', () => {
     const toggle = wrapper.find('.q-toggle');
     await toggle.trigger('click');
     await flushPromises();
-    expect(notifySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'positive' })
-    );
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
   });
 
   it('toggleBot показывает error уведомление при ошибке', async () => {
@@ -74,7 +72,7 @@ describe('SettingsPage', () => {
     await toggle.trigger('click');
     await flushPromises();
     expect(notifySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'negative', message: 'Ошибка' })
+      expect.objectContaining({ type: 'negative', message: 'Ошибка' }),
     );
   });
 });

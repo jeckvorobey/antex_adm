@@ -1,24 +1,8 @@
 <template>
   <q-card flat bordered>
     <q-card-section class="row q-col-gutter-md items-end">
-      <q-input
-        v-model="local.dateFrom"
-        type="date"
-        stack-label
-        label="С даты"
-        outlined
-        dense
-        class="col-12 col-sm-6 col-md-3"
-      />
-      <q-input
-        v-model="local.dateTo"
-        type="date"
-        stack-label
-        label="По дату"
-        outlined
-        dense
-        class="col-12 col-sm-6 col-md-3"
-      />
+      <AdminDateInput v-model="local.dateFrom" label="С даты" class="col-12 col-sm-6 col-md-3" />
+      <AdminDateInput v-model="local.dateTo" label="По дату" class="col-12 col-sm-6 col-md-3" />
       <q-select
         v-model="local.campaignId"
         :options="campaignOptions"
@@ -30,9 +14,8 @@
         map-options
         class="col-12 col-sm-6 col-md-3"
       />
-      <q-select
+      <MarketingCurrencySelect
         v-model="local.currency"
-        :options="currencyOptions"
         label="Валюта расходов"
         outlined
         dense
@@ -55,6 +38,9 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue';
 
+import AdminDateInput from '@/components/ui/AdminDateInput.vue';
+import MarketingCurrencySelect from '@/components/marketing/MarketingCurrencySelect.vue';
+
 const props = defineProps<{
   modelValue: {
     dateFrom: string;
@@ -66,7 +52,6 @@ const props = defineProps<{
 }>();
 defineEmits<{ apply: [filters: typeof props.modelValue] }>();
 const local = reactive({ ...props.modelValue });
-const currencyOptions = ['USDT', 'RUB', 'THB', 'VND', 'GEL'];
 watch(
   () => props.modelValue,
   (value) => Object.assign(local, value),

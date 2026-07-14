@@ -2,7 +2,7 @@
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
       <div>
-        <div class="text-h5">Кампании</div>
+        <div class="text-h5">Компании</div>
         <div class="text-body2 text-grey-7">Создание доступно только в генераторе ссылок</div>
       </div>
       <q-btn
@@ -24,15 +24,12 @@
           dense
           class="col-12 col-md-5"
         />
-        <q-select
+        <MarketingPlatformSelect
           v-model="filters.provider"
-          :options="providerOptions"
           label="Платформа"
           outlined
           dense
           clearable
-          emit-value
-          map-options
           class="col-12 col-sm-6 col-md-3"
         />
         <q-select
@@ -161,7 +158,9 @@ import { copyToClipboard, type QTableColumn, useQuasar } from 'quasar';
 import { onMounted, reactive, ref } from 'vue';
 
 import DailyMetricsDialog from '@/components/marketing/DailyMetricsDialog.vue';
+import MarketingPlatformSelect from '@/components/marketing/MarketingPlatformSelect.vue';
 import AppResponsiveTable from '@/components/ui/AppResponsiveTable.vue';
+import { MARKETING_CAMPAIGN_STATUS_OPTIONS } from '@/constants/marketing';
 import { marketingApi } from '@/services/marketing';
 import type { MarketingCampaign } from '@/types/marketing';
 import { formatAdminDateTime } from '@/utils/date';
@@ -177,18 +176,13 @@ const filters = reactive({
   status: null as string | null,
 });
 const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
-const providerOptions = [{ label: 'Telegram Ads', value: 'telegram_ads' }];
-const statusOptions = [
-  { label: 'Черновик', value: 'draft' },
-  { label: 'Активна', value: 'active' },
-  { label: 'Приостановлена', value: 'paused' },
-  { label: 'В архиве', value: 'archived' },
-];
+const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS;
 const columns: QTableColumn<MarketingCampaign>[] = [
   { name: 'name', label: 'Кампания', field: 'name', align: 'left' },
   { name: 'code', label: 'Код', field: 'code', align: 'left' },
   { name: 'provider', label: 'Платформа', field: 'provider', align: 'left' },
   { name: 'status', label: 'Статус', field: 'status', align: 'left' },
+  { name: 'campaignType', label: 'Тип', field: 'campaignType', align: 'left', format: (value) => value === 'paid' ? 'Платная' : 'Бесплатная' },
   { name: 'attributedUsers', label: 'Пользователи', field: 'attributedUsers', align: 'right' },
   { name: 'applications', label: 'Заявки', field: 'applications', align: 'right' },
   {
@@ -217,6 +211,7 @@ const mobileConfig = {
   fields: [
     { name: 'attributedUsers', label: 'Пользователи' },
     { name: 'applications', label: 'Заявки' },
+    { name: 'campaignType', label: 'Тип' },
     { name: 'budget', label: 'Бюджет' },
     { name: 'createdAt', label: 'Создана' },
   ],

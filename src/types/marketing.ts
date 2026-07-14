@@ -1,16 +1,15 @@
-export type MarketingProvider = 'telegram_ads';
+export type MarketingProvider = string;
 export type MarketingCampaignStatus = 'draft' | 'active' | 'paused' | 'archived';
 
 export interface CampaignCreatePayload {
   name: string;
   provider: MarketingProvider;
-  source?: string;
   medium?: string;
   externalId?: string;
   objective?: string;
   status: MarketingCampaignStatus;
   budget?: number;
-  currency?: string;
+  currency: string;
   startsAt?: string;
   endsAt?: string;
   notes?: string;
@@ -25,6 +24,17 @@ export interface MarketingCampaign extends CampaignCreatePayload {
   updatedAt: string;
   attributedUsers: number;
   applications: number;
+  campaignType: 'paid' | 'free';
+}
+
+export interface MarketingPlatform {
+  slug: string;
+  name: string;
+}
+
+export interface MarketingCurrency {
+  code: string;
+  name: string;
 }
 
 export interface PaginatedResponse<T> {

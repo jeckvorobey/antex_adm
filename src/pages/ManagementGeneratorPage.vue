@@ -16,16 +16,12 @@
             class="col-12 col-md-6"
             :rules="[(value) => Boolean(value) || 'Укажите наименование']"
           />
-          <q-select
+          <MarketingPlatformSelect
             v-model="form.provider"
             label="Рекламная платформа *"
             outlined
-            emit-value
-            map-options
-            :options="providerOptions"
             class="col-12 col-md-6"
           />
-          <q-input v-model.trim="form.source" label="Source" outlined class="col-12 col-md-6" />
           <q-input v-model.trim="form.medium" label="Medium" outlined class="col-12 col-md-6" />
           <q-input
             v-model.trim="form.externalId"
@@ -56,29 +52,14 @@
             outlined
             class="col-12 col-md-4"
           />
-          <q-input
-            v-model.trim="form.currency"
+          <MarketingCurrencySelect
+            v-model="form.currency"
             label="Валюта"
-            maxlength="8"
             outlined
             class="col-12 col-md-4"
           />
-          <q-input
-            v-model="form.startsAt"
-            type="date"
-            label="Дата начала"
-            stack-label
-            outlined
-            class="col-12 col-md-6"
-          />
-          <q-input
-            v-model="form.endsAt"
-            type="date"
-            label="Дата окончания"
-            stack-label
-            outlined
-            class="col-12 col-md-6"
-          />
+          <AdminDateInput v-model="form.startsAt" label="Дата начала" class="col-12 col-md-6" />
+          <AdminDateInput v-model="form.endsAt" label="Дата окончания" class="col-12 col-md-6" />
           <q-input
             v-model.trim="form.notes"
             type="textarea"
@@ -123,6 +104,10 @@
 import { copyToClipboard, useQuasar } from 'quasar';
 import { reactive, ref } from 'vue';
 
+import AdminDateInput from '@/components/ui/AdminDateInput.vue';
+import MarketingCurrencySelect from '@/components/marketing/MarketingCurrencySelect.vue';
+import MarketingPlatformSelect from '@/components/marketing/MarketingPlatformSelect.vue';
+import { MARKETING_CAMPAIGN_STATUS_OPTIONS } from '@/constants/marketing';
 import { marketingApi } from '@/services/marketing';
 import type { CampaignCreatePayload, MarketingCampaign } from '@/types/marketing';
 
@@ -132,7 +117,6 @@ const created = ref<MarketingCampaign | null>(null);
 const form = reactive({
   name: '',
   provider: 'telegram_ads' as const,
-  source: 'telegram',
   medium: 'paid',
   externalId: '',
   objective: '',
@@ -143,12 +127,9 @@ const form = reactive({
   endsAt: '',
   notes: '',
 });
-const providerOptions = [{ label: 'Telegram Ads', value: 'telegram_ads' }];
-const statusOptions = [
-  { label: 'Черновик', value: 'draft' },
-  { label: 'Активна', value: 'active' },
-  { label: 'Приостановлена', value: 'paused' },
-];
+const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS.filter(
+  (option) => option.value !== 'archived',
+);
 
 async function submit() {
   loading.value = true;

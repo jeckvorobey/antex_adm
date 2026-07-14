@@ -2,7 +2,7 @@
   <q-page class="q-pa-md">
     <div class="text-h5 q-mb-xs">Генератор ссылок</div>
     <div class="text-body2 text-grey-7 q-mb-md">
-      Новая кампания создаётся только здесь. Код назначает сервер и изменить его нельзя.
+      Новая компания создаётся только здесь. Код назначает сервер и изменить его нельзя.
     </div>
 
     <q-card flat bordered>
@@ -22,10 +22,9 @@
             outlined
             class="col-12 col-md-6"
           />
-          <q-input v-model.trim="form.medium" label="Medium" outlined class="col-12 col-md-6" />
           <q-input
             v-model.trim="form.externalId"
-            label="External campaign ID"
+            label="ID компании на сервисе"
             outlined
             class="col-12 col-md-6"
           />
@@ -51,13 +50,11 @@
             label="Бюджет"
             outlined
             class="col-12 col-md-4"
-          />
-          <MarketingCurrencySelect
-            v-model="form.currency"
-            label="Валюта"
-            outlined
-            class="col-12 col-md-4"
-          />
+          >
+            <template #append>
+              <MarketingCurrencySelect v-model="form.currency" dense borderless style="min-width: 76px" />
+            </template>
+          </q-input>
           <AdminDateInput v-model="form.startsAt" label="Дата начала" class="col-12 col-md-6" />
           <AdminDateInput v-model="form.endsAt" label="Дата окончания" class="col-12 col-md-6" />
           <q-input
@@ -82,7 +79,7 @@
 
     <q-card v-if="created" flat bordered class="q-mt-md bg-positive text-white">
       <q-card-section>
-        <div class="text-subtitle1 text-weight-medium">Кампания создана</div>
+        <div class="text-subtitle1 text-weight-medium">Компания создана</div>
         <div class="text-body2 q-mt-sm">Код: {{ created.code }}</div>
         <div class="text-body2">{{ created.marketParameter }}</div>
         <div class="text-body2 ellipsis q-mt-xs">{{ created.link }}</div>
@@ -117,7 +114,6 @@ const created = ref<MarketingCampaign | null>(null);
 const form = reactive({
   name: '',
   provider: 'telegram_ads' as const,
-  medium: 'paid',
   externalId: '',
   objective: '',
   status: 'active' as const,
@@ -139,7 +135,7 @@ async function submit() {
   ) as unknown as CampaignCreatePayload;
   try {
     created.value = await marketingApi.createCampaign(payload);
-    $q.notify({ type: 'positive', message: 'Маркетинговая кампания создана' });
+    $q.notify({ type: 'positive', message: 'Маркетинговая компания создана' });
   } catch {
     $q.notify({ type: 'negative', message: 'Не удалось создать кампанию' });
   } finally {

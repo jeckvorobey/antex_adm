@@ -4,7 +4,6 @@ export type MarketingCampaignStatus = 'draft' | 'active' | 'paused' | 'archived'
 export interface CampaignCreatePayload {
   name: string;
   provider: MarketingProvider;
-  medium?: string;
   externalId?: string;
   objective?: string;
   status: MarketingCampaignStatus;

@@ -43,7 +43,7 @@ describe('MainLayout', () => {
     expect(html.indexOf('Реклама')).toBeLessThan(html.indexOf('Заявки'));
     expect(html).toContain('Дашборд');
     expect(html).toContain('Компании');
-    expect(html).toContain('Заявки по кампаниям');
+    expect(html).toContain('Заявки по компаниям');
     expect(html).toContain('Генератор ссылок');
     const management = wrapper.findComponent('[data-testid="management-menu"]');
     expect(management.props('icon')).toBe('ads_click');

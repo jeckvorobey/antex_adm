@@ -2,6 +2,7 @@ export type MarketingProvider = string;
 export type MarketingCampaignStatus = 'draft' | 'active' | 'paused' | 'archived';
 
 export interface CampaignCreatePayload {
+  codeToken?: string;
   name: string;
   provider: MarketingProvider;
   externalId?: string;
@@ -12,6 +13,11 @@ export interface CampaignCreatePayload {
   startsAt?: string;
   endsAt?: string;
   notes?: string;
+}
+
+export interface CampaignCodePreview {
+  code: string;
+  token: string;
 }
 
 export interface MarketingCampaign extends CampaignCreatePayload {

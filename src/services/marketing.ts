@@ -2,6 +2,7 @@ import { api } from '@boot/axios';
 
 import type {
   CampaignCreatePayload,
+  CampaignCodePreview,
   DailyMetricPayload,
   MarketingApplicationRow,
   MarketingCampaign,
@@ -12,6 +13,11 @@ import type {
 } from '@/types/marketing';
 
 export const marketingApi = {
+  async generateCampaignCode(): Promise<CampaignCodePreview> {
+    return (await api.post<CampaignCodePreview>('/api/admin/marketing/campaigns/code-preview'))
+      .data;
+  },
+
   async listPlatforms(): Promise<MarketingPlatform[]> {
     return (await api.get<MarketingPlatform[]>('/api/admin/marketing/platforms')).data;
   },

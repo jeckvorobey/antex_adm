@@ -12,19 +12,25 @@
       :error-message="errorMessage"
       input-class="text-weight-bold campaign-code-input"
       class="col-12 col-md-6"
-    />
-    <q-btn
-      data-testid="regenerate-code"
-      type="button"
-      color="primary"
-      icon="autorenew"
-      label="Обновить код"
-      :loading="loading"
-      :disable="disabled"
-      aria-label="Сгенерировать новый рекламный код"
-      class="col-auto"
-      @click="emit('regenerate')"
-    />
+    >
+      <template #append>
+        <q-btn
+          data-testid="regenerate-code"
+          type="button"
+          round
+          flat
+          dense
+          color="primary"
+          icon="autorenew"
+          :loading="loading"
+          :disable="disabled"
+          aria-label="Сгенерировать новый рекламный код"
+          @click="emit('regenerate')"
+        >
+          <q-tooltip>Сгенерировать новый код</q-tooltip>
+        </q-btn>
+      </template>
+    </q-input>
   </div>
 </template>
 

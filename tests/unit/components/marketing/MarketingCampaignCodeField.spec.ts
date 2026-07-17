@@ -26,7 +26,7 @@ describe('MarketingCampaignCodeField', () => {
     await wrapper.get('[data-testid="regenerate-code"]').trigger('click');
 
     expect(wrapper.emitted('regenerate')).toHaveLength(1);
-    expect(wrapper.get('[data-testid="regenerate-code"]').classes()).not.toContain('round');
-    expect(wrapper.text()).toContain('Обновить код');
+    expect(wrapper.get('[data-testid="regenerate-code"]').attributes('round')).toBeDefined();
+    expect(wrapper.text()).not.toContain('Обновить код');
   });
 });

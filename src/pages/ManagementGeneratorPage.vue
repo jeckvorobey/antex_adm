@@ -144,18 +144,19 @@
           </template>
 
           <q-separator class="q-my-md" />
-          <q-btn
-            data-testid="submit-campaign"
-            type="submit"
-            color="primary"
-            icon="add_link"
-            label="Создать компанию и ссылку"
-            class="full-width"
-            unelevated
-            no-caps
-            :loading="loading"
-            :disable="!previewCode || !previewToken || generatingCode || Boolean(created)"
-          />
+          <div class="row justify-end">
+            <q-btn
+              data-testid="submit-campaign"
+              type="submit"
+              color="primary"
+              icon="add_link"
+              label="Создать компанию и ссылку"
+              unelevated
+              no-caps
+              :loading="loading"
+              :disable="!previewCode || !previewToken || generatingCode || Boolean(created)"
+            />
+          </div>
         </q-card-section>
       </q-card>
     </q-form>

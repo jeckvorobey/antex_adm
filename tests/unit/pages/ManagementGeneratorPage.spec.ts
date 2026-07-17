@@ -39,7 +39,10 @@ describe('ManagementGeneratorPage', () => {
     expect(wrapper.get('[data-testid="submit-campaign"]').element.closest('form')).toBe(
       wrapper.get('form').element,
     );
-    expect(wrapper.get('[data-testid="submit-campaign"]').classes()).toContain('full-width');
+    expect(wrapper.get('[data-testid="submit-campaign"]').classes()).not.toContain('full-width');
+    expect(
+      wrapper.get('[data-testid="submit-campaign"]').element.parentElement?.className,
+    ).toContain('justify-end');
   });
 
   it('показывает серверный код в read-only поле и отправляет его с метаданными', async () => {

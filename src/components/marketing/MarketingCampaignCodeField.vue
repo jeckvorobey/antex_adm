@@ -1,5 +1,5 @@
 <template>
-  <div data-testid="campaign-code-field" class="row items-center q-col-gutter-sm col-12">
+  <div data-testid="campaign-code-field" class="row items-center col-12">
     <q-input
       name="code"
       :model-value="modelValue"

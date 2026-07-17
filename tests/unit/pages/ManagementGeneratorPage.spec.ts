@@ -54,7 +54,7 @@ describe('ManagementGeneratorPage', () => {
 
     const codeInput = wrapper.get('input[name="code"]');
     expect((codeInput.element as HTMLInputElement).readOnly).toBe(true);
-    expect((codeInput.element as HTMLInputElement).value).toBe('market_BDF7J9J8JH');
+    expect((codeInput.element as HTMLInputElement).value).toBe('BDF7J9J8JH');
     await wrapper.get('input[name="name"]').setValue('Telegram Ads July');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
@@ -82,7 +82,7 @@ describe('ManagementGeneratorPage', () => {
 
     expect(previewMock).toHaveBeenCalledTimes(2);
     expect((wrapper.get('input[name="code"]').element as HTMLInputElement).value).toBe(
-      'market_NEWW8X2K4Q',
+      'NEWW8X2K4Q',
     );
     expect(wrapper.text()).not.toContain('market_BDF7J9J8JH');
   });

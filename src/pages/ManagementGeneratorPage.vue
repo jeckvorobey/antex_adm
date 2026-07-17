@@ -197,7 +197,7 @@ const form = reactive({
 const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS.filter(
   (option) => option.value !== 'archived',
 );
-const displayCode = computed(() => (previewCode.value ? `market_${previewCode.value}` : ''));
+const displayCode = computed(() => previewCode.value);
 const nameRules = [
   (value: string) => Boolean(value?.trim()) || 'Укажите название компании',
   (value: string) => value.length <= 255 || 'Не более 255 символов',

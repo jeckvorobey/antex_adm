@@ -36,12 +36,20 @@ describe('ManagementGeneratorPage', () => {
     const nameInputIndex = formInputs.findIndex((input) => input.attributes('name') === 'name');
     expect(codeInputIndex).toBeGreaterThanOrEqual(0);
     expect(codeInputIndex).toBeLessThan(nameInputIndex);
-    expect(wrapper.get('[data-testid="submit-campaign"]').element.closest('form')).toBe(
+    expect(wrapper.get('[data-testid="submit-campaign-mobile"]').element.closest('form')).toBe(
       wrapper.get('form').element,
     );
-    expect(wrapper.get('[data-testid="submit-campaign"]').classes()).not.toContain('full-width');
+    expect(wrapper.get('[data-testid="submit-campaign-mobile"]').classes()).toEqual(
+      expect.arrayContaining(['full-width', 'lt-md']),
+    );
+    expect(wrapper.get('[data-testid="submit-campaign-desktop"]').classes()).toEqual(
+      expect.arrayContaining(['gt-sm']),
+    );
+    expect(wrapper.get('[data-testid="submit-campaign-desktop"]').classes()).not.toContain(
+      'full-width',
+    );
     expect(
-      wrapper.get('[data-testid="submit-campaign"]').element.parentElement?.className,
+      wrapper.get('[data-testid="submit-campaign-desktop"]').element.parentElement?.className,
     ).toContain('justify-end');
   });
 

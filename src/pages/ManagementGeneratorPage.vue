@@ -146,11 +146,24 @@
           <q-separator class="q-my-md" />
           <div class="row justify-end">
             <q-btn
-              data-testid="submit-campaign"
+              data-testid="submit-campaign-mobile"
               type="submit"
               color="primary"
               icon="add_link"
               label="Создать компанию и ссылку"
+              class="full-width lt-md"
+              unelevated
+              no-caps
+              :loading="loading"
+              :disable="!previewCode || !previewToken || generatingCode || Boolean(created)"
+            />
+            <q-btn
+              data-testid="submit-campaign-desktop"
+              type="submit"
+              color="primary"
+              icon="add_link"
+              label="Создать компанию и ссылку"
+              class="gt-sm"
               unelevated
               no-caps
               :loading="loading"

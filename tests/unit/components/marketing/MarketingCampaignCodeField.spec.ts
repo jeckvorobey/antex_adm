@@ -21,6 +21,9 @@ describe('MarketingCampaignCodeField', () => {
     expect(wrapper.get('[data-testid="campaign-code-field"]').classes()).toEqual(
       expect.arrayContaining(['col-12']),
     );
+    expect(wrapper.get('[data-testid="campaign-code-field"]').classes()).not.toContain(
+      'q-col-gutter-sm',
+    );
     expect(input.classes()).toEqual(expect.arrayContaining(['col-12', 'col-md-6']));
 
     await wrapper.get('[data-testid="regenerate-code"]').trigger('click');

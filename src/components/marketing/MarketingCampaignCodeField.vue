@@ -1,34 +1,31 @@
 <template>
-  <q-input
-    name="code"
-    :model-value="modelValue"
-    label="Код компании"
-    outlined
-    dense
-    readonly
-    :loading="loading"
-    :error="Boolean(errorMessage)"
-    :error-message="errorMessage"
-    input-class="text-weight-bold campaign-code-input"
-  >
-    <template #append>
-      <q-btn
-        data-testid="regenerate-code"
-        type="button"
-        round
-        flat
-        dense
-        color="primary"
-        icon="autorenew"
-        :loading="loading"
-        :disable="disabled"
-        aria-label="Сгенерировать новый рекламный код"
-        @click="$emit('regenerate')"
-      >
-        <q-tooltip>Сгенерировать новый код</q-tooltip>
-      </q-btn>
-    </template>
-  </q-input>
+  <div data-testid="campaign-code-field" class="row items-center q-col-gutter-sm col-12">
+    <q-input
+      name="code"
+      :model-value="modelValue"
+      label="Код компании"
+      outlined
+      dense
+      readonly
+      :loading="loading"
+      :error="Boolean(errorMessage)"
+      :error-message="errorMessage"
+      input-class="text-weight-bold campaign-code-input"
+      class="col-12 col-md-6"
+    />
+    <q-btn
+      data-testid="regenerate-code"
+      type="button"
+      color="primary"
+      icon="autorenew"
+      label="Обновить код"
+      :loading="loading"
+      :disable="disabled"
+      aria-label="Сгенерировать новый рекламный код"
+      class="col-auto"
+      @click="emit('regenerate')"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -39,7 +36,7 @@ defineProps<{
   errorMessage: string;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   regenerate: [];
 }>();
 </script>

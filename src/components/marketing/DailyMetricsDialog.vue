@@ -4,18 +4,14 @@
       <q-card-section class="text-h6">Дневные метрики — {{ campaign?.name }}</q-card-section>
       <q-card-section>
         <q-form class="q-gutter-md" @submit="save">
-          <AdminDateInput
-            v-model="metricDate"
-            label="Дата *"
-            :rules="[(value: string) => Boolean(value) || 'Укажите дату']"
-          />
+          <AdminDateInput v-model="metricDate" label="Дата *" :rules="metricDateRules" />
           <q-input
             v-model.number="form.impressions"
             type="number"
             min="0"
             label="Показы"
             outlined
-            :rules="[nonNegative]"
+            :rules="requiredNonNegativeRules"
           />
           <q-input
             v-model.number="form.starts"
@@ -23,7 +19,7 @@
             min="0"
             label="Переходы / starts"
             outlined
-            :rules="[nonNegative]"
+            :rules="requiredNonNegativeRules"
           />
           <q-input
             v-model.number="form.spend"
@@ -32,7 +28,7 @@
             step="0.01"
             label="Расход"
             outlined
-            :rules="[nonNegative]"
+            :rules="requiredNonNegativeRules"
           />
           <q-input
             v-model.number="form.platformCpm"
@@ -41,7 +37,7 @@
             step="0.01"
             label="Platform CPM"
             outlined
-            :rules="[optionalNonNegative]"
+            :rules="optionalNonNegativeRules"
           />
           <div class="row justify-end q-gutter-sm">
             <q-btn flat label="Отмена" @click="opened = false" />
@@ -60,6 +56,7 @@ import { useQuasar } from 'quasar';
 import { marketingApi } from '@/services/marketing';
 import type { MarketingCampaign } from '@/types/marketing';
 import AdminDateInput from '@/components/ui/AdminDateInput.vue';
+import { nonNegative, optionalDate, optionalNonNegative, requiredValue } from '@/utils/validation';
 
 const $q = useQuasar();
 const emit = defineEmits<{ saved: [] }>();
@@ -73,9 +70,9 @@ const form = reactive({
   spend: 0,
   platformCpm: undefined as number | undefined,
 });
-const nonNegative = (value: number) => value >= 0 || 'Значение не может быть отрицательным';
-const optionalNonNegative = (value?: number) =>
-  value === undefined || value >= 0 || 'Значение не может быть отрицательным';
+const metricDateRules = [requiredValue('Укажите дату'), optionalDate('Введите корректную дату')];
+const requiredNonNegativeRules = [nonNegative('Значение не может быть отрицательным')];
+const optionalNonNegativeRules = [optionalNonNegative('Значение не может быть отрицательным')];
 
 function open(value: MarketingCampaign) {
   campaign.value = value;

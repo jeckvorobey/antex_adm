@@ -3,218 +3,161 @@
     <div data-testid="generator-title" class="text-h5 q-mb-md">Новая рекламная компания</div>
 
     <q-form @submit="submit">
-      <div class="row q-col-gutter-md">
-        <div data-testid="campaign-fields-column" class="col-12 col-lg-8">
-          <q-card flat bordered>
-            <q-card-section>
-              <div class="text-subtitle1 q-mb-md">Данные компании</div>
+      <q-card flat bordered>
+        <q-card-section>
+          <div class="text-subtitle1 q-mb-md">Данные компании</div>
 
-              <div class="row q-col-gutter-md">
-                <q-input
-                  v-model.trim="form.name"
-                  name="name"
-                  label="Название компании *"
-                  outlined
+          <div class="row q-col-gutter-md">
+            <MarketingCampaignCodeField
+              :model-value="displayCode"
+              :loading="generatingCode"
+              :disabled="loading"
+              :error-message="codeError"
+              class="col-12"
+              @regenerate="regenerateCode"
+            />
+            <q-input
+              v-model.trim="form.name"
+              name="name"
+              label="Название компании *"
+              outlined
+              dense
+              lazy-rules
+              hide-bottom-space
+              maxlength="255"
+              class="col-12 col-sm-6"
+              :rules="nameRules"
+            />
+            <MarketingPlatformSelect
+              v-model="form.provider"
+              label="Рекламная платформа *"
+              outlined
+              dense
+              lazy-rules
+              hide-bottom-space
+              class="col-12 col-sm-6"
+              :rules="requiredPlatformRules"
+            />
+            <q-input
+              v-model.trim="form.externalId"
+              label="ID компании на платформе"
+              outlined
+              dense
+              maxlength="255"
+              class="col-12 col-sm-6"
+            />
+            <q-input
+              v-model.trim="form.objective"
+              label="Цель компании"
+              outlined
+              dense
+              maxlength="255"
+              class="col-12 col-sm-6"
+            />
+          </div>
+
+          <q-separator class="q-my-md" />
+          <div class="text-subtitle1 q-mb-md">Бюджет и период</div>
+
+          <div class="row q-col-gutter-md">
+            <q-select
+              v-model="form.status"
+              label="Статус"
+              outlined
+              dense
+              emit-value
+              map-options
+              :options="statusOptions"
+              class="col-12 col-sm-6 col-md-4"
+            />
+            <q-input
+              v-model.number="form.budget"
+              type="number"
+              min="0"
+              step="0.01"
+              label="Бюджет"
+              outlined
+              dense
+              lazy-rules
+              hide-bottom-space
+              class="col-12 col-sm-6 col-md-4"
+              :rules="budgetRules"
+            />
+            <MarketingCurrencySelect
+              v-model="form.currency"
+              label="Валюта *"
+              outlined
+              dense
+              lazy-rules
+              hide-bottom-space
+              class="col-12 col-sm-6 col-md-4"
+              :rules="requiredCurrencyRules"
+            />
+            <AdminDateInput v-model="form.startsAt" label="Дата начала" class="col-12 col-sm-6" />
+            <AdminDateInput
+              v-model="form.endsAt"
+              label="Дата окончания"
+              lazy-rules
+              hide-bottom-space
+              class="col-12 col-sm-6"
+              :rules="endDateRules"
+            />
+          </div>
+
+          <q-separator class="q-my-md" />
+          <q-input
+            v-model.trim="form.notes"
+            type="textarea"
+            rows="3"
+            label="Заметки"
+            outlined
+            dense
+            hint="Внутренняя информация для команды"
+          />
+
+          <template v-if="created">
+            <q-separator class="q-my-md" />
+            <div class="row items-center q-mb-sm text-positive">
+              <q-icon name="check_circle" size="20px" class="q-mr-xs" />
+              <span class="text-weight-medium">Компания создана</span>
+            </div>
+            <q-input :model-value="created.link" label="Готовая ссылка" outlined dense readonly>
+              <template #append>
+                <q-btn
+                  data-testid="copy-link"
+                  type="button"
+                  round
+                  flat
                   dense
-                  lazy-rules
-                  hide-bottom-space
-                  maxlength="255"
-                  class="col-12 col-sm-6"
-                  :rules="nameRules"
-                />
-                <MarketingPlatformSelect
-                  v-model="form.provider"
-                  label="Рекламная платформа *"
-                  outlined
-                  dense
-                  lazy-rules
-                  hide-bottom-space
-                  class="col-12 col-sm-6"
-                  :rules="requiredPlatformRules"
-                />
-                <q-input
-                  v-model.trim="form.externalId"
-                  label="ID компании на платформе"
-                  outlined
-                  dense
-                  maxlength="255"
-                  class="col-12 col-sm-6"
-                />
-                <q-input
-                  v-model.trim="form.objective"
-                  label="Цель компании"
-                  outlined
-                  dense
-                  maxlength="255"
-                  class="col-12 col-sm-6"
-                />
-              </div>
-
-              <q-separator class="q-my-md" />
-              <div class="text-subtitle1 q-mb-md">Бюджет и период</div>
-
-              <div class="row q-col-gutter-md">
-                <q-select
-                  v-model="form.status"
-                  label="Статус"
-                  outlined
-                  dense
-                  emit-value
-                  map-options
-                  :options="statusOptions"
-                  class="col-12 col-sm-6 col-md-4"
-                />
-                <q-input
-                  v-model.number="form.budget"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  label="Бюджет"
-                  outlined
-                  dense
-                  lazy-rules
-                  hide-bottom-space
-                  class="col-12 col-sm-6 col-md-4"
-                  :rules="budgetRules"
-                />
-                <MarketingCurrencySelect
-                  v-model="form.currency"
-                  label="Валюта *"
-                  outlined
-                  dense
-                  lazy-rules
-                  hide-bottom-space
-                  class="col-12 col-sm-6 col-md-4"
-                  :rules="requiredCurrencyRules"
-                />
-                <AdminDateInput
-                  v-model="form.startsAt"
-                  label="Дата начала"
-                  class="col-12 col-sm-6"
-                />
-                <AdminDateInput
-                  v-model="form.endsAt"
-                  label="Дата окончания"
-                  lazy-rules
-                  hide-bottom-space
-                  class="col-12 col-sm-6"
-                  :rules="endDateRules"
-                />
-              </div>
-
-              <q-separator class="q-my-md" />
-              <q-input
-                v-model.trim="form.notes"
-                type="textarea"
-                rows="3"
-                label="Заметки"
-                outlined
-                dense
-                hint="Внутренняя информация для команды"
-              />
-            </q-card-section>
-          </q-card>
-        </div>
-
-        <div data-testid="campaign-code-column" class="col-12 col-lg-4">
-          <q-card flat bordered>
-            <q-card-section>
-              <div class="row items-center justify-between q-mb-md">
-                <div class="text-subtitle1">Рекламный код</div>
-                <q-badge
-                  :color="isCurrentCodePersisted ? 'positive' : 'warning'"
-                  :label="isCurrentCodePersisted ? 'Сохранён' : 'Временный'"
-                />
-              </div>
-
-              <q-input
-                name="code"
-                :model-value="displayCode"
-                label="Код компании"
-                outlined
-                dense
-                readonly
-                :loading="generatingCode"
-                :error="Boolean(codeError)"
-                :error-message="codeError"
-                input-class="text-weight-bold generator-code-input"
-              >
-                <template #append>
-                  <q-btn
-                    data-testid="regenerate-code"
-                    type="button"
-                    round
-                    flat
-                    dense
-                    color="primary"
-                    icon="autorenew"
-                    :loading="generatingCode"
-                    :disable="loading"
-                    aria-label="Сгенерировать новый рекламный код"
-                    @click="regenerateCode"
-                  >
-                    <q-tooltip>Сгенерировать новый код</q-tooltip>
-                  </q-btn>
-                </template>
-              </q-input>
-
-              <div class="row items-start no-wrap q-mt-sm text-caption text-grey-7">
-                <q-icon
-                  :name="isCurrentCodePersisted ? 'cloud_done' : 'cloud_off'"
-                  size="18px"
-                  class="q-mr-xs"
-                />
-                <span v-if="!isCurrentCodePersisted">
-                  Код ещё не сохранён в базе данных. Новый код заменит текущее значение.
-                </span>
-                <span v-else>Код сохранён вместе с созданной компанией.</span>
-              </div>
-
-              <q-separator class="q-my-md" />
-              <q-btn
-                data-testid="submit-campaign"
-                type="submit"
-                color="primary"
-                icon="add_link"
-                label="Создать компанию и ссылку"
-                class="full-width"
-                unelevated
-                no-caps
-                :loading="loading"
-                :disable="!previewCode || !previewToken || generatingCode || isCurrentCodePersisted"
-              />
-
-              <template v-if="created">
-                <q-separator class="q-my-md" />
-                <div class="row items-center q-mb-sm text-positive">
-                  <q-icon name="check_circle" size="20px" class="q-mr-xs" />
-                  <span class="text-weight-medium">Компания создана</span>
-                </div>
-                <q-input :model-value="created.link" label="Готовая ссылка" outlined dense readonly>
-                  <template #append>
-                    <q-btn
-                      data-testid="copy-link"
-                      type="button"
-                      round
-                      flat
-                      dense
-                      color="primary"
-                      icon="content_copy"
-                      aria-label="Копировать готовую ссылку"
-                      @click="copyLink"
-                    >
-                      <q-tooltip>Копировать ссылку</q-tooltip>
-                    </q-btn>
-                  </template>
-                </q-input>
-                <div class="text-caption text-grey-7 q-mt-sm">
-                  Параметр: <span class="text-weight-medium">{{ created.marketParameter }}</span>
-                </div>
+                  color="primary"
+                  icon="content_copy"
+                  aria-label="Копировать готовую ссылку"
+                  @click="copyLink"
+                >
+                  <q-tooltip>Копировать ссылку</q-tooltip>
+                </q-btn>
               </template>
-            </q-card-section>
-          </q-card>
-        </div>
-      </div>
+            </q-input>
+            <div class="text-caption text-grey-7 q-mt-sm">
+              Параметр: <span class="text-weight-medium">{{ created.marketParameter }}</span>
+            </div>
+          </template>
+
+          <q-separator class="q-my-md" />
+          <q-btn
+            data-testid="submit-campaign"
+            type="submit"
+            color="primary"
+            icon="add_link"
+            label="Создать компанию и ссылку"
+            class="full-width"
+            unelevated
+            no-caps
+            :loading="loading"
+            :disable="!previewCode || !previewToken || generatingCode || Boolean(created)"
+          />
+        </q-card-section>
+      </q-card>
     </q-form>
   </q-page>
 </template>
@@ -224,6 +167,7 @@ import { isAxiosError } from 'axios';
 import { copyToClipboard, useQuasar } from 'quasar';
 import { computed, onMounted, reactive, ref } from 'vue';
 
+import MarketingCampaignCodeField from '@/components/marketing/MarketingCampaignCodeField.vue';
 import MarketingCurrencySelect from '@/components/marketing/MarketingCurrencySelect.vue';
 import MarketingPlatformSelect from '@/components/marketing/MarketingPlatformSelect.vue';
 import AdminDateInput from '@/components/ui/AdminDateInput.vue';
@@ -254,9 +198,6 @@ const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS.filter(
   (option) => option.value !== 'archived',
 );
 const displayCode = computed(() => (previewCode.value ? `market_${previewCode.value}` : ''));
-const isCurrentCodePersisted = computed(() =>
-  Boolean(created.value && created.value.code === previewCode.value),
-);
 const nameRules = [
   (value: string) => Boolean(value?.trim()) || 'Укажите название компании',
   (value: string) => value.length <= 255 || 'Не более 255 символов',
@@ -340,10 +281,3 @@ onMounted(() => {
   void regenerateCode();
 });
 </script>
-
-<style scoped>
-:deep(.generator-code-input) {
-  font-family: monospace;
-  letter-spacing: 0.08em;
-}
-</style>

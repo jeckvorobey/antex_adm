@@ -19,19 +19,25 @@ describe('ManagementGeneratorPage', () => {
     previewMock.mockResolvedValue({ code: 'BDF7J9J8JH', token: 'preview-token-1' });
   });
 
-  it('использует компактную responsive-композицию общего стиля admin', async () => {
+  it('размещает переиспользуемое поле кода и действие внутри основной формы', async () => {
     const wrapper = mount(ManagementGeneratorPage);
     await flushPromises();
 
     expect(wrapper.get('[data-testid="generator-title"]').classes()).toContain('text-h5');
-    expect(wrapper.text()).not.toContain('РЕКЛАМА');
-    expect(wrapper.text()).not.toContain('Код назначает сервер');
-    expect(wrapper.text()).not.toContain('Поля со звёздочкой обязательны');
-    expect(wrapper.get('[data-testid="campaign-fields-column"]').classes()).toEqual(
-      expect.arrayContaining(['col-12', 'col-lg-8']),
-    );
-    expect(wrapper.get('[data-testid="campaign-code-column"]').classes()).toEqual(
-      expect.arrayContaining(['col-12', 'col-lg-4']),
+    expect(wrapper.findComponent({ name: 'MarketingCampaignCodeField' }).exists()).toBe(true);
+    expect(wrapper.text()).not.toContain('Рекламный код');
+    expect(wrapper.text()).not.toContain('Временный');
+    expect(wrapper.text()).not.toContain('Сохранён');
+    expect(wrapper.text()).not.toContain('Код ещё не сохранён в базе данных');
+    expect(wrapper.find('[data-testid="campaign-code-column"]').exists()).toBe(false);
+
+    const formInputs = wrapper.get('form').findAll('input');
+    const codeInputIndex = formInputs.findIndex((input) => input.attributes('name') === 'code');
+    const nameInputIndex = formInputs.findIndex((input) => input.attributes('name') === 'name');
+    expect(codeInputIndex).toBeGreaterThanOrEqual(0);
+    expect(codeInputIndex).toBeLessThan(nameInputIndex);
+    expect(wrapper.get('[data-testid="submit-campaign"]').element.closest('form')).toBe(
+      wrapper.get('form').element,
     );
     expect(wrapper.get('[data-testid="submit-campaign"]').classes()).toContain('full-width');
   });
@@ -49,8 +55,6 @@ describe('ManagementGeneratorPage', () => {
     const codeInput = wrapper.get('input[name="code"]');
     expect((codeInput.element as HTMLInputElement).readOnly).toBe(true);
     expect((codeInput.element as HTMLInputElement).value).toBe('market_BDF7J9J8JH');
-    expect(wrapper.text()).toContain('Код ещё не сохранён в базе данных');
-
     await wrapper.get('input[name="name"]').setValue('Telegram Ads July');
     await wrapper.get('form').trigger('submit');
     await flushPromises();

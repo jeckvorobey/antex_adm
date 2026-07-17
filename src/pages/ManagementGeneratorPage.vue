@@ -44,7 +44,10 @@
               outlined
               dense
               maxlength="255"
+              lazy-rules
+              hide-bottom-space
               class="col-12 col-sm-6"
+              :rules="externalIdRules"
             />
             <q-input
               v-model.trim="form.objective"
@@ -52,7 +55,10 @@
               outlined
               dense
               maxlength="255"
+              lazy-rules
+              hide-bottom-space
               class="col-12 col-sm-6"
+              :rules="objectiveRules"
             />
           </div>
 
@@ -93,12 +99,20 @@
               class="col-12 col-sm-6 col-md-4"
               :rules="requiredCurrencyRules"
             />
-            <AdminDateInput v-model="form.startsAt" label="Дата начала" class="col-12 col-sm-6" />
+            <AdminDateInput
+              v-model="form.startsAt"
+              label="Дата начала"
+              lazy-rules
+              hide-bottom-space
+              class="col-12 col-sm-6"
+              :rules="startDateRules"
+            />
             <AdminDateInput
               v-model="form.endsAt"
               label="Дата окончания"
               lazy-rules
               hide-bottom-space
+              reactive-rules
               class="col-12 col-sm-6"
               :rules="endDateRules"
             />
@@ -188,6 +202,13 @@ import AdminDateInput from '@/components/ui/AdminDateInput.vue';
 import { MARKETING_CAMPAIGN_STATUS_OPTIONS } from '@/constants/marketing';
 import { marketingApi } from '@/services/marketing';
 import type { CampaignCreatePayload, MarketingCampaign } from '@/types/marketing';
+import {
+  dateOnOrAfter,
+  maxTextLength,
+  optionalDate,
+  optionalNonNegative,
+  requiredValue,
+} from '@/utils/validation';
 
 const $q = useQuasar();
 const loading = ref(false);
@@ -213,19 +234,19 @@ const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS.filter(
 );
 const displayCode = computed(() => previewCode.value);
 const nameRules = [
-  (value: string) => Boolean(value?.trim()) || 'Укажите название компании',
-  (value: string) => value.length <= 255 || 'Не более 255 символов',
+  requiredValue('Укажите название компании'),
+  maxTextLength(255, 'Не более 255 символов'),
 ];
-const requiredPlatformRules = [(value: string | null) => Boolean(value) || 'Выберите платформу'];
-const requiredCurrencyRules = [(value: string | null) => Boolean(value) || 'Выберите валюту'];
-const budgetRules = [
-  (value: number | undefined) =>
-    value === undefined || value >= 0 || 'Бюджет не может быть отрицательным',
-];
-const endDateRules = [
-  (value: string) =>
-    !value || !form.startsAt || value >= form.startsAt || 'Дата окончания раньше даты начала',
-];
+const requiredPlatformRules = [requiredValue('Выберите платформу')];
+const requiredCurrencyRules = [requiredValue('Выберите валюту')];
+const externalIdRules = [maxTextLength(255, 'Не более 255 символов')];
+const objectiveRules = [maxTextLength(255, 'Не более 255 символов')];
+const budgetRules = [optionalNonNegative('Бюджет не может быть отрицательным')];
+const startDateRules = [optionalDate('Введите корректную дату')];
+const endDateRules = computed(() => [
+  optionalDate('Введите корректную дату'),
+  dateOnOrAfter(form.startsAt, 'Дата окончания раньше даты начала'),
+]);
 
 /** Запрашивает новый код и атомарно заменяет прежнее значение во временном состоянии формы. */
 async function regenerateCode(): Promise<void> {

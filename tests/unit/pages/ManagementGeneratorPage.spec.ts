@@ -148,4 +148,21 @@ describe('ManagementGeneratorPage', () => {
       expect.objectContaining({ startsAt: '2026-07-17', endsAt: '2026-07-31' }),
     );
   });
+
+  it('не считает дату окончания в display-формате более ранней, чем ISO-дата начала', async () => {
+    createMock.mockResolvedValue({ id: 1, code: 'BDF7J9J8JH', link: 'https://t.me/antex_bot' });
+    const wrapper = mount(ManagementGeneratorPage);
+    await flushPromises();
+    const dates = wrapper.findAllComponents({ name: 'AdminDateInput' });
+
+    await wrapper.get('input[name="name"]').setValue('Campaign');
+    await dates[0]?.find('input').setValue('17.07.2026');
+    await dates[1]?.find('input').setValue('19.07.2026');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ startsAt: '2026-07-17', endsAt: '2026-07-19' }),
+    );
+  });
 });

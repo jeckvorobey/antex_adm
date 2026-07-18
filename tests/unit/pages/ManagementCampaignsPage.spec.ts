@@ -106,10 +106,18 @@ describe('ManagementCampaignsPage', () => {
     setScreenXs(true);
     const mobileWrapper = mount(ManagementCampaignsPage);
     await flushPromises();
+    const mobileActions = mobileWrapper.get('[data-testid="campaign-mobile-actions"]');
+
+    expect(mobileActions.text()).toContain('Действия');
+    expect(mobileActions.classes()).toEqual(
+      expect.arrayContaining(['row', 'items-center', 'justify-between']),
+    );
 
     for (const [name, label, icon] of actions) {
       const mobileButton = mobileWrapper.get(`[data-testid="campaign-action-${name}-mobile"]`);
 
+      expect(mobileButton.attributes('flat')).toBe('');
+      expect(mobileButton.attributes('outline')).toBeUndefined();
       expect(mobileButton.attributes('round')).toBe('');
       expect(mobileButton.attributes('aria-label')).toBe(label);
       expect(mobileButton.html()).toContain(icon);

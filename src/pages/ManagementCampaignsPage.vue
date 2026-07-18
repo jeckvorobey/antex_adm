@@ -106,44 +106,47 @@
         </q-td>
       </template>
       <template #mobile-actions="{ row }">
-        <div class="row q-gutter-xs">
-          <q-btn
-            data-testid="campaign-action-copy-mobile"
-            outline
-            round
-            dense
-            color="primary"
-            icon="content_copy"
-            aria-label="Копировать ссылку"
-            @click="copyLink(row)"
-          >
-            <q-tooltip>Копировать ссылку</q-tooltip>
-          </q-btn>
-          <q-btn
-            data-testid="campaign-action-metrics-mobile"
-            outline
-            round
-            dense
-            color="primary"
-            icon="bar_chart"
-            aria-label="Открыть метрики"
-            @click="metricsDialog?.open(row)"
-          >
-            <q-tooltip>Открыть метрики</q-tooltip>
-          </q-btn>
-          <q-btn
-            v-if="row.status !== 'archived'"
-            data-testid="campaign-action-archive-mobile"
-            outline
-            round
-            dense
-            color="negative"
-            icon="archive"
-            aria-label="Архивировать кампанию"
-            @click="archive(row)"
-          >
-            <q-tooltip>Архивировать кампанию</q-tooltip>
-          </q-btn>
+        <div data-testid="campaign-mobile-actions" class="row items-center justify-between">
+          <span class="text-caption text-grey-7">Действия</span>
+          <div class="row q-gutter-xs">
+            <q-btn
+              data-testid="campaign-action-copy-mobile"
+              flat
+              round
+              dense
+              color="primary"
+              icon="content_copy"
+              aria-label="Копировать ссылку"
+              @click="copyLink(row)"
+            >
+              <q-tooltip>Копировать ссылку</q-tooltip>
+            </q-btn>
+            <q-btn
+              data-testid="campaign-action-metrics-mobile"
+              flat
+              round
+              dense
+              color="primary"
+              icon="bar_chart"
+              aria-label="Открыть метрики"
+              @click="metricsDialog?.open(row)"
+            >
+              <q-tooltip>Открыть метрики</q-tooltip>
+            </q-btn>
+            <q-btn
+              v-if="row.status !== 'archived'"
+              data-testid="campaign-action-archive-mobile"
+              flat
+              round
+              dense
+              color="negative"
+              icon="archive"
+              aria-label="Архивировать кампанию"
+              @click="archive(row)"
+            >
+              <q-tooltip>Архивировать кампанию</q-tooltip>
+            </q-btn>
+          </div>
         </div>
       </template>
     </AppResponsiveTable>

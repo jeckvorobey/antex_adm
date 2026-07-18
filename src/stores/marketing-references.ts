@@ -19,19 +19,29 @@ export const useMarketingReferencesStore = defineStore('marketingReferences', ()
 
   async function loadPlatforms(force = false) {
     if (!force && platforms.value.length) return platforms.value;
-    platformsRequest ??= marketingApi.listPlatforms().then((items) => {
-      platforms.value = items;
-      return items;
-    }).finally(() => { platformsRequest = null; });
+    platformsRequest ??= marketingApi
+      .listPlatforms()
+      .then((items) => {
+        platforms.value = items;
+        return items;
+      })
+      .finally(() => {
+        platformsRequest = null;
+      });
     return platformsRequest;
   }
 
   async function loadCurrencies(force = false) {
     if (!force && currencies.value.length) return currencies.value;
-    currenciesRequest ??= marketingApi.listCurrencies().then((items) => {
-      currencies.value = items;
-      return items;
-    }).finally(() => { currenciesRequest = null; });
+    currenciesRequest ??= marketingApi
+      .listCurrencies()
+      .then((items) => {
+        currencies.value = items;
+        return items;
+      })
+      .finally(() => {
+        currenciesRequest = null;
+      });
     return currenciesRequest;
   }
 

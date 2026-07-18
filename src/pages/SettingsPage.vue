@@ -23,13 +23,35 @@
               <q-item v-for="item in references.platforms" :key="item.slug">
                 <q-item-section>{{ item.name }}</q-item-section>
                 <q-item-section side>{{ item.slug }}</q-item-section>
-                <q-item-section side><q-btn flat round dense color="negative" icon="delete" @click="deletePlatform(item.slug)" /></q-item-section>
+                <q-item-section side
+                  ><q-btn
+                    flat
+                    round
+                    dense
+                    color="negative"
+                    icon="delete"
+                    @click="deletePlatform(item.slug)"
+                /></q-item-section>
               </q-item>
             </q-list>
             <q-form class="row q-col-gutter-sm" @submit="createPlatform">
-              <q-input v-model.trim="platform.slug" label="Slug" outlined class="col-12 col-sm-5" :rules="[required]" />
-              <q-input v-model.trim="platform.name" label="Название" outlined class="col-12 col-sm-7" :rules="[required]" />
-              <div class="col-12"><q-btn type="submit" color="primary" label="Добавить платформу" /></div>
+              <q-input
+                v-model.trim="platform.slug"
+                label="Slug"
+                outlined
+                class="col-12 col-sm-5"
+                :rules="[required]"
+              />
+              <q-input
+                v-model.trim="platform.name"
+                label="Название"
+                outlined
+                class="col-12 col-sm-7"
+                :rules="[required]"
+              />
+              <div class="col-12">
+                <q-btn type="submit" color="primary" label="Добавить платформу" />
+              </div>
             </q-form>
           </q-card-section>
         </q-card>
@@ -42,13 +64,35 @@
               <q-item v-for="item in references.currencies" :key="item.code">
                 <q-item-section>{{ item.code }}</q-item-section>
                 <q-item-section side>{{ item.name }}</q-item-section>
-                <q-item-section side><q-btn flat round dense color="negative" icon="delete" @click="deleteCurrency(item.code)" /></q-item-section>
+                <q-item-section side
+                  ><q-btn
+                    flat
+                    round
+                    dense
+                    color="negative"
+                    icon="delete"
+                    @click="deleteCurrency(item.code)"
+                /></q-item-section>
               </q-item>
             </q-list>
             <q-form class="row q-col-gutter-sm" @submit="createCurrency">
-              <q-input v-model.trim="currency.code" label="Код" outlined class="col-12 col-sm-4" :rules="[required]" />
-              <q-input v-model.trim="currency.name" label="Название" outlined class="col-12 col-sm-8" :rules="[required]" />
-              <div class="col-12"><q-btn type="submit" color="primary" label="Добавить валюту" /></div>
+              <q-input
+                v-model.trim="currency.code"
+                label="Код"
+                outlined
+                class="col-12 col-sm-4"
+                :rules="[required]"
+              />
+              <q-input
+                v-model.trim="currency.name"
+                label="Название"
+                outlined
+                class="col-12 col-sm-8"
+                :rules="[required]"
+              />
+              <div class="col-12">
+                <q-btn type="submit" color="primary" label="Добавить валюту" />
+              </div>
             </q-form>
           </q-card-section>
         </q-card>
@@ -122,7 +166,10 @@ async function deleteCurrency(code: string) {
     await references.loadCurrencies(true);
     $q.notify({ type: 'positive', message: 'Валюта удалена' });
   } catch {
-    $q.notify({ type: 'negative', message: 'Валюта связана с компаниями или не может быть удалена' });
+    $q.notify({
+      type: 'negative',
+      message: 'Валюта связана с компаниями или не может быть удалена',
+    });
   }
 }
 

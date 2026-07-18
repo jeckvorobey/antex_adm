@@ -151,7 +151,7 @@
     <DailyMetricsDialog ref="metricsDialog" @saved="reload" />
     <q-dialog v-model="editOpened">
       <q-card style="width: 520px; max-width: 95vw">
-        <q-card-section class="text-h6">Изменить кампанию</q-card-section>
+        <q-card-section class="text-h6">Изменить компанию</q-card-section>
         <q-card-section
           ><q-form class="q-gutter-md" @submit="saveEdit">
             <q-input v-model.trim="editForm.name" label="Наименование" outlined />

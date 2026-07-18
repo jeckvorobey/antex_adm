@@ -1,5 +1,12 @@
 <template>
-  <q-select v-bind="$attrs" :model-value="modelValue" :options="store.platformOptions" emit-value map-options @update:model-value="$emit('update:modelValue', $event)" />
+  <q-select
+    v-bind="$attrs"
+    :model-value="modelValue"
+    :options="store.platformOptions"
+    emit-value
+    map-options
+    @update:model-value="$emit('update:modelValue', $event)"
+  />
 </template>
 
 <script setup lang="ts">

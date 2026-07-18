@@ -43,6 +43,12 @@
           map-options
           class="col-12 col-sm-6 col-md-3"
         />
+        <q-checkbox
+          v-model="filters.includeArchived"
+          data-testid="campaign-show-archive"
+          label="Показать архив"
+          class="col-12"
+        />
         <div class="col-12 col-md-1">
           <q-btn color="primary" icon="search" class="full-width" @click="reload" />
         </div>
@@ -215,6 +221,7 @@ const filters = reactive({
   search: '',
   provider: null as string | null,
   status: null as string | null,
+  includeArchived: false,
 });
 const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
 const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS;
@@ -273,8 +280,10 @@ async function fetchCampaigns(append = false) {
     ? campaigns.value.length
     : (pagination.value.page - 1) * pagination.value.rowsPerPage;
   try {
+    const { includeArchived, ...campaignFilters } = filters;
     const data = await marketingApi.listCampaigns({
-      ...filters,
+      ...campaignFilters,
+      include_archived: includeArchived,
       limit: pagination.value.rowsPerPage,
       offset,
     });

@@ -77,6 +77,27 @@ describe('ManagementCampaignsPage', () => {
     ]);
   });
 
+  it('скрывает архив по умолчанию и передаёт выбор checkbox в API', async () => {
+    const wrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+
+    const archiveCheckbox = wrapper.get('[data-testid="campaign-show-archive"]');
+
+    expect(archiveCheckbox.text()).toContain('Показать архив');
+    expect((archiveCheckbox.get('input').element as HTMLInputElement).checked).toBe(false);
+    expect(listMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ include_archived: false, limit: 20, offset: 0 }),
+    );
+
+    await archiveCheckbox.get('input').setValue(true);
+    await wrapper.get('button[icon="search"]').trigger('click');
+    await flushPromises();
+
+    expect(listMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ include_archived: true, limit: 20, offset: 0 }),
+    );
+  });
+
   it('показывает в диалоге редактирования название «Изменить компанию»', async () => {
     const wrapper = mount(ManagementCampaignsPage);
     await flushPromises();

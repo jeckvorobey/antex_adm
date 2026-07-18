@@ -77,6 +77,16 @@ describe('ManagementCampaignsPage', () => {
     ]);
   });
 
+  it('показывает в диалоге редактирования название «Изменить компанию»', async () => {
+    const wrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+
+    await wrapper.get('button[icon="edit"]').trigger('click');
+
+    expect(wrapper.text()).toContain('Изменить компанию');
+    expect(wrapper.text()).not.toContain('Изменить кампанию');
+  });
+
   it('показывает компактные семантические действия кампании на мобильной карточке', async () => {
     const desktopWrapper = mount(ManagementCampaignsPage);
     await flushPromises();

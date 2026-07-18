@@ -294,6 +294,28 @@ const QToggleStub = defineComponent({
   },
 });
 
+const QCheckboxStub = defineComponent({
+  name: 'QCheckboxStub',
+  props: {
+    modelValue: { type: Boolean, default: false },
+    label: { type: String, default: '' },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit, attrs }) {
+    return () =>
+      h('label', { ...attrs, class: ['q-checkbox', attrs.class] }, [
+        h('input', {
+          type: 'checkbox',
+          checked: props.modelValue,
+          onChange: (event: Event) => {
+            emit('update:modelValue', (event.target as HTMLInputElement).checked);
+          },
+        }),
+        props.label,
+      ]);
+  },
+});
+
 const QBadgeStub = defineComponent({
   name: 'QBadgeStub',
   props: {
@@ -443,6 +465,7 @@ config.global.stubs = {
   'q-select': QSelectStub,
   'q-editor': QEditorStub,
   'q-toggle': QToggleStub,
+  'q-checkbox': QCheckboxStub,
   'q-badge': QBadgeStub,
   'q-table': QTableStub,
   'q-expansion-item': defineComponent({

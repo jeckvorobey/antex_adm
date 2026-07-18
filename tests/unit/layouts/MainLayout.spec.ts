@@ -108,11 +108,32 @@ describe('MainLayout', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('не раскрывает Рекламу автоматически на дочернем маршруте', () => {
+  it('раскрывает Рекламу на её дочернем маршруте', () => {
     mockRoute.path = '/management/dashboard';
     const wrapper = mountLayout();
     const management = wrapper.findAllComponents({ name: 'QExpansionItemStub' })[0];
 
-    expect(management?.props('modelValue')).toBe(false);
+    expect(management?.props('modelValue')).toBe(true);
+  });
+
+  it('раскрывает каждую группу меню на её дочернем маршруте', () => {
+    mockRoute.path = '/aex/journal';
+    const wrapper = mountLayout();
+    const expansionItems = wrapper.findAllComponents({ name: 'QExpansionItemStub' });
+
+    expect(expansionItems[0]?.props('modelValue')).toBe(false);
+    expect(expansionItems[1]?.props('modelValue')).toBe(true);
+  });
+
+  it('не позволяет свернуть группу активного маршрута', async () => {
+    mockRoute.path = '/management/campaigns';
+    const wrapper = mountLayout();
+    const management = wrapper.get('[data-testid="management-menu"]');
+
+    await management.trigger('click');
+
+    expect(wrapper.findAllComponents({ name: 'QExpansionItemStub' })[0]?.props('modelValue')).toBe(
+      true,
+    );
   });
 });

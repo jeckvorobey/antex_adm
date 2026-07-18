@@ -104,6 +104,64 @@ describe('ManagementCampaignsPage', () => {
     );
   });
 
+  it('не заменяет новый список устаревшим ответом после смены архива', async () => {
+    let resolveInitialRequest!: (value: unknown) => void;
+    const initialRequest = new Promise((resolve) => {
+      resolveInitialRequest = resolve;
+    });
+    listMock
+      .mockImplementationOnce(() => initialRequest)
+      .mockResolvedValueOnce({
+        items: [
+          {
+            id: 2,
+            code: 'ARCHIVED',
+            name: 'Архивная компания',
+            provider: 'telegram_ads',
+            status: 'archived',
+            currency: 'USDT',
+            budget: 100,
+            link: 'https://t.me/bot?startapp=market_ARCHIVED',
+            marketParameter: 'market=ARCHIVED',
+            createdAt: '2026-07-13T00:00:00Z',
+          },
+        ],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      });
+    const wrapper = mount(ManagementCampaignsPage);
+
+    await wrapper.get('[data-testid="campaign-show-archive"] input').setValue(true);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Архивная компания');
+
+    resolveInitialRequest({
+      items: [
+        {
+          id: 1,
+          code: 'ACTIVE',
+          name: 'Активная компания',
+          provider: 'telegram_ads',
+          status: 'active',
+          currency: 'USDT',
+          budget: 100,
+          link: 'https://t.me/bot?startapp=market_ACTIVE',
+          marketParameter: 'market=ACTIVE',
+          createdAt: '2026-07-13T00:00:00Z',
+        },
+      ],
+      total: 1,
+      limit: 20,
+      offset: 0,
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Архивная компания');
+    expect(wrapper.text()).not.toContain('Активная компания');
+  });
+
   it('показывает в диалоге редактирования название «Изменить компанию»', async () => {
     const wrapper = mount(ManagementCampaignsPage);
     await flushPromises();

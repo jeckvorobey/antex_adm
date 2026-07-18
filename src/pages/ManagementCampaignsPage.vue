@@ -274,8 +274,10 @@ const mobileConfig = {
 const editOpened = ref(false);
 const editing = ref<MarketingCampaign | null>(null);
 const editForm = reactive({ name: '', objective: '', status: 'active' });
+let latestCampaignsRequestId = 0;
 
 async function fetchCampaigns(append = false) {
+  const requestId = ++latestCampaignsRequestId;
   append ? (loadingMore.value = true) : (loading.value = true);
   const offset = append
     ? campaigns.value.length
@@ -288,12 +290,15 @@ async function fetchCampaigns(append = false) {
       limit: pagination.value.rowsPerPage,
       offset,
     });
+    if (requestId !== latestCampaignsRequestId) return;
     campaigns.value = append ? [...campaigns.value, ...data.items] : data.items;
     pagination.value.rowsNumber = data.total;
   } catch {
+    if (requestId !== latestCampaignsRequestId) return;
     if (!append) campaigns.value = [];
     $q.notify({ type: 'negative', message: 'Не удалось загрузить кампании' });
   } finally {
+    if (requestId !== latestCampaignsRequestId) return;
     loading.value = false;
     loadingMore.value = false;
   }

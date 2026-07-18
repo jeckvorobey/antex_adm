@@ -17,11 +17,12 @@
         </q-item>
 
         <q-expansion-item
-          v-model="managementExpanded"
+          :model-value="isManagementExpanded"
           data-testid="management-menu"
           icon="ads_click"
           label="Реклама"
           :header-class="isManagementRoute ? 'text-primary' : 'text-weight-medium'"
+          @update:model-value="updateManagementExpanded"
         >
           <q-item
             v-for="item in managementMenu"
@@ -46,8 +47,9 @@
             v-else
             :icon="item.icon"
             :label="item.label"
-            :default-opened="isAexExpanded"
+            :model-value="isMenuGroupExpanded(item)"
             header-class="text-weight-medium"
+            @update:model-value="updateMenuGroupExpanded(item, $event)"
           >
             <q-item
               v-for="child in item.children"
@@ -81,7 +83,13 @@ interface MenuItem {
   to?: string;
   icon: string;
   label: string;
-  children?: { to: string; icon: string; label: string }[];
+  children?: MenuChild[];
+}
+
+interface MenuChild {
+  to: string;
+  icon: string;
+  label: string;
 }
 
 const drawer = ref(false);
@@ -89,7 +97,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-const managementMenu = [
+const managementMenu: MenuChild[] = [
   { to: '/management/dashboard', icon: 'dashboard', label: 'Дашборд' },
   { to: '/management/campaigns', icon: 'domain', label: 'Компании' },
   { to: '/management/applications', icon: 'assignment', label: 'Заявки по компаниям' },
@@ -97,7 +105,39 @@ const managementMenu = [
 ];
 const isManagementRoute = computed(() => route.path.startsWith('/management/'));
 const managementExpanded = ref(false);
-const isAexExpanded = computed(() => route.path.startsWith('/aex/'));
+const manualMenuExpansion = ref<Record<string, boolean>>({});
+
+/** Определяет, открыт ли сейчас один из дочерних маршрутов группы меню. */
+function hasActiveChildRoute(children: MenuChild[]): boolean {
+  return children.some((child) => route.path === child.to || route.path.startsWith(`${child.to}/`));
+}
+
+const isManagementExpanded = computed(
+  () => hasActiveChildRoute(managementMenu) || managementExpanded.value,
+);
+
+/** Сохраняет ручное раскрытие рекламы только вне её активных маршрутов. */
+function updateManagementExpanded(expanded: boolean): void {
+  if (!hasActiveChildRoute(managementMenu)) {
+    managementExpanded.value = expanded;
+  }
+}
+
+/** Возвращает раскрытое состояние группы, включая обязательное раскрытие активного route. */
+function isMenuGroupExpanded(item: MenuItem): boolean {
+  if (!item.children) {
+    return false;
+  }
+
+  return hasActiveChildRoute(item.children) || manualMenuExpansion.value[item.label] === true;
+}
+
+/** Сохраняет ручное состояние только для группы без активного дочернего route. */
+function updateMenuGroupExpanded(item: MenuItem, expanded: boolean): void {
+  if (item.children && !hasActiveChildRoute(item.children)) {
+    manualMenuExpansion.value[item.label] = expanded;
+  }
+}
 
 const menu: MenuItem[] = [
   { to: '/orders', icon: 'list_alt', label: 'Заявки' },

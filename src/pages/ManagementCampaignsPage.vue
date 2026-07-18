@@ -66,53 +66,84 @@
       <template #body-cell-actions="props">
         <q-td :props="props">
           <div class="row no-wrap q-gutter-xs">
-            <q-btn flat dense icon="content_copy" label="Копировать" @click="copyLink(props.row)" />
-            <q-btn flat dense icon="edit" label="Изменить" @click="openEdit(props.row)" />
             <q-btn
+              data-testid="campaign-action-copy-desktop"
               flat
               dense
-              icon="monitoring"
+              icon="content_copy"
+              label="Копировать"
+              aria-label="Копировать ссылку"
+              @click="copyLink(props.row)"
+            >
+              <q-tooltip>Копировать ссылку</q-tooltip>
+            </q-btn>
+            <q-btn flat dense icon="edit" label="Изменить" @click="openEdit(props.row)" />
+            <q-btn
+              data-testid="campaign-action-metrics-desktop"
+              flat
+              dense
+              icon="bar_chart"
               label="Метрики"
+              aria-label="Открыть метрики"
               @click="metricsDialog?.open(props.row)"
-            />
+            >
+              <q-tooltip>Открыть метрики</q-tooltip>
+            </q-btn>
             <q-btn
               v-if="props.row.status !== 'archived'"
+              data-testid="campaign-action-archive-desktop"
               flat
               dense
               color="negative"
               icon="archive"
               label="Архивировать"
+              aria-label="Архивировать кампанию"
               @click="archive(props.row)"
-            />
+            >
+              <q-tooltip>Архивировать кампанию</q-tooltip>
+            </q-btn>
           </div>
         </q-td>
       </template>
       <template #mobile-actions="{ row }">
         <div class="row q-gutter-xs">
           <q-btn
+            data-testid="campaign-action-copy-mobile"
             outline
+            round
             dense
             color="primary"
             icon="content_copy"
-            label="Ссылка"
+            aria-label="Копировать ссылку"
             @click="copyLink(row)"
-          />
+          >
+            <q-tooltip>Копировать ссылку</q-tooltip>
+          </q-btn>
           <q-btn
+            data-testid="campaign-action-metrics-mobile"
             outline
+            round
             dense
-            icon="monitoring"
-            label="Метрики"
+            color="primary"
+            icon="bar_chart"
+            aria-label="Открыть метрики"
             @click="metricsDialog?.open(row)"
-          />
+          >
+            <q-tooltip>Открыть метрики</q-tooltip>
+          </q-btn>
           <q-btn
             v-if="row.status !== 'archived'"
+            data-testid="campaign-action-archive-mobile"
             outline
+            round
             dense
             color="negative"
             icon="archive"
-            label="Архивировать"
+            aria-label="Архивировать кампанию"
             @click="archive(row)"
-          />
+          >
+            <q-tooltip>Архивировать кампанию</q-tooltip>
+          </q-btn>
         </div>
       </template>
     </AppResponsiveTable>
@@ -182,7 +213,13 @@ const columns: QTableColumn<MarketingCampaign>[] = [
   { name: 'code', label: 'Код', field: 'code', align: 'left' },
   { name: 'provider', label: 'Платформа', field: 'provider', align: 'left' },
   { name: 'status', label: 'Статус', field: 'status', align: 'left' },
-  { name: 'campaignType', label: 'Тип', field: 'campaignType', align: 'left', format: (value) => value === 'paid' ? 'Платная' : 'Бесплатная' },
+  {
+    name: 'campaignType',
+    label: 'Тип',
+    field: 'campaignType',
+    align: 'left',
+    format: (value) => (value === 'paid' ? 'Платная' : 'Бесплатная'),
+  },
   { name: 'attributedUsers', label: 'Пользователи', field: 'attributedUsers', align: 'right' },
   { name: 'applications', label: 'Заявки', field: 'applications', align: 'right' },
   {

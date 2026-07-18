@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Screen } from 'quasar';
 
 import ManagementCampaignsPage from '@/pages/ManagementCampaignsPage.vue';
 
@@ -12,8 +13,17 @@ vi.mock('@/services/marketing', () => ({
   },
 }));
 
+function setScreenXs(value: boolean) {
+  const screen = Screen as unknown as { xs: boolean; md: boolean; name: string; width: number };
+  screen.xs = value;
+  screen.md = !value;
+  screen.name = value ? 'xs' : 'md';
+  screen.width = value ? 390 : 1280;
+}
+
 describe('ManagementCampaignsPage', () => {
   beforeEach(() => {
+    setScreenXs(false);
     listMock.mockResolvedValue({
       items: [
         {
@@ -65,5 +75,34 @@ describe('ManagementCampaignsPage', () => {
       { label: 'Приостановлена', value: 'paused' },
       { label: 'В архиве', value: 'archived' },
     ]);
+  });
+
+  it('показывает компактные семантические действия кампании на мобильной карточке', async () => {
+    const desktopWrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+    const actions = [
+      ['copy', 'Копировать ссылку', 'content_copy'],
+      ['metrics', 'Открыть метрики', 'bar_chart'],
+      ['archive', 'Архивировать кампанию', 'archive'],
+    ] as const;
+
+    for (const [name, label, icon] of actions) {
+      const desktopButton = desktopWrapper.get(`[data-testid="campaign-action-${name}-desktop"]`);
+
+      expect(desktopButton.attributes('aria-label')).toBe(label);
+      expect(desktopButton.html()).toContain(icon);
+    }
+
+    setScreenXs(true);
+    const mobileWrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+
+    for (const [name, label, icon] of actions) {
+      const mobileButton = mobileWrapper.get(`[data-testid="campaign-action-${name}-mobile"]`);
+
+      expect(mobileButton.attributes('round')).toBe('');
+      expect(mobileButton.attributes('aria-label')).toBe(label);
+      expect(mobileButton.html()).toContain(icon);
+    }
   });
 });

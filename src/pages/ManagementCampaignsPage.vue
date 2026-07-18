@@ -48,6 +48,7 @@
           data-testid="campaign-show-archive"
           label="Показать архив"
           class="col-12"
+          @update:model-value="reload"
         />
         <div class="col-12 col-md-1">
           <q-btn color="primary" icon="search" class="full-width" @click="reload" />

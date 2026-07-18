@@ -90,11 +90,17 @@ describe('ManagementCampaignsPage', () => {
     );
 
     await archiveCheckbox.get('input').setValue(true);
-    await wrapper.get('button[icon="search"]').trigger('click');
     await flushPromises();
 
     expect(listMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ include_archived: true, limit: 20, offset: 0 }),
+    );
+
+    await archiveCheckbox.get('input').setValue(false);
+    await flushPromises();
+
+    expect(listMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ include_archived: false, limit: 20, offset: 0 }),
     );
   });
 

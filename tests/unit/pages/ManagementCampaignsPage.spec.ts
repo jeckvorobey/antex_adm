@@ -53,7 +53,7 @@ describe('ManagementCampaignsPage', () => {
     expect(wrapper.text()).toContain('Компании');
     expect(wrapper.text()).toContain('Telegram July');
     expect(wrapper.text()).not.toContain('Создать кампанию');
-    expect(wrapper.text()).toContain('Метрики');
+    expect(wrapper.text()).toContain('Открыть метрики');
     expect(wrapper.text()).toContain('Архивировать');
   });
 
@@ -90,22 +90,29 @@ describe('ManagementCampaignsPage', () => {
   it('показывает компактные семантические действия кампании на мобильной карточке', async () => {
     const desktopWrapper = mount(ManagementCampaignsPage);
     await flushPromises();
-    const actions = [
+    const desktopActions = [
       ['copy', 'Копировать ссылку', 'content_copy'],
+      ['edit', 'Изменить', 'edit'],
       ['metrics', 'Открыть метрики', 'bar_chart'],
-      ['archive', 'Архивировать кампанию', 'archive'],
     ] as const;
 
-    for (const [name, label, icon] of actions) {
+    for (const [name, label, icon] of desktopActions) {
       const desktopButton = desktopWrapper.get(`[data-testid="campaign-action-${name}-desktop"]`);
 
       expect(desktopButton.attributes('aria-label')).toBe(label);
+      expect(desktopButton.find('.q-btn__label').exists()).toBe(false);
+      expect(desktopButton.get('.q-tooltip').text()).toBe(label);
       expect(desktopButton.html()).toContain(icon);
     }
 
     setScreenXs(true);
     const mobileWrapper = mount(ManagementCampaignsPage);
     await flushPromises();
+    const actions = [
+      ['copy', 'Копировать ссылку', 'content_copy'],
+      ['metrics', 'Открыть метрики', 'bar_chart'],
+      ['archive', 'Архивировать кампанию', 'archive'],
+    ] as const;
     const mobileActions = mobileWrapper.get('[data-testid="campaign-mobile-actions"]');
 
     expect(mobileActions.text()).toContain('Действия');

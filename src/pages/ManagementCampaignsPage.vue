@@ -71,19 +71,26 @@
               flat
               dense
               icon="content_copy"
-              label="Копировать"
               aria-label="Копировать ссылку"
               @click="copyLink(props.row)"
             >
               <q-tooltip>Копировать ссылку</q-tooltip>
             </q-btn>
-            <q-btn flat dense icon="edit" label="Изменить" @click="openEdit(props.row)" />
+            <q-btn
+              data-testid="campaign-action-edit-desktop"
+              flat
+              dense
+              icon="edit"
+              aria-label="Изменить"
+              @click="openEdit(props.row)"
+            >
+              <q-tooltip>Изменить</q-tooltip>
+            </q-btn>
             <q-btn
               data-testid="campaign-action-metrics-desktop"
               flat
               dense
               icon="bar_chart"
-              label="Метрики"
               aria-label="Открыть метрики"
               @click="metricsDialog?.open(props.row)"
             >

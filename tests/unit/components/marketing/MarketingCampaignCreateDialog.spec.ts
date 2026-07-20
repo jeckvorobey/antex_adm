@@ -31,6 +31,9 @@ describe('MarketingCampaignCreateDialog', () => {
     expect(wrapper.get('[data-testid="campaign-create-dialog"]').classes()).toContain(
       'campaign-create-dialog',
     );
+    expect(wrapper.get('[data-testid="campaign-data-fields"]').classes()).toEqual(
+      expect.arrayContaining(['q-mx-none']),
+    );
     expect(wrapper.text()).toContain('Новая рекламная компания');
     await wrapper.get('input[name="name"]').setValue('Telegram Ads July');
     await wrapper.get('form').trigger('submit');
@@ -40,6 +43,7 @@ describe('MarketingCampaignCreateDialog', () => {
       expect.objectContaining({ name: 'Telegram Ads July', codeToken: 'preview-token-1' }),
     );
     expect(wrapper.emitted('created')).toHaveLength(1);
+    expect(wrapper.emitted('update:modelValue')).toContainEqual([false]);
   });
 
   it('запрашивает новый preview-код при каждом открытии', async () => {

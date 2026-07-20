@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Screen } from 'quasar';
+import { Dialog, Screen } from 'quasar';
 
 import ManagementCampaignsPage from '@/pages/ManagementCampaignsPage.vue';
 
@@ -23,7 +23,9 @@ function setScreenXs(value: boolean) {
 
 describe('ManagementCampaignsPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     setScreenXs(false);
+    vi.mocked(Dialog.create).mockReturnValue({ onOk: vi.fn() } as never);
     listMock.mockResolvedValue({
       items: [
         {
@@ -59,7 +61,7 @@ describe('ManagementCampaignsPage', () => {
     expect(wrapper.findComponent({ name: 'MarketingCampaignCreateDialog' }).exists()).toBe(true);
   });
 
-  it('возвращает архивную компанию в активный статус', async () => {
+  it('подтверждает возврат архивной компании в активный статус', async () => {
     listMock.mockResolvedValueOnce({
       items: [
         {
@@ -86,10 +88,55 @@ describe('ManagementCampaignsPage', () => {
     expect(restore.attributes('aria-label')).toBe('Вернуть из архива');
     expect(restore.find('.q-btn__label').exists()).toBe(false);
 
+    let confirmRestore: (() => void) | undefined;
+    vi.mocked(Dialog.create).mockReturnValue({
+      onOk(callback: () => void) {
+        confirmRestore = callback;
+        return this;
+      },
+    } as never);
+
     await restore.trigger('click');
+
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(Dialog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Вернуть из архива',
+        ok: expect.objectContaining({ label: 'Вернуть' }),
+      }),
+    );
+
+    confirmRestore?.();
     await flushPromises();
 
     expect(updateMock).toHaveBeenCalledWith(2, { status: 'active' });
+  });
+
+  it('подтверждает добавление компании в архив', async () => {
+    let confirmArchive: (() => void) | undefined;
+    vi.mocked(Dialog.create).mockReturnValue({
+      onOk(callback: () => void) {
+        confirmArchive = callback;
+        return this;
+      },
+    } as never);
+    const wrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+
+    await wrapper.get('[data-testid="campaign-action-archive-desktop"]').trigger('click');
+
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(Dialog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Архивировать компанию',
+        ok: expect.objectContaining({ label: 'Архивировать' }),
+      }),
+    );
+
+    confirmArchive?.();
+    await flushPromises();
+
+    expect(updateMock).toHaveBeenCalledWith(1, { status: 'archived' });
   });
 
   it('использует те же русские lifecycle-статусы в фильтре', async () => {
@@ -136,6 +183,27 @@ describe('ManagementCampaignsPage', () => {
 
     expect(listMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ include_archived: false, limit: 20, offset: 0 }),
+    );
+  });
+
+  it('применяет search и status фильтры сразу без кнопки поиска', async () => {
+    const wrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+
+    expect(wrapper.find('button[icon="search"]').exists()).toBe(false);
+
+    await wrapper.get('input[placeholder=""]').setValue('July');
+    await flushPromises();
+
+    expect(listMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ search: 'July', status: null, limit: 20, offset: 0 }),
+    );
+
+    await wrapper.findAll('select')[1].setValue('archived');
+    await flushPromises();
+
+    expect(listMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ search: 'July', status: 'archived', limit: 20, offset: 0 }),
     );
   });
 

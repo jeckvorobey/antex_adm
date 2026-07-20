@@ -290,6 +290,12 @@ describe('ManagementCampaignsPage', () => {
       ['edit', 'Изменить', 'edit'],
       ['metrics', 'Открыть метрики', 'bar_chart'],
     ] as const;
+    expect(
+      Array.from(
+        desktopWrapper.get('[data-testid="campaign-action-copy-desktop"]').element.parentElement
+          ?.classList ?? [],
+      ),
+    ).toEqual(expect.arrayContaining(['justify-end']));
 
     for (const [name, label, icon] of desktopActions) {
       const desktopButton = desktopWrapper.get(`[data-testid="campaign-action-${name}-desktop"]`);
@@ -312,6 +318,7 @@ describe('ManagementCampaignsPage', () => {
     await flushPromises();
     const actions = [
       ['copy', 'Копировать ссылку', 'content_copy'],
+      ['edit', 'Изменить', 'edit'],
       ['metrics', 'Открыть метрики', 'bar_chart'],
       ['archive', 'Архивировать кампанию', 'archive'],
     ] as const;

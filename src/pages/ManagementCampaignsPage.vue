@@ -3,14 +3,15 @@
     <div class="row items-center justify-between q-mb-md">
       <div>
         <div class="text-h5">Компании</div>
-        <div class="text-body2 text-grey-7">Создание доступно только в генераторе ссылок</div>
       </div>
       <q-btn
-        flat
         color="primary"
-        icon="link"
-        label="Открыть генератор"
-        to="/management/generator"
+        icon="add"
+        label="Добавить компанию"
+        unelevated
+        no-caps
+        data-testid="campaign-create"
+        @click="createOpened = true"
       />
     </div>
 
@@ -110,11 +111,22 @@
               dense
               color="negative"
               icon="archive"
-              label="Архивировать"
               aria-label="Архивировать кампанию"
               @click="archive(props.row)"
             >
               <q-tooltip>Архивировать кампанию</q-tooltip>
+            </q-btn>
+            <q-btn
+              v-else
+              data-testid="campaign-action-restore-desktop"
+              flat
+              dense
+              color="positive"
+              icon="unarchive"
+              aria-label="Вернуть из архива"
+              @click="restore(props.row)"
+            >
+              <q-tooltip>Вернуть из архива</q-tooltip>
             </q-btn>
           </div>
         </q-td>
@@ -160,12 +172,26 @@
             >
               <q-tooltip>Архивировать кампанию</q-tooltip>
             </q-btn>
+            <q-btn
+              v-else
+              data-testid="campaign-action-restore-mobile"
+              flat
+              round
+              dense
+              color="positive"
+              icon="unarchive"
+              aria-label="Вернуть из архива"
+              @click="restore(row)"
+            >
+              <q-tooltip>Вернуть из архива</q-tooltip>
+            </q-btn>
           </div>
         </div>
       </template>
     </AppResponsiveTable>
 
     <DailyMetricsDialog ref="metricsDialog" @saved="reload" />
+    <MarketingCampaignCreateDialog v-model="createOpened" @created="reload" />
     <q-dialog v-model="editOpened">
       <q-card style="width: 520px; max-width: 95vw">
         <q-card-section class="text-h6">Изменить компанию</q-card-section>
@@ -206,6 +232,7 @@ import { copyToClipboard, type QTableColumn, useQuasar } from 'quasar';
 import { onMounted, reactive, ref } from 'vue';
 
 import DailyMetricsDialog from '@/components/marketing/DailyMetricsDialog.vue';
+import MarketingCampaignCreateDialog from '@/components/marketing/MarketingCampaignCreateDialog.vue';
 import MarketingPlatformSelect from '@/components/marketing/MarketingPlatformSelect.vue';
 import AppResponsiveTable from '@/components/ui/AppResponsiveTable.vue';
 import { MARKETING_CAMPAIGN_STATUS_OPTIONS } from '@/constants/marketing';
@@ -272,6 +299,7 @@ const mobileConfig = {
   ],
 };
 const editOpened = ref(false);
+const createOpened = ref(false);
 const editing = ref<MarketingCampaign | null>(null);
 const editForm = reactive({ name: '', objective: '', status: 'active' });
 let latestCampaignsRequestId = 0;
@@ -320,6 +348,11 @@ async function copyLink(row: MarketingCampaign) {
 }
 async function archive(row: MarketingCampaign) {
   await marketingApi.updateCampaign(row.id, { status: 'archived' });
+  reload();
+}
+/** Возвращает архивную компанию в active status через существующий lifecycle API. */
+async function restore(row: MarketingCampaign) {
+  await marketingApi.updateCampaign(row.id, { status: 'active' });
   reload();
 }
 function openEdit(row: MarketingCampaign) {

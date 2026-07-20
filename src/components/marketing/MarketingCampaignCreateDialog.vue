@@ -1,11 +1,23 @@
 <template>
-  <q-page class="q-pa-md">
-    <div data-testid="generator-title" class="text-h5 q-mb-md">Новая рекламная компания</div>
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
+    <q-card data-testid="campaign-create-dialog" class="campaign-create-dialog">
+      <q-card-section class="row items-center justify-between q-pb-none">
+        <div class="text-h6">Новая рекламная компания</div>
+        <q-btn
+          flat
+          round
+          dense
+          icon="close"
+          aria-label="Закрыть"
+          @click="emit('update:modelValue', false)"
+        >
+          <q-tooltip>Закрыть</q-tooltip>
+        </q-btn>
+      </q-card-section>
 
-    <q-form @submit="submit">
-      <q-card flat bordered>
-        <q-card-section>
-          <div class="text-subtitle1 q-mb-md">Данные компании</div>
+      <q-card-section>
+        <q-form class="q-gutter-md" @submit="submit">
+          <div class="text-subtitle1">Данные компании</div>
 
           <div class="row q-col-gutter-md">
             <MarketingCampaignCodeField
@@ -62,8 +74,8 @@
             />
           </div>
 
-          <q-separator class="q-my-md" />
-          <div class="text-subtitle1 q-mb-md">Бюджет и период</div>
+          <q-separator />
+          <div class="text-subtitle1">Бюджет и период</div>
 
           <div class="row q-col-gutter-md">
             <q-select
@@ -118,7 +130,7 @@
             />
           </div>
 
-          <q-separator class="q-my-md" />
+          <q-separator />
           <q-input
             v-model.trim="form.notes"
             type="textarea"
@@ -130,8 +142,8 @@
           />
 
           <template v-if="created">
-            <q-separator class="q-my-md" />
-            <div class="row items-center q-mb-sm text-positive">
+            <q-separator />
+            <div class="row items-center text-positive">
               <q-icon name="check_circle" size="20px" class="q-mr-xs" />
               <span class="text-weight-medium">Компания создана</span>
             </div>
@@ -152,48 +164,40 @@
                 </q-btn>
               </template>
             </q-input>
-            <div class="text-caption text-grey-7 q-mt-sm">
+            <div class="text-caption text-grey-7">
               Параметр: <span class="text-weight-medium">{{ created.marketParameter }}</span>
             </div>
           </template>
 
-          <q-separator class="q-my-md" />
-          <div class="row justify-end">
+          <div class="row justify-end q-gutter-sm">
             <q-btn
-              data-testid="submit-campaign-mobile"
-              type="submit"
-              color="primary"
-              icon="add_link"
-              label="Создать компанию и ссылку"
-              class="full-width lt-md"
-              unelevated
-              no-caps
-              :loading="loading"
-              :disable="!previewCode || !previewToken || generatingCode || Boolean(created)"
+              flat
+              label="Отмена"
+              :disable="loading"
+              @click="emit('update:modelValue', false)"
             />
             <q-btn
-              data-testid="submit-campaign-desktop"
+              data-testid="submit-campaign"
               type="submit"
               color="primary"
               icon="add_link"
               label="Создать компанию и ссылку"
-              class="gt-sm"
               unelevated
               no-caps
               :loading="loading"
               :disable="!previewCode || !previewToken || generatingCode || Boolean(created)"
             />
           </div>
-        </q-card-section>
-      </q-card>
-    </q-form>
-  </q-page>
+        </q-form>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
 import { isAxiosError } from 'axios';
 import { copyToClipboard, useQuasar } from 'quasar';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 
 import MarketingCampaignCodeField from '@/components/marketing/MarketingCampaignCodeField.vue';
 import MarketingCurrencySelect from '@/components/marketing/MarketingCurrencySelect.vue';
@@ -210,6 +214,11 @@ import {
   requiredValue,
 } from '@/utils/validation';
 
+const props = defineProps<{ modelValue: boolean }>();
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean];
+  created: [campaign: MarketingCampaign];
+}>();
 const $q = useQuasar();
 const loading = ref(false);
 const generatingCode = ref(false);
@@ -248,7 +257,7 @@ const endDateRules = computed(() => [
   dateOnOrAfter(form.startsAt, 'Дата окончания раньше даты начала'),
 ]);
 
-/** Запрашивает новый код и атомарно заменяет прежнее значение во временном состоянии формы. */
+/** Запрашивает новый серверный preview-код для текущей формы. */
 async function regenerateCode(): Promise<void> {
   if (generatingCode.value) return;
   generatingCode.value = true;
@@ -266,7 +275,7 @@ async function regenerateCode(): Promise<void> {
   }
 }
 
-/** Возвращает локализованное сообщение по machine-readable коду backend. */
+/** Преобразует machine-readable ошибку backend в понятное администратору сообщение. */
 function campaignCreateErrorMessage(error: unknown): string {
   if (isAxiosError<{ code?: string }>(error)) {
     const messages: Record<string, string> = {
@@ -281,7 +290,7 @@ function campaignCreateErrorMessage(error: unknown): string {
   return 'Не удалось создать компанию. Проверьте заполненные данные.';
 }
 
-/** Отправляет валидную форму и текущий preview-код одной операцией создания. */
+/** Создаёт компанию с актуальным preview-token и уведомляет страницу списка о результате. */
 async function submit(): Promise<void> {
   if (!previewCode.value || !previewToken.value || !form.provider || !form.currency) {
     $q.notify({ type: 'negative', message: 'Дождитесь кода и заполните обязательные поля.' });
@@ -297,6 +306,7 @@ async function submit(): Promise<void> {
   ) as unknown as CampaignCreatePayload;
   try {
     created.value = await marketingApi.createCampaign(payload);
+    emit('created', created.value);
     $q.notify({ type: 'positive', message: 'Рекламная компания создана' });
   } catch (error) {
     $q.notify({ type: 'negative', message: campaignCreateErrorMessage(error) });
@@ -305,14 +315,54 @@ async function submit(): Promise<void> {
   }
 }
 
-/** Копирует готовую ссылку созданной компании. */
+/** Копирует ссылку только после успешного создания компании. */
 async function copyLink(): Promise<void> {
   if (!created.value) return;
   await copyToClipboard(created.value.link);
   $q.notify({ type: 'positive', message: 'Ссылка скопирована' });
 }
 
-onMounted(() => {
-  void regenerateCode();
-});
+/** Сбрасывает одноразовый preview и поля, чтобы повторное открытие создавало новую компанию. */
+function resetCreateState(): void {
+  Object.assign(form, {
+    name: '',
+    provider: 'telegram_ads',
+    externalId: '',
+    objective: '',
+    status: 'active',
+    budget: undefined,
+    currency: 'USDT',
+    startsAt: '',
+    endsAt: '',
+    notes: '',
+  });
+  codeError.value = '';
+  previewCode.value = '';
+  previewToken.value = '';
+  created.value = null;
+}
+
+/** Сбрасывает форму и получает новый preview-код при каждом открытии диалога. */
+watch(
+  () => props.modelValue,
+  (opened) => {
+    if (!opened) return;
+    resetCreateState();
+    void regenerateCode();
+  },
+  { immediate: true },
+);
 </script>
+
+<style scoped>
+.campaign-create-dialog {
+  width: 90vw;
+  max-width: 90vw;
+}
+
+@media (min-width: 1024px) {
+  .campaign-create-dialog {
+    width: 60vw;
+  }
+}
+</style>

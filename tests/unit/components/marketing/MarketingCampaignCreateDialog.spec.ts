@@ -31,10 +31,14 @@ describe('MarketingCampaignCreateDialog', () => {
     expect(wrapper.get('[data-testid="campaign-create-dialog"]').classes()).toContain(
       'campaign-create-dialog',
     );
+    expect(wrapper.get('[data-testid="campaign-dialog-toolbar"]').classes()).toEqual(
+      expect.arrayContaining(['no-wrap']),
+    );
+    expect(wrapper.text()).toContain('Новая компания');
+    expect(wrapper.text()).not.toContain('Новая рекламная компания');
     expect(wrapper.get('[data-testid="campaign-data-fields"]').classes()).toEqual(
       expect.arrayContaining(['q-mx-none']),
     );
-    expect(wrapper.text()).toContain('Новая рекламная компания');
     await wrapper.get('input[name="name"]').setValue('Telegram Ads July');
     await wrapper.get('form').trigger('submit');
     await flushPromises();

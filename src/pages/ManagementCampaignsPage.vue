@@ -253,7 +253,13 @@ const columns: QTableColumn<MarketingCampaign>[] = [
   { name: 'name', label: 'Компания', field: 'name', align: 'left' },
   { name: 'code', label: 'Код', field: 'code', align: 'left' },
   { name: 'provider', label: 'Платформа', field: 'provider', align: 'left' },
-  { name: 'status', label: 'Статус', field: 'status', align: 'left' },
+  {
+    name: 'status',
+    label: 'Статус',
+    field: 'status',
+    align: 'left',
+    format: (value) => formatCampaignStatus(value as MarketingCampaign['status']),
+  },
   {
     name: 'campaignType',
     label: 'Тип',
@@ -283,7 +289,7 @@ const mobileConfig = {
   title: (row: MarketingCampaign) => row.name,
   subtitle: (row: MarketingCampaign) => `${row.code} · ${row.provider}`,
   badge: (row: MarketingCampaign) => ({
-    label: row.status,
+    label: formatCampaignStatus(row.status),
     color: row.status === 'active' ? 'positive' : 'grey',
   }),
   fields: [
@@ -299,6 +305,10 @@ const createOpened = ref(false);
 const editing = ref<MarketingCampaign | null>(null);
 const editForm = reactive({ name: '', objective: '', status: 'active' });
 let latestCampaignsRequestId = 0;
+
+function formatCampaignStatus(status: MarketingCampaign['status']): string {
+  return statusOptions.find((option) => option.value === status)?.label ?? status;
+}
 
 async function fetchCampaigns(append = false) {
   const requestId = ++latestCampaignsRequestId;

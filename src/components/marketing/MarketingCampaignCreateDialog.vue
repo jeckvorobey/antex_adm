@@ -1,18 +1,20 @@
 <template>
   <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card data-testid="campaign-create-dialog" class="campaign-create-dialog">
-      <q-card-section class="row items-center justify-between q-pb-none">
-        <div class="text-h6">Новая рекламная компания</div>
-        <q-btn
-          flat
-          round
-          dense
-          icon="close"
-          aria-label="Закрыть"
-          @click="emit('update:modelValue', false)"
-        >
-          <q-tooltip>Закрыть</q-tooltip>
-        </q-btn>
+      <q-card-section class="q-pb-none">
+        <q-toolbar data-testid="campaign-dialog-toolbar" class="q-pa-none no-wrap">
+          <q-toolbar-title class="text-h6">Новая компания</q-toolbar-title>
+          <q-btn
+            flat
+            round
+            dense
+            icon="close"
+            aria-label="Закрыть"
+            @click="emit('update:modelValue', false)"
+          >
+            <q-tooltip>Закрыть</q-tooltip>
+          </q-btn>
+        </q-toolbar>
       </q-card-section>
 
       <q-card-section>

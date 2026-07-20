@@ -44,7 +44,7 @@ describe('MainLayout', () => {
     expect(html).toContain('Дашборд');
     expect(html).toContain('Компании');
     expect(html).toContain('Заявки по компаниям');
-    expect(html).toContain('Генератор ссылок');
+    expect(html).not.toContain('Генератор ссылок');
     const management = wrapper.findComponent('[data-testid="management-menu"]');
     expect(management.props('icon')).toBe('ads_click');
   });

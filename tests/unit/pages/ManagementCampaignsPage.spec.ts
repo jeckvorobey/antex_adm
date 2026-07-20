@@ -4,11 +4,11 @@ import { Screen } from 'quasar';
 
 import ManagementCampaignsPage from '@/pages/ManagementCampaignsPage.vue';
 
-const { listMock } = vi.hoisted(() => ({ listMock: vi.fn() }));
+const { listMock, updateMock } = vi.hoisted(() => ({ listMock: vi.fn(), updateMock: vi.fn() }));
 vi.mock('@/services/marketing', () => ({
   marketingApi: {
     listCampaigns: listMock,
-    updateCampaign: vi.fn(),
+    updateCampaign: updateMock,
     upsertDailyMetric: vi.fn(),
   },
 }));
@@ -45,16 +45,51 @@ describe('ManagementCampaignsPage', () => {
     });
   });
 
-  it('загружает server page и не предлагает создать кампанию', async () => {
+  it('загружает server page и открывает создание компании без генератора ссылок', async () => {
     const wrapper = mount(ManagementCampaignsPage);
     await flushPromises();
 
     expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ limit: 20, offset: 0 }));
     expect(wrapper.text()).toContain('Компании');
     expect(wrapper.text()).toContain('Telegram July');
-    expect(wrapper.text()).not.toContain('Создать кампанию');
+    expect(wrapper.text()).toContain('Добавить компанию');
+    expect(wrapper.text()).not.toContain('генератор');
     expect(wrapper.text()).toContain('Открыть метрики');
-    expect(wrapper.text()).toContain('Архивировать');
+    expect(wrapper.get('[data-testid="campaign-create"]')).toBeTruthy();
+    expect(wrapper.findComponent({ name: 'MarketingCampaignCreateDialog' }).exists()).toBe(true);
+  });
+
+  it('возвращает архивную компанию в активный статус', async () => {
+    listMock.mockResolvedValueOnce({
+      items: [
+        {
+          id: 2,
+          code: 'ARCHIVED00',
+          name: 'Архивная компания',
+          provider: 'telegram_ads',
+          status: 'archived',
+          currency: 'USDT',
+          budget: 100,
+          link: 'https://t.me/bot?startapp=market_ARCHIVED00',
+          marketParameter: 'market=ARCHIVED00',
+          createdAt: '2026-07-13T00:00:00Z',
+        },
+      ],
+      total: 1,
+      limit: 20,
+      offset: 0,
+    });
+    const wrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+
+    const restore = wrapper.get('[data-testid="campaign-action-restore-desktop"]');
+    expect(restore.attributes('aria-label')).toBe('Вернуть из архива');
+    expect(restore.find('.q-btn__label').exists()).toBe(false);
+
+    await restore.trigger('click');
+    await flushPromises();
+
+    expect(updateMock).toHaveBeenCalledWith(2, { status: 'active' });
   });
 
   it('использует те же русские lifecycle-статусы в фильтре', async () => {
@@ -189,6 +224,13 @@ describe('ManagementCampaignsPage', () => {
       expect(desktopButton.get('.q-tooltip').text()).toBe(label);
       expect(desktopButton.html()).toContain(icon);
     }
+
+    const archiveDesktopButton = desktopWrapper.get(
+      '[data-testid="campaign-action-archive-desktop"]',
+    );
+    expect(archiveDesktopButton.attributes('aria-label')).toBe('Архивировать кампанию');
+    expect(archiveDesktopButton.find('.q-btn__label').exists()).toBe(false);
+    expect(archiveDesktopButton.html()).toContain('archive');
 
     setScreenXs(true);
     const mobileWrapper = mount(ManagementCampaignsPage);

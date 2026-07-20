@@ -35,11 +35,6 @@ const routes: RouteRecordRaw[] = [
         name: 'management-applications',
         component: () => import('@pages/ManagementApplicationsPage.vue'),
       },
-      {
-        path: 'management/generator',
-        name: 'management-generator',
-        component: () => import('@pages/ManagementGeneratorPage.vue'),
-      },
       { path: 'orders', name: 'orders', component: () => import('@pages/OrdersPage.vue') },
       {
         path: 'site-leads',

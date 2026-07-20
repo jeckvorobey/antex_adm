@@ -61,6 +61,13 @@ describe('ManagementCampaignsPage', () => {
     expect(wrapper.findComponent({ name: 'MarketingCampaignCreateDialog' }).exists()).toBe(true);
   });
 
+  it('показывает status компании на русском в desktop-таблице', async () => {
+    const wrapper = mount(ManagementCampaignsPage);
+    await flushPromises();
+
+    expect(wrapper.findAll('.q-table-row .q-table-cell')[3].text()).toBe('Активна');
+  });
+
   it('подтверждает возврат архивной компании в активный статус', async () => {
     listMock.mockResolvedValueOnce({
       items: [

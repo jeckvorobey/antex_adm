@@ -49,11 +49,7 @@
           data-testid="campaign-show-archive"
           label="Показать архив"
           class="col-12"
-          @update:model-value="reload"
         />
-        <div class="col-12 col-md-1">
-          <q-btn color="primary" icon="search" class="full-width" @click="reload" />
-        </div>
       </q-card-section>
     </q-card>
 
@@ -112,7 +108,7 @@
               color="negative"
               icon="archive"
               aria-label="Архивировать кампанию"
-              @click="archive(props.row)"
+              @click="confirmArchive(props.row)"
             >
               <q-tooltip>Архивировать кампанию</q-tooltip>
             </q-btn>
@@ -124,7 +120,7 @@
               color="positive"
               icon="unarchive"
               aria-label="Вернуть из архива"
-              @click="restore(props.row)"
+              @click="confirmRestore(props.row)"
             >
               <q-tooltip>Вернуть из архива</q-tooltip>
             </q-btn>
@@ -168,7 +164,7 @@
               color="negative"
               icon="archive"
               aria-label="Архивировать кампанию"
-              @click="archive(row)"
+              @click="confirmArchive(row)"
             >
               <q-tooltip>Архивировать кампанию</q-tooltip>
             </q-btn>
@@ -181,7 +177,7 @@
               color="positive"
               icon="unarchive"
               aria-label="Вернуть из архива"
-              @click="restore(row)"
+              @click="confirmRestore(row)"
             >
               <q-tooltip>Вернуть из архива</q-tooltip>
             </q-btn>
@@ -229,7 +225,7 @@
 
 <script setup lang="ts">
 import { copyToClipboard, type QTableColumn, useQuasar } from 'quasar';
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 
 import DailyMetricsDialog from '@/components/marketing/DailyMetricsDialog.vue';
 import MarketingCampaignCreateDialog from '@/components/marketing/MarketingCampaignCreateDialog.vue';
@@ -335,6 +331,7 @@ function reload() {
   pagination.value.page = 1;
   void fetchCampaigns();
 }
+watch(() => [filters.search, filters.provider, filters.status, filters.includeArchived], reload);
 function onRequest({ pagination: value }: { pagination: typeof pagination.value }) {
   pagination.value = value;
   void fetchCampaigns();
@@ -354,6 +351,28 @@ async function archive(row: MarketingCampaign) {
 async function restore(row: MarketingCampaign) {
   await marketingApi.updateCampaign(row.id, { status: 'active' });
   reload();
+}
+function confirmArchive(row: MarketingCampaign) {
+  $q.dialog({
+    title: 'Архивировать компанию',
+    message: `Компания «${row.name}» будет перемещена в архив.`,
+    persistent: true,
+    cancel: { label: 'Отмена', flat: true },
+    ok: { label: 'Архивировать', color: 'negative', unelevated: true },
+  }).onOk(() => {
+    void archive(row);
+  });
+}
+function confirmRestore(row: MarketingCampaign) {
+  $q.dialog({
+    title: 'Вернуть из архива',
+    message: `Компания «${row.name}» снова станет активной.`,
+    persistent: true,
+    cancel: { label: 'Отмена', flat: true },
+    ok: { label: 'Вернуть', color: 'positive', unelevated: true },
+  }).onOk(() => {
+    void restore(row);
+  });
 }
 function openEdit(row: MarketingCampaign) {
   editing.value = row;

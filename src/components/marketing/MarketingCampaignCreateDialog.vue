@@ -19,7 +19,7 @@
         <q-form class="q-gutter-md" @submit="submit">
           <div class="text-subtitle1">Данные компании</div>
 
-          <div class="row q-col-gutter-md">
+          <div data-testid="campaign-data-fields" class="row q-col-gutter-md q-mx-none">
             <MarketingCampaignCodeField
               :model-value="displayCode"
               :loading="generatingCode"
@@ -77,7 +77,7 @@
           <q-separator />
           <div class="text-subtitle1">Бюджет и период</div>
 
-          <div class="row q-col-gutter-md">
+          <div data-testid="campaign-budget-fields" class="row q-col-gutter-md q-mx-none">
             <q-select
               v-model="form.status"
               label="Статус"
@@ -141,34 +141,6 @@
             hint="Внутренняя информация для команды"
           />
 
-          <template v-if="created">
-            <q-separator />
-            <div class="row items-center text-positive">
-              <q-icon name="check_circle" size="20px" class="q-mr-xs" />
-              <span class="text-weight-medium">Компания создана</span>
-            </div>
-            <q-input :model-value="created.link" label="Готовая ссылка" outlined dense readonly>
-              <template #append>
-                <q-btn
-                  data-testid="copy-link"
-                  type="button"
-                  round
-                  flat
-                  dense
-                  color="primary"
-                  icon="content_copy"
-                  aria-label="Копировать готовую ссылку"
-                  @click="copyLink"
-                >
-                  <q-tooltip>Копировать ссылку</q-tooltip>
-                </q-btn>
-              </template>
-            </q-input>
-            <div class="text-caption text-grey-7">
-              Параметр: <span class="text-weight-medium">{{ created.marketParameter }}</span>
-            </div>
-          </template>
-
           <div class="row justify-end q-gutter-sm">
             <q-btn
               flat
@@ -185,7 +157,7 @@
               unelevated
               no-caps
               :loading="loading"
-              :disable="!previewCode || !previewToken || generatingCode || Boolean(created)"
+              :disable="!previewCode || !previewToken || generatingCode"
             />
           </div>
         </q-form>
@@ -196,7 +168,7 @@
 
 <script setup lang="ts">
 import { isAxiosError } from 'axios';
-import { copyToClipboard, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { computed, reactive, ref, watch } from 'vue';
 
 import MarketingCampaignCodeField from '@/components/marketing/MarketingCampaignCodeField.vue';
@@ -225,7 +197,6 @@ const generatingCode = ref(false);
 const codeError = ref('');
 const previewCode = ref('');
 const previewToken = ref('');
-const created = ref<MarketingCampaign | null>(null);
 const form = reactive({
   name: '',
   provider: 'telegram_ads' as string | null,
@@ -266,7 +237,6 @@ async function regenerateCode(): Promise<void> {
     const preview = await marketingApi.generateCampaignCode();
     previewCode.value = preview.code;
     previewToken.value = preview.token;
-    created.value = null;
   } catch {
     codeError.value = 'Не удалось получить уникальный код';
     $q.notify({ type: 'negative', message: codeError.value });
@@ -298,28 +268,21 @@ async function submit(): Promise<void> {
   }
 
   loading.value = true;
-  created.value = null;
   const payload = Object.fromEntries(
     Object.entries({ ...form, codeToken: previewToken.value }).filter(
       ([, value]) => value !== '' && value !== undefined,
     ),
   ) as unknown as CampaignCreatePayload;
   try {
-    created.value = await marketingApi.createCampaign(payload);
-    emit('created', created.value);
+    const campaign = await marketingApi.createCampaign(payload);
+    emit('created', campaign);
+    emit('update:modelValue', false);
     $q.notify({ type: 'positive', message: 'Рекламная компания создана' });
   } catch (error) {
     $q.notify({ type: 'negative', message: campaignCreateErrorMessage(error) });
   } finally {
     loading.value = false;
   }
-}
-
-/** Копирует ссылку только после успешного создания компании. */
-async function copyLink(): Promise<void> {
-  if (!created.value) return;
-  await copyToClipboard(created.value.link);
-  $q.notify({ type: 'positive', message: 'Ссылка скопирована' });
 }
 
 /** Сбрасывает одноразовый preview и поля, чтобы повторное открытие создавало новую компанию. */
@@ -339,7 +302,6 @@ function resetCreateState(): void {
   codeError.value = '';
   previewCode.value = '';
   previewToken.value = '';
-  created.value = null;
 }
 
 /** Сбрасывает форму и получает новый preview-код при каждом открытии диалога. */

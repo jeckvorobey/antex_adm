@@ -69,7 +69,7 @@
     >
       <template #body-cell-actions="props">
         <q-td :props="props">
-          <div class="row no-wrap q-gutter-xs">
+          <div class="row no-wrap justify-end q-gutter-xs">
             <q-btn
               data-testid="campaign-action-copy-desktop"
               flat
@@ -142,6 +142,18 @@
               @click="copyLink(row)"
             >
               <q-tooltip>Копировать ссылку</q-tooltip>
+            </q-btn>
+            <q-btn
+              data-testid="campaign-action-edit-mobile"
+              flat
+              round
+              dense
+              color="primary"
+              icon="edit"
+              aria-label="Изменить"
+              @click="openEdit(row)"
+            >
+              <q-tooltip>Изменить</q-tooltip>
             </q-btn>
             <q-btn
               data-testid="campaign-action-metrics-mobile"

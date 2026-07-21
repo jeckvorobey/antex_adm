@@ -591,7 +591,11 @@ async function updateRole(row: UserRow, role: number) {
     const res = await api.patch<UserRow>(`/api/admin/users/${row.id}`, { role });
     const index = users.value.findIndex((item) => item.id === row.id);
     if (index >= 0) {
-      users.value[index] = res.data;
+      users.value[index] = {
+        ...users.value[index],
+        ...res.data,
+        attribution: res.data.attribution ?? users.value[index].attribution,
+      };
     }
     $q.notify({ type: 'positive', message: 'Роль пользователя сохранена' });
   } catch (error) {

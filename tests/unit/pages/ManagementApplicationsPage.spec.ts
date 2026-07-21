@@ -104,7 +104,7 @@ describe('ManagementApplicationsPage', () => {
         touchAt: '2026-07-20T10:00:00Z',
         applicationAt: '2026-07-20T14:00:00Z',
         hoursToApplication: 4,
-        status: 2,
+        status: orderId === 10 ? 2 : 4,
         completed: false,
       })),
       total: 2,
@@ -117,6 +117,7 @@ describe('ManagementApplicationsPage', () => {
     expect(wrapper.findAll('.app-responsive-table__card')).toHaveLength(2);
     expect(wrapper.text()).toContain('20.07.2026 10:00');
     expect(wrapper.text()).toContain('В обработке');
+    expect(wrapper.text()).toContain('Отменена');
     expect(wrapper.text()).not.toContain('2026-07-20T10:00:00Z');
   });
 });

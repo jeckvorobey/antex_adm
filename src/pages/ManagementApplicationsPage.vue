@@ -138,8 +138,8 @@ const mobileConfig = {
   title: (row: MarketingApplicationAttribution) => row.campaignName,
   subtitle: (row: MarketingApplicationAttribution) => `Заявка ${row.publicNumber}`,
   badge: (row: MarketingApplicationAttribution) => ({
-    label: row.completed ? 'Завершена' : 'В работе',
-    color: row.completed ? 'positive' : 'grey',
+    label: formatOrderStatus(row.status),
+    color: row.status === 3 ? 'positive' : row.status === 4 ? 'negative' : 'grey',
   }),
   fields: columns.slice(1).map((column) => ({ name: column.name, label: column.label })),
 };

@@ -84,6 +84,11 @@ describe('UsersPage', () => {
           role: 9,
           role_name: 'Пользователь',
           createdAt: '2024-01-01',
+          attribution: {
+            sourceType: 'direct',
+            acquiredAt: '2024-01-01',
+            sourceStatus: 'fixed',
+          },
           referral_code: 'ABC12345',
           referral_rate_percent: '0.2',
           referred_by: 2,
@@ -218,6 +223,11 @@ describe('UsersPage', () => {
           role: 9,
           role_name: 'Пользователь',
           createdAt: '2024-01-01',
+          attribution: {
+            sourceType: 'direct',
+            acquiredAt: '2024-01-01',
+            sourceStatus: 'fixed',
+          },
         },
       ],
     });
@@ -242,6 +252,8 @@ describe('UsersPage', () => {
     expect(api.patch).toHaveBeenCalledWith('/api/admin/users/1', { role: 2 });
     expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
     expect(wrapper.html()).toContain('Менеджер');
+    await wrapper.find('button[icon="hub"]').trigger('click');
+    expect(wrapper.text()).toContain('Прямой');
   });
 
   it('не отправляет повторное сохранение роли, пока предыдущий запрос не завершён', async () => {

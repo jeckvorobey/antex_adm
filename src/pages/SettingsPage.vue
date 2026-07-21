@@ -23,11 +23,16 @@
             type="number"
             min="1"
             max="90"
+            step="1"
             label="Дней"
             outlined
             dense
             class="col-12 col-sm-3"
-            :rules="[(value) => (value >= 1 && value <= 90) || 'Введите от 1 до 90 дней']"
+            :rules="[
+              (value) =>
+                (Number.isInteger(value) && value >= 1 && value <= 90) ||
+                'Введите целое число от 1 до 90 дней',
+            ]"
           />
           <div class="col-12 col-sm-auto">
             <q-btn type="submit" color="primary" label="Сохранить" :loading="savingWindow" />
@@ -214,6 +219,14 @@ async function updateBotEnabled(enabled: boolean) {
 }
 
 async function saveAttributionWindow() {
+  if (
+    !Number.isInteger(marketingAttributionWindowDays.value) ||
+    marketingAttributionWindowDays.value < 1 ||
+    marketingAttributionWindowDays.value > 90
+  ) {
+    $q.notify({ type: 'negative', message: 'Введите целое число от 1 до 90 дней' });
+    return;
+  }
   savingWindow.value = true;
   try {
     const res = await api.patch('/api/admin/config', {

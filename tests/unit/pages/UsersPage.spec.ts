@@ -107,8 +107,82 @@ describe('UsersPage', () => {
       '% начисл.',
       'Реферер',
       'Баланс',
+      'Источники',
       'Регистрация',
     ]);
+  });
+
+  it('показывает отдельную карточку источников и атрибуции на desktop', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          username: 'source_user',
+          first_name: 'Source',
+          role: 9,
+          role_name: 'Пользователь',
+          referred_by: 9,
+          createdAt: '2026-07-20T00:00:00Z',
+          attribution: {
+            sourceType: 'referral',
+            acquiredAt: '2026-07-20T00:00:00Z',
+            primaryCampaignName: null,
+            lastTouchAt: '2026-07-21T00:00:00Z',
+            lastTouchCampaignName: 'Возвратная компания',
+            lastOrderCampaignName: 'Возвратная компания',
+            lastOrderAttributionType: 'reengagement',
+            sourceStatus: 'fixed',
+          },
+        },
+      ],
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.find('button[icon="hub"]').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Источники и атрибуция');
+    expect(wrapper.text()).toContain('Реферальный');
+    expect(wrapper.text()).toContain('Реферер');
+    expect(wrapper.text()).toContain('Возвратная компания');
+    expect(wrapper.text()).toContain('reengagement');
+    expect(wrapper.text()).toContain('Зафиксирован');
+  });
+
+  it('открывает карточку источников и атрибуции на mobile', async () => {
+    setScreenXs(true);
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 2,
+          username: 'mobile_source',
+          role: 9,
+          role_name: 'Пользователь',
+          createdAt: '2026-07-20T00:00:00Z',
+          attribution: {
+            sourceType: 'campaign',
+            acquiredAt: '2026-07-20T00:00:00Z',
+            primaryCampaignName: 'Первичная компания',
+            lastTouchAt: '2026-07-21T00:00:00Z',
+            lastTouchCampaignName: 'Последняя компания',
+            lastOrderCampaignName: 'Последняя компания',
+            lastOrderAttributionType: 'acquisition',
+            sourceStatus: 'fixed',
+          },
+        },
+      ],
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get('.app-responsive-table__mobile button').trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Источники и атрибуция');
+    expect(wrapper.text()).toContain('Первичная компания');
+    expect(wrapper.text()).toContain('Последняя компания');
+    expect(wrapper.text()).toContain('acquisition');
   });
 
   it('показывает popup-edit для смены роли без оператора', async () => {

@@ -17,9 +17,16 @@ import { computed } from 'vue';
 const props = defineProps<{ summary: Record<string, number | null> }>();
 const items = computed(() => [
   {
-    key: 'attributedUsers',
-    label: 'Атрибутированные пользователи',
-    value: props.summary.attributedUsers,
+    key: 'newUsers',
+    label: 'Новые пользователи',
+    value: props.summary.newUsers,
+  },
+  { key: 'returningUsers', label: 'Вернувшиеся', value: props.summary.returningUsers },
+  { key: 'touches', label: 'Рекламные касания', value: props.summary.touches },
+  {
+    key: 'uniqueTouchedUsers',
+    label: 'Уникальные с касанием',
+    value: props.summary.uniqueTouchedUsers,
   },
   { key: 'applications', label: 'Заявки', value: props.summary.applications },
   { key: 'uniqueApplicants', label: 'Уникальные заявители', value: props.summary.uniqueApplicants },
@@ -42,9 +49,14 @@ const items = computed(() => [
   },
   { key: 'costPerApplication', label: 'Стоимость заявки', value: props.summary.costPerApplication },
   {
-    key: 'costPerAttributedUser',
-    label: 'Стоимость пользователя',
-    value: props.summary.costPerAttributedUser,
+    key: 'costPerNewUser',
+    label: 'Стоимость нового пользователя',
+    value: props.summary.costPerNewUser,
+  },
+  {
+    key: 'costPerCompletedApplication',
+    label: 'Стоимость завершённой заявки',
+    value: props.summary.costPerCompletedApplication,
   },
 ]);
 

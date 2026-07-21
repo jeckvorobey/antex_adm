@@ -14,6 +14,28 @@
       </q-card-section>
     </q-card>
 
+    <q-card class="q-mb-md">
+      <q-card-section>
+        <div class="text-subtitle1 q-mb-sm">Окно атрибуции рекламы</div>
+        <q-form class="row items-center q-col-gutter-sm" @submit="saveAttributionWindow">
+          <q-input
+            v-model.number="marketingAttributionWindowDays"
+            type="number"
+            min="1"
+            max="90"
+            label="Дней"
+            outlined
+            dense
+            class="col-12 col-sm-3"
+            :rules="[(value) => (value >= 1 && value <= 90) || 'Введите от 1 до 90 дней']"
+          />
+          <div class="col-12 col-sm-auto">
+            <q-btn type="submit" color="primary" label="Сохранить" :loading="savingWindow" />
+          </div>
+        </q-form>
+      </q-card-section>
+    </q-card>
+
     <div class="row q-col-gutter-md">
       <div class="col-12 col-md-6">
         <q-card>
@@ -110,6 +132,8 @@ import { useMarketingReferencesStore } from '@/stores/marketing-references';
 
 const $q = useQuasar();
 const botEnabled = ref(true);
+const marketingAttributionWindowDays = ref(7);
+const savingWindow = ref(false);
 const references = useMarketingReferencesStore();
 const platform = reactive({ slug: '', name: '' });
 const currency = reactive({ code: '', name: '' });
@@ -119,6 +143,7 @@ onMounted(async () => {
   try {
     const res = await api.get('/api/admin/config');
     botEnabled.value = res.data.enabled;
+    marketingAttributionWindowDays.value = res.data.marketingAttributionWindowDays ?? 7;
   } catch {
     botEnabled.value = false;
   }
@@ -185,6 +210,21 @@ async function updateBotEnabled(enabled: boolean) {
   } catch {
     botEnabled.value = previousValue;
     $q.notify({ type: 'negative', message: 'Ошибка' });
+  }
+}
+
+async function saveAttributionWindow() {
+  savingWindow.value = true;
+  try {
+    const res = await api.patch('/api/admin/config', {
+      marketingAttributionWindowDays: marketingAttributionWindowDays.value,
+    });
+    marketingAttributionWindowDays.value = res.data.marketingAttributionWindowDays;
+    $q.notify({ type: 'positive', message: 'Окно атрибуции сохранено' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Не удалось сохранить окно атрибуции' });
+  } finally {
+    savingWindow.value = false;
   }
 }
 </script>

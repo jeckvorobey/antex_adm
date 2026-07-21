@@ -279,14 +279,36 @@ const columns: QTableColumn<MarketingCampaign>[] = [
     align: 'left',
     format: (value) => (value === 'paid' ? 'Платная' : 'Бесплатная'),
   },
-  { name: 'attributedUsers', label: 'Пользователи', field: 'attributedUsers', align: 'right' },
+  { name: 'newUsers', label: 'Новые', field: 'newUsers', align: 'right' },
+  { name: 'returningUsers', label: 'Вернувшиеся', field: 'returningUsers', align: 'right' },
+  { name: 'touches', label: 'Касания', field: 'touches', align: 'right' },
   { name: 'applications', label: 'Заявки', field: 'applications', align: 'right' },
   {
-    name: 'budget',
-    label: 'Бюджет',
-    field: 'budget',
+    name: 'completedApplications',
+    label: 'Завершённые',
+    field: 'completedApplications',
     align: 'right',
-    format: (value, row) => (value == null ? '—' : `${value} ${row.currency ?? ''}`),
+  },
+  {
+    name: 'costPerNewUser',
+    label: 'Стоимость нового',
+    field: 'costPerNewUser',
+    align: 'right',
+    format: (value, row) => formatCost(value, row.currency),
+  },
+  {
+    name: 'costPerApplication',
+    label: 'Стоимость заявки',
+    field: 'costPerApplication',
+    align: 'right',
+    format: (value, row) => formatCost(value, row.currency),
+  },
+  {
+    name: 'costPerCompletedApplication',
+    label: 'Стоимость завершённой',
+    field: 'costPerCompletedApplication',
+    align: 'right',
+    format: (value, row) => formatCost(value, row.currency),
   },
   {
     name: 'createdAt',
@@ -305,10 +327,15 @@ const mobileConfig = {
     color: row.status === 'active' ? 'positive' : 'grey',
   }),
   fields: [
-    { name: 'attributedUsers', label: 'Пользователи' },
+    { name: 'newUsers', label: 'Новые' },
+    { name: 'returningUsers', label: 'Вернувшиеся' },
+    { name: 'touches', label: 'Касания' },
     { name: 'applications', label: 'Заявки' },
+    { name: 'completedApplications', label: 'Завершённые' },
     { name: 'campaignType', label: 'Тип' },
-    { name: 'budget', label: 'Бюджет' },
+    { name: 'costPerNewUser', label: 'Стоимость нового' },
+    { name: 'costPerApplication', label: 'Стоимость заявки' },
+    { name: 'costPerCompletedApplication', label: 'Стоимость завершённой' },
     { name: 'createdAt', label: 'Создана' },
   ],
 };
@@ -320,6 +347,10 @@ let latestCampaignsRequestId = 0;
 
 function formatCampaignStatus(status: MarketingCampaign['status']): string {
   return statusOptions.find((option) => option.value === status)?.label ?? status;
+}
+
+function formatCost(value: unknown, currency: string | undefined): string {
+  return typeof value === 'number' ? `${value} ${currency ?? ''}`.trim() : '—';
 }
 
 async function fetchCampaigns(append = false) {

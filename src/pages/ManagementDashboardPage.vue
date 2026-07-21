@@ -91,7 +91,8 @@ const error = ref(false);
 const isEmpty = computed(
   () =>
     !dashboard.value ||
-    Number(dashboard.value.summary.attributedUsers ?? 0) +
+    Number(dashboard.value.summary.newUsers ?? 0) +
+      Number(dashboard.value.summary.touches ?? 0) +
       Number(dashboard.value.summary.applications ?? 0) ===
       0,
 );
@@ -103,8 +104,16 @@ const timeOptions = computed<ApexOptions>(() => ({
 }));
 const timeSeries = computed<ApexAxisChartSeries>(() => [
   {
-    name: 'Атрибутированные пользователи',
-    data: dashboard.value?.timeSeries.map((row) => Number(row.attributedUsers)) ?? [],
+    name: 'Новые',
+    data: dashboard.value?.timeSeries.map((row) => Number(row.newUsers)) ?? [],
+  },
+  {
+    name: 'Вернувшиеся',
+    data: dashboard.value?.timeSeries.map((row) => Number(row.returningUsers)) ?? [],
+  },
+  {
+    name: 'Касания',
+    data: dashboard.value?.timeSeries.map((row) => Number(row.touches)) ?? [],
   },
   {
     name: 'Заявки',
@@ -123,8 +132,16 @@ const comparisonOptions = computed<ApexOptions>(() => ({
 }));
 const comparisonSeries = computed<ApexAxisChartSeries>(() => [
   {
-    name: 'Пользователи',
-    data: dashboard.value?.campaignComparison.map((row) => row.attributedUsers) ?? [],
+    name: 'Новые',
+    data: dashboard.value?.campaignComparison.map((row) => row.newUsers) ?? [],
+  },
+  {
+    name: 'Вернувшиеся',
+    data: dashboard.value?.campaignComparison.map((row) => row.returningUsers) ?? [],
+  },
+  {
+    name: 'Касания',
+    data: dashboard.value?.campaignComparison.map((row) => row.touches) ?? [],
   },
   {
     name: 'Заявки',

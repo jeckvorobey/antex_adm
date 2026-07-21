@@ -50,6 +50,23 @@ describe('SettingsPage', () => {
     expect(api.patch).toHaveBeenCalledWith('/api/admin/config', { enabled: false });
   });
 
+  it('сохраняет окно атрибуции через существующий config API', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: { enabled: true, marketingAttributionWindowDays: 7 },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: { marketingAttributionWindowDays: 14 } });
+    const wrapper = mountPage();
+    await flushPromises();
+    const input = wrapper.find('input[type="number"]');
+    await input.setValue('14');
+    await input.trigger('submit');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      marketingAttributionWindowDays: 14,
+    });
+  });
+
   it('toggleBot показывает positive уведомление при успехе', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { enabled: true } });
     vi.mocked(api.patch).mockResolvedValue({ data: { enabled: false } });

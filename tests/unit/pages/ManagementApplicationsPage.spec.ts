@@ -1,34 +1,40 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Screen } from 'quasar';
 
 import ManagementApplicationsPage from '@/pages/ManagementApplicationsPage.vue';
 
 const { listMock } = vi.hoisted(() => ({ listMock: vi.fn() }));
 vi.mock('@/services/marketing', () => ({
   marketingApi: {
-    listApplications: listMock,
+    listApplicationAttributions: listMock,
   },
 }));
 
 describe('ManagementApplicationsPage', () => {
-  it('показывает counts и прочерк для nullable conversion', async () => {
+  beforeEach(() => {
+    const screen = Screen as unknown as { xs: boolean; md: boolean; name: string; width: number };
+    screen.xs = false;
+    screen.md = true;
+    screen.name = 'md';
+    screen.width = 1280;
+  });
+  it('показывает snapshot касания и тип атрибуции заявки', async () => {
     listMock.mockResolvedValue({
       items: [
         {
           campaignId: 1,
           campaignName: 'No conversions',
-          code: 'BDF7J9J8JH',
-          provider: 'telegram_ads',
-          status: 'active',
-          currency: 'USDT',
-          attributedUsers: 0,
-          applications: 3,
-          uniqueApplicants: 2,
-          completedApplications: 1,
-          attributionToApplicationRate: null,
-          applicationCompletionRate: 33.3333,
-          spend: 10,
-          costPerApplication: 3.3333,
+          orderId: 10,
+          publicNumber: '0000000010',
+          userId: 20,
+          userState: 'returning',
+          attributionType: 'reengagement',
+          touchAt: '2026-07-20T10:00:00Z',
+          applicationAt: '2026-07-20T14:00:00Z',
+          hoursToApplication: 4,
+          status: 2,
+          completed: true,
         },
       ],
       total: 1,
@@ -39,9 +45,10 @@ describe('ManagementApplicationsPage', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('No conversions');
-    expect(wrapper.text()).toContain('3');
-    expect(wrapper.text()).toContain('2');
-    expect(wrapper.text()).toContain('—');
+    expect(wrapper.text()).toContain('Вернувшийся');
+    expect(wrapper.text()).toContain('reengagement');
+    expect(wrapper.text()).toContain('4');
+    expect(wrapper.text()).toContain('Да');
   });
 
   it('передаёт выбранные даты фильтра в API в ISO-формате', async () => {
@@ -77,5 +84,39 @@ describe('ManagementApplicationsPage', () => {
     await flushPromises();
 
     expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'active' }));
+  });
+
+  it('на mobile различает заявки одной компании и форматирует даты и статус', async () => {
+    const screen = Screen as unknown as { xs: boolean; md: boolean; name: string; width: number };
+    screen.xs = true;
+    screen.md = false;
+    screen.name = 'xs';
+    screen.width = 390;
+    listMock.mockResolvedValue({
+      items: [10, 11].map((orderId) => ({
+        campaignId: 1,
+        campaignName: 'Одна компания',
+        orderId,
+        publicNumber: String(orderId),
+        userId: orderId,
+        userState: 'returning',
+        attributionType: 'reengagement',
+        touchAt: '2026-07-20T10:00:00Z',
+        applicationAt: '2026-07-20T14:00:00Z',
+        hoursToApplication: 4,
+        status: 2,
+        completed: false,
+      })),
+      total: 2,
+      limit: 20,
+      offset: 0,
+    });
+    const wrapper = mount(ManagementApplicationsPage);
+    await flushPromises();
+
+    expect(wrapper.findAll('.app-responsive-table__card')).toHaveLength(2);
+    expect(wrapper.text()).toContain('20.07.2026 10:00');
+    expect(wrapper.text()).toContain('В обработке');
+    expect(wrapper.text()).not.toContain('2026-07-20T10:00:00Z');
   });
 });

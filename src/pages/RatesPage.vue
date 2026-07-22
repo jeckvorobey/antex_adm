@@ -15,7 +15,9 @@
     <q-card>
       <q-card-section>
         <div class="text-subtitle1">Текущие курсы</div>
-        <div class="text-caption text-grey-7 q-mt-xs">Наценка редактируется прямо в таблице</div>
+        <div class="text-caption text-grey-7 q-mt-xs">
+          Наценка внешних курсов редактируется прямо в таблице
+        </div>
       </q-card-section>
 
       <AppResponsiveTable
@@ -29,13 +31,20 @@
         dense
         :pagination="{ rowsPerPage: 0 }"
       >
+        <template #body-cell-country="props">
+          <q-td :props="props">
+            {{ getRateScopeLabel(props.row) }}
+          </q-td>
+        </template>
+
         <template #body-cell-margin="props">
           <q-td :props="props">
             <div class="row items-center justify-end q-gutter-xs">
               <span>{{ formatMargin(props.row.margin) }}</span>
-              <q-icon name="edit" size="16px" color="grey-6" />
+              <q-icon v-if="!props.row.isInternal" name="edit" size="16px" color="grey-6" />
             </div>
             <q-popup-edit
+              v-if="!props.row.isInternal"
               v-slot="scope"
               :model-value="props.row.margin"
               buttons
@@ -60,9 +69,10 @@
         <template #mobile-field-margin="{ row }">
           <div class="row items-center justify-end q-gutter-xs">
             <span>{{ formatMargin(row.margin) }}</span>
-            <q-icon name="edit" size="16px" color="grey-6" />
+            <q-icon v-if="!row.isInternal" name="edit" size="16px" color="grey-6" />
           </div>
           <q-popup-edit
+            v-if="!row.isInternal"
             v-slot="scope"
             :model-value="row.margin"
             buttons
@@ -99,8 +109,9 @@ import { formatAdminDateTime } from '@utils/date';
 interface RateRow {
   id: number;
   currency: string;
-  country: string;
-  countryRuName: string;
+  country: string | null;
+  countryRuName: string | null;
+  isInternal: boolean;
   baseRate: number;
   baseRateDisplay: string;
   finalRate: number;
@@ -125,7 +136,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
   {
     name: 'country',
     label: 'Страна',
-    field: 'countryRuName',
+    field: (row) => getRateScopeLabel(row),
     align: 'left',
     sortable: true,
     style: 'width: 18%',
@@ -168,7 +179,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
 
 const mobileConfig = {
   title: (row: RateRow) => row.currency,
-  subtitle: (row: RateRow) => row.countryRuName,
+  subtitle: (row: RateRow) => getRateScopeLabel(row),
   badge: (row: RateRow) => ({ label: formatMargin(row.margin), color: 'primary' }),
   fields: [
     { name: 'baseRate', label: 'Базовый курс' },
@@ -220,5 +231,9 @@ async function updateMargin(row: RateRow, margin: number) {
 
 function formatMargin(value: number) {
   return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
+}
+
+function getRateScopeLabel(row: RateRow) {
+  return row.isInternal ? 'Внутренний курс' : (row.countryRuName ?? '—');
 }
 </script>

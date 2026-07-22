@@ -86,6 +86,36 @@ describe('RatesPage', () => {
     expect(wrapper.html()).toContain('Вьетнам');
   });
 
+  it('показывает внутренние RUB/USDT курсы без редактора наценки', async () => {
+    mockAdminGet({
+      rates: [
+        {
+          id: 7,
+          currency: 'USDTRUB',
+          country: null,
+          countryRuName: null,
+          isInternal: true,
+          price: 90,
+          priceDisplay: '90.00',
+          baseRate: 90,
+          baseRateDisplay: '90.00',
+          finalRate: 87.3,
+          finalRateDisplay: '87.30',
+          margin: 3,
+          createdAt: '2026-07-22T10:00:00Z',
+          updatedAt: '2026-07-22T10:00:00Z',
+        },
+      ],
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.html()).toContain('USDTRUB');
+    expect(wrapper.html()).toContain('Внутренний курс');
+    expect(wrapper.findComponent({ name: 'QPopupEdit' }).exists()).toBe(false);
+  });
+
   it('показывает дату обновления курса в едином admin-формате', async () => {
     mockAdminGet({
       rates: [

@@ -16,7 +16,7 @@
       <q-card-section>
         <div class="text-subtitle1">Текущие курсы</div>
         <div class="text-caption text-grey-7 q-mt-xs">
-          Наценка внешних курсов редактируется прямо в таблице
+          Наценка любого курса редактируется прямо в таблице
         </div>
       </q-card-section>
 
@@ -41,10 +41,9 @@
           <q-td :props="props">
             <div class="row items-center justify-end q-gutter-xs">
               <span>{{ formatMargin(props.row.margin) }}</span>
-              <q-icon v-if="!props.row.isInternal" name="edit" size="16px" color="grey-6" />
+              <q-icon name="edit" size="16px" color="grey-6" />
             </div>
             <q-popup-edit
-              v-if="!props.row.isInternal"
               v-slot="scope"
               :model-value="props.row.margin"
               buttons
@@ -69,10 +68,9 @@
         <template #mobile-field-margin="{ row }">
           <div class="row items-center justify-end q-gutter-xs">
             <span>{{ formatMargin(row.margin) }}</span>
-            <q-icon v-if="!row.isInternal" name="edit" size="16px" color="grey-6" />
+            <q-icon name="edit" size="16px" color="grey-6" />
           </div>
           <q-popup-edit
-            v-if="!row.isInternal"
             v-slot="scope"
             :model-value="row.margin"
             buttons

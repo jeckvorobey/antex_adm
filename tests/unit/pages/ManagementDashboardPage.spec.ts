@@ -26,7 +26,6 @@ describe('ManagementDashboardPage', () => {
         costPerApplication: null,
         costPerAttributedUser: null,
       },
-      funnel: [],
       timeSeries: [],
       campaignComparison: [],
       spendByCurrency: [],
@@ -67,7 +66,6 @@ describe('ManagementDashboardPage', () => {
         applications: 0,
         completedApplications: 0,
       },
-      funnel: [],
       timeSeries: [],
       campaignComparison: [],
       spendByCurrency: [],
@@ -85,7 +83,6 @@ describe('ManagementDashboardPage', () => {
   it('разделяет новые, вернувшиеся касания и заявки в дневном графике', async () => {
     dashboardMock.mockResolvedValueOnce({
       summary: { newUsers: 1, returningUsers: 1, touches: 2, applications: 1 },
-      funnel: [],
       timeSeries: [
         {
           date: '2026-07-20',
@@ -109,5 +106,23 @@ describe('ManagementDashboardPage', () => {
       expect.arrayContaining(['Новые', 'Вернувшиеся', 'Касания', 'Заявки']),
     );
     expect(wrapper.text()).not.toContain('Атрибутированные пользователи');
+  });
+
+  it('не показывает воронку, даже если API возвращает её данные', async () => {
+    dashboardMock.mockResolvedValueOnce({
+      summary: { newUsers: 1, returningUsers: 0, touches: 2, applications: 1 },
+      funnel: [{ stage: 'Маркетинговые касания', value: 2 }],
+      timeSeries: [],
+      campaignComparison: [],
+      spendByCurrency: [],
+      appliedFilters: {},
+    });
+    const wrapper = mount(ManagementDashboardPage, {
+      global: { stubs: { MarketingChart: { template: '<div />', props: ['series'] } } },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('Воронка');
+    expect(wrapper.text()).not.toContain('Маркетинговые касания');
   });
 });

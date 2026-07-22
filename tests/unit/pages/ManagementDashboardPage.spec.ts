@@ -57,6 +57,31 @@ describe('ManagementDashboardPage', () => {
     expect(dashboardMock).toHaveBeenCalledTimes(2);
   });
 
+  it('не скрывает графики при активности только вернувшихся пользователей', async () => {
+    dashboardMock.mockResolvedValueOnce({
+      summary: {
+        attributedUsers: 0,
+        newUsers: 0,
+        returningUsers: 1,
+        touches: 0,
+        applications: 0,
+        completedApplications: 0,
+      },
+      funnel: [],
+      timeSeries: [],
+      campaignComparison: [],
+      spendByCurrency: [],
+      appliedFilters: {},
+    });
+    const wrapper = mount(ManagementDashboardPage, {
+      global: { stubs: { MarketingChart: { template: '<div />', props: ['series'] } } },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('Нет данных за выбранный период');
+    expect(wrapper.text()).toContain('Динамика');
+  });
+
   it('разделяет новые, вернувшиеся касания и заявки в дневном графике', async () => {
     dashboardMock.mockResolvedValueOnce({
       summary: { newUsers: 1, returningUsers: 1, touches: 2, applications: 1 },

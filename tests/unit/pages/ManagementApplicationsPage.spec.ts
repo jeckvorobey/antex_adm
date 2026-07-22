@@ -68,22 +68,22 @@ describe('ManagementApplicationsPage', () => {
     );
   });
 
-  it('показывает русские статусы и передаёт их API value в фильтр', async () => {
+  it('показывает статусы заявок и передаёт числовой API value в фильтр', async () => {
     listMock.mockResolvedValue({ items: [], total: 0, limit: 20, offset: 0 });
     const wrapper = mount(ManagementApplicationsPage);
     await flushPromises();
     listMock.mockClear();
 
-    expect(wrapper.text()).toContain('Черновик');
-    expect(wrapper.text()).toContain('Активна');
-    expect(wrapper.text()).toContain('Приостановлена');
-    expect(wrapper.text()).toContain('В архиве');
+    expect(wrapper.text()).toContain('Создана');
+    expect(wrapper.text()).toContain('В обработке');
+    expect(wrapper.text()).toContain('Завершена');
+    expect(wrapper.text()).toContain('Отменена');
 
-    await wrapper.findAll('select')[1]?.setValue('active');
+    await wrapper.findAll('select')[1]?.setValue('3');
     await wrapper.get('button').trigger('click');
     await flushPromises();
 
-    expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'active' }));
+    expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ status: 3 }));
   });
 
   it('на mobile различает заявки одной компании и форматирует даты и статус', async () => {

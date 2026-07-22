@@ -92,6 +92,7 @@ const isEmpty = computed(
   () =>
     !dashboard.value ||
     Number(dashboard.value.summary.newUsers ?? 0) +
+      Number(dashboard.value.summary.returningUsers ?? 0) +
       Number(dashboard.value.summary.touches ?? 0) +
       Number(dashboard.value.summary.applications ?? 0) ===
       0,

@@ -66,7 +66,7 @@ import { onMounted, reactive, ref } from 'vue';
 import AppResponsiveTable from '@/components/ui/AppResponsiveTable.vue';
 import AdminDateInput from '@/components/ui/AdminDateInput.vue';
 import MarketingPlatformSelect from '@/components/marketing/MarketingPlatformSelect.vue';
-import { MARKETING_CAMPAIGN_STATUS_OPTIONS } from '@/constants/marketing';
+import { MARKETING_APPLICATION_STATUS_OPTIONS } from '@/constants/marketing';
 import { marketingApi } from '@/services/marketing';
 import type { MarketingApplicationAttribution } from '@/types/marketing';
 import { formatAdminDateTime } from '@/utils/date';
@@ -78,12 +78,12 @@ const filters = reactive({
   dateFrom: today.toISOString().slice(0, 10),
   dateTo,
   provider: null as string | null,
-  status: null as string | null,
+  status: null as number | null,
 });
 const rows = ref<MarketingApplicationAttribution[]>([]);
 const loading = ref(false);
 const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 });
-const statusOptions = MARKETING_CAMPAIGN_STATUS_OPTIONS;
+const statusOptions = MARKETING_APPLICATION_STATUS_OPTIONS;
 const columns: QTableColumn<MarketingApplicationAttribution>[] = [
   { name: 'campaignName', label: 'Компания', field: 'campaignName', align: 'left' },
   {
@@ -155,6 +155,7 @@ async function fetchRows() {
   try {
     const data = await marketingApi.listApplicationAttributions({
       ...filters,
+      status: filters.status === null ? null : Number(filters.status),
       limit: pagination.value.rowsPerPage,
       offset: (pagination.value.page - 1) * pagination.value.rowsPerPage,
     });

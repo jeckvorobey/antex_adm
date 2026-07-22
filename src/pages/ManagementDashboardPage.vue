@@ -17,28 +17,11 @@
         >Нет данных за выбранный период</q-banner
       >
       <div v-else class="row q-col-gutter-md q-mt-xs">
-        <div class="col-12 col-lg-8">
+        <div class="col-12">
           <q-card flat bordered
             ><q-card-section
               ><div class="text-h6 q-mb-md">Динамика</div>
               <MarketingChart :options="timeOptions" :series="timeSeries" /></q-card-section
-          ></q-card>
-        </div>
-        <div class="col-12 col-lg-4">
-          <q-card flat bordered class="full-height"
-            ><q-card-section
-              ><div class="text-h6 q-mb-md">Воронка</div>
-              <div v-for="stage in dashboard.funnel" :key="stage.stage" class="q-mb-md">
-                <div class="row justify-between">
-                  <span>{{ stage.stage }}</span
-                  ><b>{{ stage.value }}</b>
-                </div>
-                <q-linear-progress
-                  :value="funnelRatio(stage.value)"
-                  color="primary"
-                  rounded
-                  class="q-mt-xs"
-                /></div></q-card-section
           ></q-card>
         </div>
         <div class="col-12">
@@ -168,10 +151,6 @@ async function load() {
 function applyFilters(value: typeof filters) {
   Object.assign(filters, value);
   void load();
-}
-function funnelRatio(value: number) {
-  const first = dashboard.value?.funnel[0]?.value ?? 0;
-  return first > 0 ? value / first : 0;
 }
 onMounted(async () => {
   const campaigns = await marketingApi.listCampaigns({ limit: 100, offset: 0 });

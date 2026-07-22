@@ -109,7 +109,6 @@ export interface MarketingApplicationAttribution {
 
 export interface MarketingDashboard {
   summary: Record<string, number | null>;
-  funnel: Array<{ stage: string; value: number }>;
   timeSeries: Array<Record<string, string | number>>;
   campaignComparison: MarketingApplicationRow[];
   spendByCurrency: Array<{ currency: string; spend: number }>;

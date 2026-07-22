@@ -5,6 +5,7 @@ import type {
   CampaignCodePreview,
   DailyMetricPayload,
   MarketingApplicationRow,
+  MarketingApplicationAttribution,
   MarketingCampaign,
   MarketingDashboard,
   MarketingCurrency,
@@ -71,6 +72,12 @@ export const marketingApi = {
     params: Record<string, unknown>,
   ): Promise<PaginatedResponse<MarketingApplicationRow>> {
     return (await api.get('/api/admin/marketing/applications', { params })).data;
+  },
+
+  async listApplicationAttributions(
+    params: Record<string, unknown>,
+  ): Promise<PaginatedResponse<MarketingApplicationAttribution>> {
+    return (await api.get('/api/admin/marketing/application-attributions', { params })).data;
   },
 
   async dashboard(params: Record<string, unknown>): Promise<MarketingDashboard> {

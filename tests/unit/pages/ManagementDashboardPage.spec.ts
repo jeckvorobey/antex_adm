@@ -35,7 +35,9 @@ describe('ManagementDashboardPage', () => {
   });
 
   it('загружает dashboard и не выводит NaN или Infinity', async () => {
-    const wrapper = mount(ManagementDashboardPage);
+    const wrapper = mount(ManagementDashboardPage, {
+      global: { stubs: { MarketingChart: { template: '<div />', props: ['series'] } } },
+    });
     await flushPromises();
 
     expect(dashboardMock).toHaveBeenCalledTimes(1);
@@ -53,5 +55,59 @@ describe('ManagementDashboardPage', () => {
     await wrapper.get('[data-testid="dashboard-retry"]').trigger('click');
     await flushPromises();
     expect(dashboardMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('не скрывает графики при активности только вернувшихся пользователей', async () => {
+    dashboardMock.mockResolvedValueOnce({
+      summary: {
+        attributedUsers: 0,
+        newUsers: 0,
+        returningUsers: 1,
+        touches: 0,
+        applications: 0,
+        completedApplications: 0,
+      },
+      funnel: [],
+      timeSeries: [],
+      campaignComparison: [],
+      spendByCurrency: [],
+      appliedFilters: {},
+    });
+    const wrapper = mount(ManagementDashboardPage, {
+      global: { stubs: { MarketingChart: { template: '<div />', props: ['series'] } } },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain('Нет данных за выбранный период');
+    expect(wrapper.text()).toContain('Динамика');
+  });
+
+  it('разделяет новые, вернувшиеся касания и заявки в дневном графике', async () => {
+    dashboardMock.mockResolvedValueOnce({
+      summary: { newUsers: 1, returningUsers: 1, touches: 2, applications: 1 },
+      funnel: [],
+      timeSeries: [
+        {
+          date: '2026-07-20',
+          newUsers: 1,
+          returningUsers: 1,
+          touches: 2,
+          applications: 1,
+          completedApplications: 0,
+        },
+      ],
+      campaignComparison: [],
+      spendByCurrency: [],
+      appliedFilters: {},
+    });
+    const wrapper = mount(ManagementDashboardPage, {
+      global: { stubs: { MarketingChart: { template: '<div />', props: ['series'] } } },
+    });
+    await flushPromises();
+
+    expect(wrapper.vm.timeSeries.map((series: { name: string }) => series.name)).toEqual(
+      expect.arrayContaining(['Новые', 'Вернувшиеся', 'Касания', 'Заявки']),
+    );
+    expect(wrapper.text()).not.toContain('Атрибутированные пользователи');
   });
 });

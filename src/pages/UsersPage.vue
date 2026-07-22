@@ -138,6 +138,19 @@
         </q-td>
       </template>
 
+      <template #body-cell-attribution="props">
+        <q-td :props="props">
+          <q-btn
+            flat
+            dense
+            color="primary"
+            icon="hub"
+            label="Источники"
+            @click="selectedUser = props.row"
+          />
+        </q-td>
+      </template>
+
       <!-- Mobile field slots -->
       <template #mobile-field-role="{ row }">
         <div class="row items-center justify-end q-gutter-xs">
@@ -194,7 +207,73 @@
         </span>
         <span v-else class="referral-empty">—</span>
       </template>
+      <template #mobile-field-attribution="{ row }">
+        <q-btn flat dense color="primary" icon="hub" label="Открыть" @click="selectedUser = row" />
+      </template>
     </AppResponsiveTable>
+
+    <q-dialog :model-value="selectedUser !== null" @update:model-value="selectedUser = null">
+      <q-card v-if="selectedUser" style="width: 640px; max-width: 95vw">
+        <q-card-section class="row items-center justify-between">
+          <div class="text-h6">Источники и атрибуция</div>
+          <q-btn flat round dense icon="close" aria-label="Закрыть" @click="selectedUser = null" />
+        </q-card-section>
+        <q-separator />
+        <q-list separator>
+          <q-item
+            ><q-item-section>Первичный источник</q-item-section
+            ><q-item-section side>{{
+              sourceLabel(selectedUser.attribution?.sourceType)
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Дата первичного привлечения</q-item-section
+            ><q-item-section side>{{
+              formatOptionalDate(selectedUser.attribution?.acquiredAt)
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Первичная компания</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.primaryCampaignName ?? '—'
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Реферер</q-item-section
+            ><q-item-section side>{{
+              selectedUser.referred_by == null ? '—' : `ID ${selectedUser.referred_by}`
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Последнее рекламное касание</q-item-section
+            ><q-item-section side
+              >{{ selectedUser.attribution?.lastTouchCampaignName ?? '—' }} ·
+              {{ formatOptionalDate(selectedUser.attribution?.lastTouchAt) }}</q-item-section
+            ></q-item
+          >
+          <q-item
+            ><q-item-section>Компания последней заявки</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.lastOrderCampaignName ?? '—'
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Тип атрибуции последней заявки</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.lastOrderAttributionType ?? 'none'
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Статус фиксации источника</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.sourceStatus === 'fixed'
+                ? 'Зафиксирован'
+                : 'Не зафиксирован'
+            }}</q-item-section></q-item
+          >
+        </q-list>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -219,6 +298,16 @@ type UserRow = {
   referred_by?: number | null;
   referral_rate_percent?: string | null;
   balance?: string | null;
+  attribution?: {
+    sourceType?: 'referral' | 'campaign' | 'direct' | 'legacy' | null;
+    acquiredAt?: string | null;
+    primaryCampaignName?: string | null;
+    lastTouchAt?: string | null;
+    lastTouchCampaignName?: string | null;
+    lastOrderCampaignName?: string | null;
+    lastOrderAttributionType?: 'acquisition' | 'reengagement' | 'none' | null;
+    sourceStatus: 'fixed' | 'missing';
+  } | null;
 };
 
 const $q = useQuasar();
@@ -234,6 +323,7 @@ const loadingMore = ref(false);
 const hasMore = ref(false);
 const savingRoleIds = ref<number[]>([]);
 const generatingCodes = ref(false);
+const selectedUser = ref<UserRow | null>(null);
 const generatingForUserIds = ref<Set<number>>(new Set());
 const search = ref('');
 const pagination = ref({
@@ -294,6 +384,7 @@ const columns: QTableColumn<UserRow>[] = [
     align: 'center',
     style: 'width: 120px; max-width: 160px',
   },
+  { name: 'attribution', label: 'Источники', field: 'attribution', align: 'center' },
   {
     name: 'createdAt',
     label: 'Регистрация',
@@ -319,9 +410,27 @@ const mobileConfig = {
     { name: 'referralRatePercent', label: '% начисл.' },
     { name: 'referredBy', label: 'Реферер' },
     { name: 'referralBalance', label: 'Баланс' },
+    { name: 'attribution', label: 'Источники' },
     { name: 'createdAt', label: 'Регистрация' },
   ],
 };
+
+function sourceLabel(value: string | null | undefined): string {
+  return (
+    (
+      {
+        referral: 'Реферальный',
+        campaign: 'Компания',
+        direct: 'Прямой',
+        legacy: 'Legacy',
+      } as Record<string, string>
+    )[value ?? ''] ?? '—'
+  );
+}
+
+function formatOptionalDate(value: string | null | undefined): string {
+  return value ? formatAdminDateTime(value) : '—';
+}
 
 /** Format rate percent string like "0.200000" → "0.2%" */
 function formatRate(value: string | null | undefined): string {
@@ -482,7 +591,11 @@ async function updateRole(row: UserRow, role: number) {
     const res = await api.patch<UserRow>(`/api/admin/users/${row.id}`, { role });
     const index = users.value.findIndex((item) => item.id === row.id);
     if (index >= 0) {
-      users.value[index] = res.data;
+      users.value[index] = {
+        ...users.value[index],
+        ...res.data,
+        attribution: res.data.attribution ?? users.value[index].attribution,
+      };
     }
     $q.notify({ type: 'positive', message: 'Роль пользователя сохранена' });
   } catch (error) {

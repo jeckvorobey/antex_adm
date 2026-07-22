@@ -39,6 +39,14 @@ describe('ManagementCampaignsPage', () => {
           link: 'https://t.me/bot?startapp=market_BDF7J9J8JH',
           marketParameter: 'market=BDF7J9J8JH',
           createdAt: '2026-07-13T00:00:00Z',
+          newUsers: 2,
+          returningUsers: 3,
+          touches: 7,
+          applications: 4,
+          completedApplications: 1,
+          costPerNewUser: 50,
+          costPerApplication: 25,
+          costPerCompletedApplication: 100,
         },
       ],
       total: 1,
@@ -58,6 +66,13 @@ describe('ManagementCampaignsPage', () => {
     expect(wrapper.text()).not.toContain('генератор');
     expect(wrapper.text()).toContain('Открыть метрики');
     expect(wrapper.get('[data-testid="campaign-create"]')).toBeTruthy();
+    const labels = wrapper
+      .findComponent({ name: 'AppResponsiveTable' })
+      .props('columns')
+      .map((column: { label: string }) => column.label);
+    expect(labels).toEqual(
+      expect.arrayContaining(['Новые', 'Вернувшиеся', 'Касания', 'Стоимость завершённой']),
+    );
     expect(wrapper.findComponent({ name: 'MarketingCampaignCreateDialog' }).exists()).toBe(true);
   });
 
@@ -323,6 +338,8 @@ describe('ManagementCampaignsPage', () => {
       ['archive', 'Архивировать кампанию', 'archive'],
     ] as const;
     const mobileActions = mobileWrapper.get('[data-testid="campaign-mobile-actions"]');
+
+    expect(mobileWrapper.text()).toContain('50 USDT');
 
     expect(mobileActions.text()).toContain('Действия');
     expect(mobileActions.classes()).toEqual(

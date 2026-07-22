@@ -86,7 +86,7 @@ describe('RatesPage', () => {
     expect(wrapper.html()).toContain('Вьетнам');
   });
 
-  it('показывает внутренние RUB/USDT курсы без редактора наценки', async () => {
+  it('редактирует наценку внутреннего RUB/USDT курса', async () => {
     mockAdminGet({
       rates: [
         {
@@ -113,7 +113,31 @@ describe('RatesPage', () => {
 
     expect(wrapper.html()).toContain('USDTRUB');
     expect(wrapper.html()).toContain('Внутренний курс');
-    expect(wrapper.findComponent({ name: 'QPopupEdit' }).exists()).toBe(false);
+    expect(wrapper.findComponent({ name: 'QPopupEdit' }).exists()).toBe(true);
+
+    vi.mocked(api.patch).mockResolvedValue({
+      data: {
+        id: 7,
+        currency: 'USDTRUB',
+        country: null,
+        countryRuName: null,
+        isInternal: true,
+        price: 85.5,
+        priceDisplay: '85.50',
+        baseRate: 90,
+        baseRateDisplay: '90.00',
+        finalRate: 85.5,
+        finalRateDisplay: '85.50',
+        margin: 5,
+        createdAt: '2026-07-22T10:00:00Z',
+        updatedAt: '2026-07-22T10:05:00Z',
+      },
+    });
+    wrapper.findComponent({ name: 'QPopupEdit' }).vm.$emit('save', 5);
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/rates/7', { margin: 5 });
+    expect(wrapper.html()).toContain('85.50');
   });
 
   it('показывает дату обновления курса в едином admin-формате', async () => {

@@ -21,7 +21,10 @@
           <q-card flat bordered
             ><q-card-section
               ><div class="text-h6 q-mb-md">Динамика</div>
-              <MarketingChart :options="timeOptions" :series="timeSeries" /></q-card-section
+              <MarketingChart
+                :options="timeOptions"
+                :series="timeSeries"
+                :height="260" /></q-card-section
           ></q-card>
         </div>
         <div class="col-12">
@@ -57,13 +60,11 @@ import MarketingFilters from '@/components/marketing/MarketingFilters.vue';
 import MarketingKpiCards from '@/components/marketing/MarketingKpiCards.vue';
 import { marketingApi } from '@/services/marketing';
 import type { MarketingDashboard } from '@/types/marketing';
+import { dateRangeForPeriod, formatChartCategory, integerYAxis } from '@/utils/marketingDashboard';
 
-const now = new Date();
-const dateTo = now.toISOString().slice(0, 10);
-now.setDate(now.getDate() - 29);
+const initialRange = dateRangeForPeriod('month');
 const filters = reactive({
-  dateFrom: now.toISOString().slice(0, 10),
-  dateTo,
+  ...initialRange,
   campaignId: null as number | null,
   currency: null as string | null,
 });
@@ -81,8 +82,19 @@ const isEmpty = computed(
       0,
 );
 const timeOptions = computed<ApexOptions>(() => ({
-  chart: { type: 'line', toolbar: { show: false } },
-  xaxis: { categories: dashboard.value?.timeSeries.map((row) => String(row.date)) ?? [] },
+  chart: { type: 'line', height: 260, toolbar: { show: false } },
+  xaxis: {
+    categories: dashboard.value?.timeSeries.map((row) => String(row.date)) ?? [],
+    labels: {
+      formatter: (_value, timestamp, options) =>
+        formatChartCategory(
+          String(dashboard.value?.timeSeries[options?.i ?? 0]?.date ?? ''),
+          options?.i ?? 0,
+          dashboard.value?.timeSeries.length ?? 0,
+        ),
+    },
+  },
+  yaxis: integerYAxis(timeSeries.value.map((item) => item.data.map(Number))),
   stroke: { curve: 'smooth' },
   tooltip: { shared: true },
 }));

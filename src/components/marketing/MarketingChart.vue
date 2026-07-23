@@ -1,10 +1,13 @@
-<template><div ref="element" style="min-height: 300px" /></template>
+<template><div ref="element" :style="{ minHeight: `${height}px` }" /></template>
 
 <script setup lang="ts">
 import type { ApexOptions } from 'apexcharts';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-const props = defineProps<{ options: ApexOptions; series: ApexAxisChartSeries }>();
+const props = withDefaults(
+  defineProps<{ options: ApexOptions; series: ApexAxisChartSeries; height?: number }>(),
+  { height: 260 },
+);
 const element = ref<HTMLElement | null>(null);
 let chart: {
   render: () => Promise<void>;

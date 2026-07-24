@@ -86,7 +86,7 @@ const periodOptions = [
 function applyPeriod(value: MarketingPeriod) {
   if (value === 'interval') return;
   Object.assign(local, dateRangeForPeriod(value));
-  emit('apply', { ...local });
+  emit('apply', { ...local }, value);
 }
 watch(
   () => props.modelValue,

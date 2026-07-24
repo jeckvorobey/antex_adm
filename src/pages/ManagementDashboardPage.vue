@@ -60,7 +60,13 @@ import MarketingFilters from '@/components/marketing/MarketingFilters.vue';
 import MarketingKpiCards from '@/components/marketing/MarketingKpiCards.vue';
 import { marketingApi } from '@/services/marketing';
 import type { MarketingDashboard } from '@/types/marketing';
-import { dateRangeForPeriod, formatChartCategory, integerYAxis } from '@/utils/marketingDashboard';
+import {
+  chartTickAmount,
+  dateRangeForPeriod,
+  formatChartCategory,
+  integerYAxis,
+  type MarketingPeriod,
+} from '@/utils/marketingDashboard';
 
 const initialRange = dateRangeForPeriod('month');
 const filters = reactive({
@@ -70,6 +76,7 @@ const filters = reactive({
 });
 const campaignOptions = ref<Array<{ label: string; value: number }>>([]);
 const dashboard = ref<MarketingDashboard | null>(null);
+const activePeriod = ref<MarketingPeriod>('month');
 const loading = ref(false);
 const error = ref(false);
 const isEmpty = computed(
@@ -84,15 +91,11 @@ const isEmpty = computed(
 const timeOptions = computed<ApexOptions>(() => ({
   chart: { type: 'line', height: 260, toolbar: { show: false } },
   xaxis: {
-    categories: dashboard.value?.timeSeries.map((row) => String(row.date)) ?? [],
-    labels: {
-      formatter: (_value, timestamp, options) =>
-        formatChartCategory(
-          String(dashboard.value?.timeSeries[options?.i ?? 0]?.date ?? ''),
-          options?.i ?? 0,
-          dashboard.value?.timeSeries.length ?? 0,
-        ),
-    },
+    categories:
+      dashboard.value?.timeSeries.map((row) =>
+        formatChartCategory(String(row.date), activePeriod.value),
+      ) ?? [],
+    tickAmount: chartTickAmount(dashboard.value?.timeSeries.length ?? 0),
   },
   yaxis: integerYAxis(timeSeries.value.map((item) => item.data.map(Number))),
   stroke: { curve: 'smooth' },
@@ -160,8 +163,9 @@ async function load() {
     loading.value = false;
   }
 }
-function applyFilters(value: typeof filters) {
+function applyFilters(value: typeof filters, period: MarketingPeriod = 'interval') {
   Object.assign(filters, value);
+  activePeriod.value = period;
   void load();
 }
 onMounted(async () => {

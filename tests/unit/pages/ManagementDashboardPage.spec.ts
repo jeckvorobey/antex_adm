@@ -108,6 +108,51 @@ describe('ManagementDashboardPage', () => {
     expect(wrapper.text()).not.toContain('Атрибутированные пользователи');
   });
 
+  it('показывает на недельной оси X последовательные дни недели', async () => {
+    dashboardMock.mockResolvedValue({
+      summary: { newUsers: 1, returningUsers: 0, touches: 1, applications: 0 },
+      timeSeries: [
+        '2026-07-20',
+        '2026-07-21',
+        '2026-07-22',
+        '2026-07-23',
+        '2026-07-24',
+        '2026-07-25',
+        '2026-07-26',
+      ].map((date) => ({
+        date,
+        newUsers: 0,
+        returningUsers: 0,
+        touches: 0,
+        applications: 0,
+        completedApplications: 0,
+      })),
+      campaignComparison: [],
+      spendByCurrency: [],
+      appliedFilters: {},
+    });
+    const wrapper = mount(ManagementDashboardPage, {
+      global: { stubs: { MarketingChart: { template: '<div />', props: ['series'] } } },
+    });
+    await flushPromises();
+
+    wrapper.vm.applyFilters(
+      { dateFrom: '2026-07-20', dateTo: '2026-07-26', campaignId: null, currency: null },
+      'week',
+    );
+    await flushPromises();
+
+    expect(wrapper.vm.timeOptions.xaxis?.categories).toEqual([
+      'пн',
+      'вт',
+      'ср',
+      'чт',
+      'пт',
+      'сб',
+      'вс',
+    ]);
+  });
+
   it('не показывает воронку, даже если API возвращает её данные', async () => {
     dashboardMock.mockResolvedValueOnce({
       summary: { newUsers: 1, returningUsers: 0, touches: 2, applications: 1 },

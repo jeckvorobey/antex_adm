@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { dateRangeForPeriod, formatChartCategory, integerYAxis } from '@/utils/marketingDashboard';
+import {
+  chartTickAmount,
+  dateRangeForPeriod,
+  formatChartCategory,
+  integerYAxis,
+} from '@/utils/marketingDashboard';
 
 describe('marketing dashboard helpers', () => {
   it('рассчитывает неделю с понедельника до текущей даты', () => {
@@ -22,11 +27,12 @@ describe('marketing dashboard helpers', () => {
     });
   });
 
-  it('подписывает неделю днями, месяц числами и длинный период адаптивно', () => {
-    expect(formatChartCategory('2026-07-20', 0, 7)).toBe('пн');
-    expect(formatChartCategory('2026-07-20', 0, 31)).toBe('20');
-    expect(formatChartCategory('2026-07-20', 1, 90)).toBe('');
-    expect(formatChartCategory('2026-07-20', 12, 90)).toBe('20.07');
+  it('подписывает неделю днями, месяц числами, а интервал датой', () => {
+    expect(formatChartCategory('2026-07-20', 'week')).toBe('пн');
+    expect(formatChartCategory('2026-07-20', 'month')).toBe('20');
+    expect(formatChartCategory('2026-07-20', 'interval')).toBe('20.07');
+    expect(chartTickAmount(7)).toBe(7);
+    expect(chartTickAmount(90)).toBe(10);
   });
 
   it('задаёт целочисленную ось Y с минимумом 1 для ненулевых рядов', () => {
@@ -34,6 +40,15 @@ describe('marketing dashboard helpers', () => {
       min: 0,
       max: 3,
       tickAmount: 3,
+      forceNiceScale: true,
+    });
+  });
+
+  it('ограничивает число целочисленных отметок оси Y', () => {
+    expect(integerYAxis([[0, 1_000]])).toEqual({
+      min: 0,
+      max: 1_000,
+      tickAmount: 10,
       forceNiceScale: true,
     });
   });

@@ -49,7 +49,7 @@
             icon="filter_alt"
             label="Применить"
             class="full-width"
-            @click="$emit('apply', { ...local })"
+            @click="$emit('apply', { ...local }, period)"
           />
         </div>
       </div>
@@ -73,7 +73,7 @@ const props = defineProps<{
   };
   campaignOptions: Array<{ label: string; value: number }>;
 }>();
-const emit = defineEmits<{ apply: [filters: typeof props.modelValue] }>();
+const emit = defineEmits<{ apply: [filters: typeof props.modelValue, period: MarketingPeriod] }>();
 const local = reactive({ ...props.modelValue });
 const period = ref<MarketingPeriod>('month');
 const periodOptions = [

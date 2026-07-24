@@ -30,17 +30,21 @@ export function dateRangeForPeriod(
   return { dateFrom: isoDate(dateFrom), dateTo };
 }
 
-export function formatChartCategory(value: string, index: number, points: number): string {
+export function formatChartCategory(value: string, period: MarketingPeriod): string {
   const date = new Date(`${value}T00:00:00`);
-  if (points <= 7) return weekdayLabels[date.getDay()];
-  if (points <= 31) return String(date.getDate());
-  const step = Math.ceil(points / 8);
-  if (index % step !== 0 && index !== points - 1) return '';
+  if (period === 'week') return weekdayLabels[date.getDay()];
+  if (period === 'month') return String(date.getDate());
   return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export function chartTickAmount(points: number): number {
+  return Math.min(points, points <= 7 ? 7 : 10);
 }
 
 export function integerYAxis(series: number[][]) {
   const maximum = Math.max(0, ...series.flat());
-  const max = Math.max(1, Math.ceil(maximum));
-  return { min: 0, max, tickAmount: max, forceNiceScale: true };
+  const step = Math.max(1, Math.ceil(maximum / 10));
+  const max = Math.max(1, Math.ceil(maximum / step) * step);
+  const tickAmount = Math.ceil(max / step);
+  return { min: 0, max, tickAmount, forceNiceScale: true };
 }

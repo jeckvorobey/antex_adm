@@ -22,10 +22,10 @@ const items = computed(() => [
     value: props.summary.newUsers,
   },
   { key: 'returningUsers', label: 'Вернувшиеся', value: props.summary.returningUsers },
-  { key: 'touches', label: 'Рекламные касания', value: props.summary.touches },
+  { key: 'touches', label: 'Переходы всего', value: props.summary.touches },
   {
     key: 'uniqueTouchedUsers',
-    label: 'Уникальные с касанием',
+    label: 'Уникальные переходы',
     value: props.summary.uniqueTouchedUsers,
   },
   { key: 'applications', label: 'Заявки', value: props.summary.applications },

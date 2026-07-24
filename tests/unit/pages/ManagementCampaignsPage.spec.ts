@@ -71,7 +71,7 @@ describe('ManagementCampaignsPage', () => {
       .props('columns')
       .map((column: { label: string }) => column.label);
     expect(labels).toEqual(
-      expect.arrayContaining(['Новые', 'Вернувшиеся', 'Касания', 'Стоимость завершённой']),
+      expect.arrayContaining(['Новые', 'Вернувшиеся', 'Переходы', 'Стоимость завершённой']),
     );
     expect(wrapper.findComponent({ name: 'MarketingCampaignCreateDialog' }).exists()).toBe(true);
   });

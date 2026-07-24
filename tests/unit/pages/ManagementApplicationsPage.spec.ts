@@ -19,7 +19,7 @@ describe('ManagementApplicationsPage', () => {
     screen.name = 'md';
     screen.width = 1280;
   });
-  it('показывает snapshot касания и тип атрибуции заявки', async () => {
+  it('показывает рекламный переход и тип атрибуции заявки', async () => {
     listMock.mockResolvedValue({
       items: [
         {
@@ -49,6 +49,12 @@ describe('ManagementApplicationsPage', () => {
     expect(wrapper.text()).toContain('reengagement');
     expect(wrapper.text()).toContain('4');
     expect(wrapper.text()).toContain('Да');
+    const labels = wrapper
+      .findComponent({ name: 'AppResponsiveTable' })
+      .props('columns')
+      .map((column: { label: string }) => column.label);
+    expect(labels).toContain('Переход');
+    expect(labels).not.toContain('Касание');
   });
 
   it('передаёт выбранные даты фильтра в API в ISO-формате', async () => {

@@ -27,7 +27,7 @@
                 :height="260" /></q-card-section
           ></q-card>
         </div>
-        <div class="col-12">
+        <div v-if="showCampaignComparison" class="col-12">
           <q-card flat bordered
             ><q-card-section
               ><div class="text-h6 q-mb-md">Сравнение кампаний</div>
@@ -79,6 +79,7 @@ const dashboard = ref<MarketingDashboard | null>(null);
 const activePeriod = ref<MarketingPeriod>('month');
 const loading = ref(false);
 const error = ref(false);
+const showCampaignComparison = false;
 const isEmpty = computed(
   () =>
     !dashboard.value ||
@@ -111,7 +112,7 @@ const timeSeries = computed<ApexAxisChartSeries>(() => [
     data: dashboard.value?.timeSeries.map((row) => Number(row.returningUsers)) ?? [],
   },
   {
-    name: 'Касания',
+    name: 'Переходы',
     data: dashboard.value?.timeSeries.map((row) => Number(row.touches)) ?? [],
   },
   {
@@ -139,7 +140,7 @@ const comparisonSeries = computed<ApexAxisChartSeries>(() => [
     data: dashboard.value?.campaignComparison.map((row) => row.returningUsers) ?? [],
   },
   {
-    name: 'Касания',
+    name: 'Переходы',
     data: dashboard.value?.campaignComparison.map((row) => row.touches) ?? [],
   },
   {

@@ -245,7 +245,7 @@
             }}</q-item-section></q-item
           >
           <q-item
-            ><q-item-section>Последнее рекламное касание</q-item-section
+            ><q-item-section>Последний рекламный переход</q-item-section
             ><q-item-section side
               >{{ selectedUser.attribution?.lastTouchCampaignName ?? '—' }} ·
               {{ formatOptionalDate(selectedUser.attribution?.lastTouchAt) }}</q-item-section

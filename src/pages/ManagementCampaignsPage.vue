@@ -281,7 +281,7 @@ const columns: QTableColumn<MarketingCampaign>[] = [
   },
   { name: 'newUsers', label: 'Новые', field: 'newUsers', align: 'right' },
   { name: 'returningUsers', label: 'Вернувшиеся', field: 'returningUsers', align: 'right' },
-  { name: 'touches', label: 'Касания', field: 'touches', align: 'right' },
+  { name: 'touches', label: 'Переходы', field: 'touches', align: 'right' },
   { name: 'applications', label: 'Заявки', field: 'applications', align: 'right' },
   {
     name: 'completedApplications',
@@ -329,7 +329,7 @@ const mobileConfig = {
   fields: [
     { name: 'newUsers', label: 'Новые' },
     { name: 'returningUsers', label: 'Вернувшиеся' },
-    { name: 'touches', label: 'Касания' },
+    { name: 'touches', label: 'Переходы' },
     { name: 'applications', label: 'Заявки' },
     { name: 'completedApplications', label: 'Завершённые' },
     { name: 'campaignType', label: 'Тип' },

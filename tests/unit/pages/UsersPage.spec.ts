@@ -151,6 +151,8 @@ describe('UsersPage', () => {
     expect(wrapper.text()).toContain('Реферальный');
     expect(wrapper.text()).toContain('Реферер');
     expect(wrapper.text()).toContain('Возвратная компания');
+    expect(wrapper.text()).toContain('Последний рекламный переход');
+    expect(wrapper.text()).not.toContain('Последнее рекламное касание');
     expect(wrapper.text()).toContain('reengagement');
     expect(wrapper.text()).toContain('Зафиксирован');
   });

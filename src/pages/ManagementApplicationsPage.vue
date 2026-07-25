@@ -101,7 +101,7 @@ const columns: QTableColumn<MarketingApplicationAttribution>[] = [
   },
   {
     name: 'touchAt',
-    label: 'Касание',
+    label: 'Переход',
     field: 'touchAt',
     align: 'left',
     format: (value) => formatAdminDateTime(String(value)),

@@ -105,8 +105,11 @@ describe('ManagementDashboardPage', () => {
     expect(wrapper.vm.timeSeries.map((series: { name: string }) => series.name)).toEqual(
       expect.arrayContaining(['Новые', 'Вернувшиеся', 'Переходы', 'Заявки']),
     );
-    expect(wrapper.text()).toContain('Переходы всего');
-    expect(wrapper.text()).toContain('Уникальные переходы');
+    const kpiCards = wrapper.findComponent({ name: 'MarketingKpiCards' });
+    expect(kpiCards.findAll('.text-caption').map((item) => item.text())).toEqual(
+      expect.arrayContaining(['Переходы всего', 'Уникальные переходы']),
+    );
+    expect(kpiCards.findAll('.col-6')).toHaveLength(12);
     expect(wrapper.text()).not.toContain('касани');
     expect(wrapper.text()).not.toContain('Атрибутированные пользователи');
   });

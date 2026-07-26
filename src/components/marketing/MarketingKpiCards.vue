@@ -22,7 +22,7 @@ const items = computed(() => [
     value: props.summary.newUsers,
   },
   { key: 'returningUsers', label: 'Вернувшиеся', value: props.summary.returningUsers },
-  { key: 'touches', label: 'Переходы', value: props.summary.touches },
+  { key: 'touches', label: 'Переходы всего', value: props.summary.touches },
   {
     key: 'uniqueTouchedUsers',
     label: 'Уникальные переходы',

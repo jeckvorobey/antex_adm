@@ -1,6 +1,6 @@
 <template>
   <div class="row q-col-gutter-md">
-    <div v-for="item in items" :key="item.key" class="col-12 col-sm-6 col-lg-3">
+    <div v-for="item in items" :key="item.key" class="col-6 col-sm-6 col-lg-3">
       <q-card flat bordered class="full-height">
         <q-card-section>
           <div class="text-caption text-grey-7">{{ item.label }}</div>
@@ -22,7 +22,7 @@ const items = computed(() => [
     value: props.summary.newUsers,
   },
   { key: 'returningUsers', label: 'Вернувшиеся', value: props.summary.returningUsers },
-  { key: 'touches', label: 'Переходы всего', value: props.summary.touches },
+  { key: 'touches', label: 'Переходы', value: props.summary.touches },
   {
     key: 'uniqueTouchedUsers',
     label: 'Уникальные переходы',

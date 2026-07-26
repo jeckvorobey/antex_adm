@@ -82,6 +82,34 @@ describe('SettingsPage', () => {
     expect(api.patch).not.toHaveBeenCalled();
   });
 
+  it('сохраняет график менеджеров в UTC после ввода в МСК', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: true,
+        managerStartTimeUtc: '06:00',
+        managerEndTimeUtc: '18:00',
+        managerWorkingDaysUtc: [1, 2, 3, 4, 5, 6, 7],
+      },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const timeInputs = wrapper.findAll('input[type="time"]');
+    await timeInputs[0].setValue('10:00');
+    await timeInputs[1].setValue('22:00');
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      managerScheduleEnabled: true,
+      managerWorkingDaysUtc: [1, 2, 3, 4, 5, 6, 7],
+      managerStartTimeUtc: '07:00',
+      managerEndTimeUtc: '19:00',
+    });
+  });
+
   it('toggleBot показывает positive уведомление при успехе', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { enabled: true } });
     vi.mocked(api.patch).mockResolvedValue({ data: { enabled: false } });

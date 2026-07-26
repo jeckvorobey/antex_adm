@@ -41,6 +41,57 @@
       </q-card-section>
     </q-card>
 
+    <q-card class="q-mb-md">
+      <q-card-section>
+        <div class="text-subtitle1 q-mb-sm">Режим работы менеджеров</div>
+        <q-toggle
+          v-model="managerScheduleEnabled"
+          label="Использовать расписание"
+          color="primary"
+        />
+        <q-form class="q-mt-md" @submit="saveManagerSchedule">
+          <div class="row q-col-gutter-sm">
+            <q-input
+              v-model="managerStartMsk"
+              type="time"
+              label="Начало (МСК)"
+              outlined
+              dense
+              class="col-12 col-sm-3"
+              :disable="!managerScheduleEnabled"
+            />
+            <q-input
+              v-model="managerEndMsk"
+              type="time"
+              label="Окончание (МСК)"
+              outlined
+              dense
+              class="col-12 col-sm-3"
+              :disable="!managerScheduleEnabled"
+            />
+            <q-option-group
+              v-model="managerWorkingDays"
+              :options="weekdays"
+              type="checkbox"
+              inline
+              class="col-12"
+              :disable="!managerScheduleEnabled"
+            />
+          </div>
+          <div class="text-caption text-grey-7 q-mt-sm">
+            Заявки принимаются круглосуточно. Время отображается в МСК.
+          </div>
+          <q-btn
+            type="submit"
+            color="primary"
+            label="Сохранить"
+            class="q-mt-md"
+            :loading="savingManagerSchedule"
+          />
+        </q-form>
+      </q-card-section>
+    </q-card>
+
     <div class="row q-col-gutter-md">
       <div class="col-12 col-md-6">
         <q-card>
@@ -139,6 +190,16 @@ const $q = useQuasar();
 const botEnabled = ref(true);
 const marketingAttributionWindowDays = ref(7);
 const savingWindow = ref(false);
+const savingManagerSchedule = ref(false);
+const managerScheduleEnabled = ref(true);
+const managerStartMsk = ref('09:00');
+const managerEndMsk = ref('21:00');
+const managerWorkingDays = ref<number[]>([1, 2, 3, 4, 5, 6, 7]);
+const weekdays = [
+  { label: 'Пн', value: 1 }, { label: 'Вт', value: 2 }, { label: 'Ср', value: 3 },
+  { label: 'Чт', value: 4 }, { label: 'Пт', value: 5 }, { label: 'Сб', value: 6 },
+  { label: 'Вс', value: 7 },
+];
 const references = useMarketingReferencesStore();
 const platform = reactive({ slug: '', name: '' });
 const currency = reactive({ code: '', name: '' });
@@ -149,6 +210,10 @@ onMounted(async () => {
     const res = await api.get('/api/admin/config');
     botEnabled.value = res.data.enabled;
     marketingAttributionWindowDays.value = res.data.marketingAttributionWindowDays ?? 7;
+    managerScheduleEnabled.value = res.data.managerScheduleEnabled ?? true;
+    managerStartMsk.value = utcToMsk(res.data.managerStartTimeUtc ?? '06:00');
+    managerEndMsk.value = utcToMsk(res.data.managerEndTimeUtc ?? '18:00');
+    managerWorkingDays.value = res.data.managerWorkingDaysUtc ?? [1, 2, 3, 4, 5, 6, 7];
   } catch {
     botEnabled.value = false;
   }
@@ -166,6 +231,38 @@ async function createPlatform() {
     $q.notify({ type: 'positive', message: 'Платформа добавлена' });
   } catch {
     $q.notify({ type: 'negative', message: 'Не удалось добавить платформу' });
+  }
+}
+
+/** Конвертирует фиксированный UTC time-only контракт в МСК для административной формы. */
+function utcToMsk(value: string) { return shiftTime(value, 3); }
+/** Конвертирует введённое в МСК time-only значение в UTC-контракт API. */
+function mskToUtc(value: string) { return shiftTime(value, -3); }
+/** Сдвигает time-only значение на фиксированное число часов с переходом через полночь. */
+function shiftTime(value: string, hours: number) {
+  const [hour, minute] = value.slice(0, 5).split(':').map(Number);
+  return `${String((hour + hours + 24) % 24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+/** Сохраняет независимый от остальных настроек UTC-контракт расписания менеджеров. */
+async function saveManagerSchedule() {
+  if (!managerWorkingDays.value.length) {
+    $q.notify({ type: 'negative', message: 'Выберите рабочие дни' });
+    return;
+  }
+  savingManagerSchedule.value = true;
+  try {
+    await api.patch('/api/admin/config', {
+      managerScheduleEnabled: managerScheduleEnabled.value,
+      managerWorkingDaysUtc: managerWorkingDays.value,
+      managerStartTimeUtc: mskToUtc(managerStartMsk.value),
+      managerEndTimeUtc: mskToUtc(managerEndMsk.value),
+    });
+    $q.notify({ type: 'positive', message: 'Режим работы менеджеров сохранён' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Не удалось сохранить режим работы' });
+  } finally {
+    savingManagerSchedule.value = false;
   }
 }
 

@@ -50,6 +50,141 @@ describe('SettingsPage', () => {
     expect(api.patch).toHaveBeenCalledWith('/api/admin/config', { enabled: false });
   });
 
+  it('сохраняет окно атрибуции через существующий config API', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: { enabled: true, marketingAttributionWindowDays: 7 },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: { marketingAttributionWindowDays: 14 } });
+    const wrapper = mountPage();
+    await flushPromises();
+    const input = wrapper.find('input[type="number"]');
+    await input.setValue('14');
+    await input.trigger('submit');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      marketingAttributionWindowDays: 14,
+    });
+  });
+
+  it('не принимает дробное окно атрибуции', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: { enabled: true, marketingAttributionWindowDays: 7 },
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+    const input = wrapper.find('input[type="number"]');
+    await input.setValue('7.5');
+    await wrapper.find('form').trigger('submit');
+    await flushPromises();
+
+    expect(input.attributes('step')).toBe('1');
+    expect(api.patch).not.toHaveBeenCalled();
+  });
+
+  it('сохраняет график менеджеров в UTC после ввода в МСК', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: true,
+        managerStartTimeUtc: '06:00',
+        managerEndTimeUtc: '18:00',
+        managerWorkingDaysUtc: [1, 2, 3, 4, 5, 6, 7],
+      },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const timeInputs = wrapper.findAll('input[type="time"]');
+    await timeInputs[0].setValue('10:00');
+    await timeInputs[1].setValue('22:00');
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      managerScheduleEnabled: true,
+      managerWorkingDaysUtc: [1, 2, 3, 4, 5, 6, 7],
+      managerStartTimeUtc: '07:00',
+      managerEndTimeUtc: '19:00',
+    });
+  });
+
+  it('сдвигает рабочие дни вместе со стартом до 03:00 МСК', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: true,
+        managerStartTimeUtc: '22:00',
+        managerEndTimeUtc: '06:00',
+        managerWorkingDaysUtc: [7],
+      },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect((wrapper.vm as unknown as { managerStartMsk: string }).managerStartMsk).toBe('01:00');
+    expect((wrapper.vm as unknown as { managerWorkingDays: number[] }).managerWorkingDays).toEqual([
+      1,
+    ]);
+
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      managerScheduleEnabled: true,
+      managerWorkingDaysUtc: [7],
+      managerStartTimeUtc: '22:00',
+      managerEndTimeUtc: '06:00',
+    });
+  });
+
+  it('сохраняет выключенное расписание с пустым набором дней', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: false,
+        managerStartTimeUtc: '06:00',
+        managerEndTimeUtc: '18:00',
+        managerWorkingDaysUtc: [],
+      },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      managerScheduleEnabled: false,
+      managerWorkingDaysUtc: [],
+      managerStartTimeUtc: '06:00',
+      managerEndTimeUtc: '18:00',
+    });
+  });
+
+  it('не отправляет PATCH при пустом времени включённого расписания', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: true,
+        managerStartTimeUtc: '06:00',
+        managerEndTimeUtc: '18:00',
+        managerWorkingDaysUtc: [1],
+      },
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.findAll('input[type="time"]')[0].setValue('');
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).not.toHaveBeenCalled();
+  });
+
   it('toggleBot показывает positive уведомление при успехе', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { enabled: true } });
     vi.mocked(api.patch).mockResolvedValue({ data: { enabled: false } });
@@ -59,9 +194,7 @@ describe('SettingsPage', () => {
     const toggle = wrapper.find('.q-toggle');
     await toggle.trigger('click');
     await flushPromises();
-    expect(notifySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'positive' })
-    );
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'positive' }));
   });
 
   it('toggleBot показывает error уведомление при ошибке', async () => {
@@ -74,7 +207,7 @@ describe('SettingsPage', () => {
     await toggle.trigger('click');
     await flushPromises();
     expect(notifySpy).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'negative', message: 'Ошибка' })
+      expect.objectContaining({ type: 'negative', message: 'Ошибка' }),
     );
   });
 });

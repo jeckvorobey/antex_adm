@@ -3,13 +3,21 @@
     <div class="row items-center q-mb-md">
       <div class="text-h5">Курсы и наценка</div>
       <q-space />
-      <q-btn color="secondary" icon="refresh" label="Обновить курс" :loading="refreshing" @click="refreshRates" />
+      <q-btn
+        color="secondary"
+        icon="refresh"
+        label="Обновить курс"
+        :loading="refreshing"
+        @click="refreshRates"
+      />
     </div>
 
     <q-card>
       <q-card-section>
         <div class="text-subtitle1">Текущие курсы</div>
-        <div class="text-caption text-grey-7 q-mt-xs">Наценка редактируется прямо в таблице</div>
+        <div class="text-caption text-grey-7 q-mt-xs">
+          Наценка любого курса редактируется прямо в таблице
+        </div>
       </q-card-section>
 
       <AppResponsiveTable
@@ -23,6 +31,12 @@
         dense
         :pagination="{ rowsPerPage: 0 }"
       >
+        <template #body-cell-country="props">
+          <q-td :props="props">
+            {{ getRateScopeLabel(props.row) }}
+          </q-td>
+        </template>
+
         <template #body-cell-margin="props">
           <q-td :props="props">
             <div class="row items-center justify-end q-gutter-xs">
@@ -93,8 +107,9 @@ import { formatAdminDateTime } from '@utils/date';
 interface RateRow {
   id: number;
   currency: string;
-  country: string;
-  countryRuName: string;
+  country: string | null;
+  countryRuName: string | null;
+  isInternal: boolean;
   baseRate: number;
   baseRateDisplay: string;
   finalRate: number;
@@ -119,7 +134,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
   {
     name: 'country',
     label: 'Страна',
-    field: 'countryRuName',
+    field: (row) => getRateScopeLabel(row),
     align: 'left',
     sortable: true,
     style: 'width: 18%',
@@ -162,7 +177,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
 
 const mobileConfig = {
   title: (row: RateRow) => row.currency,
-  subtitle: (row: RateRow) => row.countryRuName,
+  subtitle: (row: RateRow) => getRateScopeLabel(row),
   badge: (row: RateRow) => ({ label: formatMargin(row.margin), color: 'primary' }),
   fields: [
     { name: 'baseRate', label: 'Базовый курс' },
@@ -216,4 +231,7 @@ function formatMargin(value: number) {
   return `${value.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}%`;
 }
 
+function getRateScopeLabel(row: RateRow) {
+  return row.isInternal ? 'Внутренний курс' : (row.countryRuName ?? '—');
+}
 </script>

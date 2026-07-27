@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { Quasar } from 'quasar';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import MainLayout from '@layouts/MainLayout.vue';
 
 vi.mock('src/boot/axios', () => ({
@@ -9,18 +10,17 @@ vi.mock('src/boot/axios', () => ({
 }));
 
 const mockPush = vi.fn();
+const mockRoute = { path: '/dashboard' };
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockPush }),
+  useRoute: () => mockRoute,
   RouterView: { template: '<div />' },
 }));
 
 function mountLayout() {
   return mount(MainLayout, {
     global: {
-      plugins: [
-        [Quasar, {}],
-        createTestingPinia({ createSpy: vi.fn, stubActions: true }),
-      ],
+      plugins: [[Quasar, {}], createTestingPinia({ createSpy: vi.fn, stubActions: true })],
       stubs: {
         'router-view': true,
         'q-page-container': { template: '<div><slot /></div>' },
@@ -32,18 +32,48 @@ function mountLayout() {
 describe('MainLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRoute.path = '/dashboard';
   });
 
-  it('рендерит 8 пунктов навигации', () => {
-    const wrapper = mountLayout();
-    const items = wrapper.findAll('.q-item');
-    expect(items.length).toBe(8);
-  });
-
-  it('меню не содержит удалённые routes cards и banks', () => {
+  it('показывает Рекламу сразу после Дашборда с уникальными иконками', () => {
     const wrapper = mountLayout();
     const html = wrapper.html();
-    for (const route of ['/dashboard', '/orders', '/site-leads', '/users', '/admins', '/rates', '/broadcasts', '/settings']) {
+
+    expect(html.indexOf('Реклама')).toBeGreaterThan(html.indexOf('Дашборд'));
+    expect(html.indexOf('Реклама')).toBeLessThan(html.indexOf('Заявки'));
+    expect(html).toContain('Дашборд');
+    expect(html).toContain('Компании');
+    expect(html).toContain('Заявки по компаниям');
+    expect(html).not.toContain('Генератор ссылок');
+    const management = wrapper.findComponent('[data-testid="management-menu"]');
+    expect(management.props('icon')).toBe('ads_click');
+  });
+
+  it('содержит отдельные раскрывающиеся группы Реклама и ATXG', () => {
+    const wrapper = mountLayout();
+
+    expect(wrapper.findAll('.q-expansion-item')).toHaveLength(2);
+    expect(wrapper.html()).toContain('ATXG');
+  });
+
+  it('меню содержит основные и ATXG routes', () => {
+    const wrapper = mountLayout();
+    const html = wrapper.html();
+
+    for (const route of [
+      '/dashboard',
+      '/orders',
+      '/site-leads',
+      '/users',
+      '/admins',
+      '/rates',
+      '/broadcasts',
+      '/settings',
+      '/aex/rates',
+      '/aex/wallets',
+      '/aex/journal',
+      '/aex/manual-ops',
+    ]) {
       expect(html).toContain(route);
     }
     expect(html).not.toContain('/cards');
@@ -54,17 +84,56 @@ describe('MainLayout', () => {
     const wrapper = mountLayout();
     const { useAuthStore } = await import('src/stores/auth');
     const authStore = useAuthStore();
-    const logoutBtn = wrapper.find('[icon="logout"]');
-    await logoutBtn.trigger('click');
+
+    await wrapper.find('[icon="logout"]').trigger('click');
     await flushPromises();
+
     expect(authStore.logout).toHaveBeenCalled();
   });
 
   it('handleLogout редиректит на /login после logout', async () => {
     const wrapper = mountLayout();
-    const logoutBtn = wrapper.find('[icon="logout"]');
-    await logoutBtn.trigger('click');
+
+    await wrapper.find('[icon="logout"]').trigger('click');
     await flushPromises();
+
     expect(mockPush).toHaveBeenCalledWith('/login');
+  });
+
+  it('клик по заголовку Реклама только раскрывает группу без перехода', async () => {
+    const wrapper = mountLayout();
+
+    await wrapper.get('[data-testid="management-menu"]').trigger('click');
+
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('раскрывает Рекламу на её дочернем маршруте', () => {
+    mockRoute.path = '/management/dashboard';
+    const wrapper = mountLayout();
+    const management = wrapper.findAllComponents({ name: 'QExpansionItemStub' })[0];
+
+    expect(management?.props('modelValue')).toBe(true);
+  });
+
+  it('раскрывает каждую группу меню на её дочернем маршруте', () => {
+    mockRoute.path = '/aex/journal';
+    const wrapper = mountLayout();
+    const expansionItems = wrapper.findAllComponents({ name: 'QExpansionItemStub' });
+
+    expect(expansionItems[0]?.props('modelValue')).toBe(false);
+    expect(expansionItems[1]?.props('modelValue')).toBe(true);
+  });
+
+  it('не позволяет свернуть группу активного маршрута', async () => {
+    mockRoute.path = '/management/campaigns';
+    const wrapper = mountLayout();
+    const management = wrapper.get('[data-testid="management-menu"]');
+
+    await management.trigger('click');
+
+    expect(wrapper.findAllComponents({ name: 'QExpansionItemStub' })[0]?.props('modelValue')).toBe(
+      true,
+    );
   });
 });

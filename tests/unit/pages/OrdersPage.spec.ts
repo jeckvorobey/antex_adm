@@ -22,7 +22,9 @@ describe('OrdersPage', () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     mountPage();
     await flushPromises();
-    expect(api.get).toHaveBeenCalledWith('/api/admin/orders');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/orders', {
+      params: { limit: 20, offset: 0 },
+    });
   });
 
   it('показывает loading=true во время загрузки', () => {
@@ -49,7 +51,17 @@ describe('OrdersPage', () => {
 
   it('данные из API попадают в таблицу', async () => {
     const orders = [
-      { id: 1, publicNumber: '2026050001', UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
+      {
+        id: 1,
+        publicNumber: '2026050001',
+        UserId: 42,
+        amountSell: 100,
+        currencySell: 'RUB',
+        amountBuy: 1,
+        currencyBuy: 'USDT',
+        status: 1,
+        createdAt: '2024-01-01',
+      },
     ];
     vi.mocked(api.get).mockResolvedValue({ data: orders });
     const wrapper = mountPage();
@@ -82,7 +94,17 @@ describe('OrdersPage', () => {
 
   it('обновляет статус заявки через backend', async () => {
     const orders = [
-      { id: 1, publicNumber: '2026050001', UserId: 42, amountSell: 100, currencySell: 'RUB', amountBuy: 1, currencyBuy: 'USDT', status: 1, createdAt: '2024-01-01' },
+      {
+        id: 1,
+        publicNumber: '2026050001',
+        UserId: 42,
+        amountSell: 100,
+        currencySell: 'RUB',
+        amountBuy: 1,
+        currencyBuy: 'USDT',
+        status: 1,
+        createdAt: '2024-01-01',
+      },
     ];
     vi.mocked(api.get).mockResolvedValue({ data: orders });
     vi.mocked(api.patch).mockResolvedValue({

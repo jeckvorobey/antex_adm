@@ -14,15 +14,30 @@
         <q-icon name="search" />
       </template>
     </q-input>
+    <q-btn
+      v-if="hasUsersWithoutReferralCode"
+      label="Сгенерировать коды"
+      color="primary"
+      icon="vpn_key"
+      class="q-mb-md"
+      :loading="generatingCodes"
+      @click="generateReferralCodes"
+    />
     <AppResponsiveTable
       :rows="users"
       :columns="columns"
       row-key="id"
       :loading="loading"
+      :loading-more="loadingMore"
+      :has-more="hasMore"
+      :pagination="pagination"
       :mobile="mobileConfig"
       table-style="table-layout: fixed; width: 100%"
       flat
       bordered
+      @request="handleTableRequest"
+      @update:pagination="handlePaginationUpdate"
+      @load-more="handleLoadMore"
     >
       <template #body-cell-role="props">
         <q-td :props="props">
@@ -62,6 +77,81 @@
         </q-td>
       </template>
 
+      <template #body-cell-referralCode="props">
+        <q-td :props="props" class="referral-code-cell">
+          <span v-if="props.row.referral_code" class="referral-code-pill">
+            {{ props.row.referral_code }}
+          </span>
+          <span v-else class="referral-empty">—</span>
+        </q-td>
+      </template>
+
+      <template #body-cell-referralRatePercent="props">
+        <q-td :props="props" class="referral-number-cell">
+          <span v-if="props.row.referral_rate_percent != null">
+            {{ formatRate(props.row.referral_rate_percent) }}
+          </span>
+          <span v-else class="referral-empty">—</span>
+        </q-td>
+      </template>
+
+      <template #body-cell-referredBy="props">
+        <q-td :props="props" class="referral-number-cell">
+          <span v-if="props.row.referred_by != null">ID {{ props.row.referred_by }}</span>
+          <span v-else class="referral-empty">—</span>
+        </q-td>
+      </template>
+
+      <template #body-cell-referralBalance="props">
+        <q-td :props="props" class="referral-number-cell">
+          <span v-if="props.row.balance != null">
+            {{ formatBalance(props.row.balance) }}
+          </span>
+          <span v-else class="referral-empty">—</span>
+        </q-td>
+      </template>
+
+      <template #body-cell-referralAction="props">
+        <q-td :props="props" class="referral-action-cell">
+          <q-btn
+            v-if="!props.row.referral_code && !generatingForUser(props.row.id)"
+            icon="vpn_key"
+            size="sm"
+            color="primary"
+            flat
+            dense
+            @click="generateReferralCodeForUser(props.row)"
+          >
+            <q-tooltip> Создать реферальный код для этого пользователя </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-else-if="generatingForUser(props.row.id)"
+            size="sm"
+            color="primary"
+            flat
+            round
+            dense
+            disable
+          >
+            <q-spinner size="sm" color="white" />
+          </q-btn>
+        </q-td>
+      </template>
+
+      <template #body-cell-attribution="props">
+        <q-td :props="props">
+          <q-btn
+            flat
+            dense
+            color="primary"
+            icon="hub"
+            label="Источники"
+            @click="selectedUser = props.row"
+          />
+        </q-td>
+      </template>
+
+      <!-- Mobile field slots -->
       <template #mobile-field-role="{ row }">
         <div class="row items-center justify-end q-gutter-xs">
           <span>{{ getRoleTitle(row) }}</span>
@@ -91,14 +181,106 @@
           />
         </q-popup-edit>
       </template>
+
+      <template #mobile-field-referralCode="{ row }">
+        <span v-if="row.referral_code" class="referral-code-pill">
+          {{ row.referral_code }}
+        </span>
+        <span v-else class="referral-empty">—</span>
+      </template>
+
+      <template #mobile-field-referralRatePercent="{ row }">
+        <span v-if="row.referral_rate_percent != null">
+          {{ formatRate(row.referral_rate_percent) }}
+        </span>
+        <span v-else class="referral-empty">—</span>
+      </template>
+
+      <template #mobile-field-referredBy="{ row }">
+        <span v-if="row.referred_by != null">ID {{ row.referred_by }}</span>
+        <span v-else class="referral-empty">—</span>
+      </template>
+
+      <template #mobile-field-referralBalance="{ row }">
+        <span v-if="row.balance != null">
+          {{ formatBalance(row.balance) }}
+        </span>
+        <span v-else class="referral-empty">—</span>
+      </template>
+      <template #mobile-field-attribution="{ row }">
+        <q-btn flat dense color="primary" icon="hub" label="Открыть" @click="selectedUser = row" />
+      </template>
     </AppResponsiveTable>
+
+    <q-dialog :model-value="selectedUser !== null" @update:model-value="selectedUser = null">
+      <q-card v-if="selectedUser" style="width: 640px; max-width: 95vw">
+        <q-card-section class="row items-center justify-between">
+          <div class="text-h6">Источники и атрибуция</div>
+          <q-btn flat round dense icon="close" aria-label="Закрыть" @click="selectedUser = null" />
+        </q-card-section>
+        <q-separator />
+        <q-list separator>
+          <q-item
+            ><q-item-section>Первичный источник</q-item-section
+            ><q-item-section side>{{
+              sourceLabel(selectedUser.attribution?.sourceType)
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Дата первичного привлечения</q-item-section
+            ><q-item-section side>{{
+              formatOptionalDate(selectedUser.attribution?.acquiredAt)
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Первичная компания</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.primaryCampaignName ?? '—'
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Реферер</q-item-section
+            ><q-item-section side>{{
+              selectedUser.referred_by == null ? '—' : `ID ${selectedUser.referred_by}`
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Последний рекламный переход</q-item-section
+            ><q-item-section side
+              >{{ selectedUser.attribution?.lastTouchCampaignName ?? '—' }} ·
+              {{ formatOptionalDate(selectedUser.attribution?.lastTouchAt) }}</q-item-section
+            ></q-item
+          >
+          <q-item
+            ><q-item-section>Компания последней заявки</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.lastOrderCampaignName ?? '—'
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Тип атрибуции последней заявки</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.lastOrderAttributionType ?? 'none'
+            }}</q-item-section></q-item
+          >
+          <q-item
+            ><q-item-section>Статус фиксации источника</q-item-section
+            ><q-item-section side>{{
+              selectedUser.attribution?.sourceStatus === 'fixed'
+                ? 'Зафиксирован'
+                : 'Не зафиксирован'
+            }}</q-item-section></q-item
+          >
+        </q-list>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { api } from '@boot/axios';
 import type { QTableColumn } from 'quasar';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 
 import { getRoleOptionsForUser } from '@pages/users/role-options';
@@ -112,6 +294,20 @@ type UserRow = {
   role: number;
   role_name?: string;
   createdAt: string;
+  referral_code?: string | null;
+  referred_by?: number | null;
+  referral_rate_percent?: string | null;
+  balance?: string | null;
+  attribution?: {
+    sourceType?: 'referral' | 'campaign' | 'direct' | 'legacy' | null;
+    acquiredAt?: string | null;
+    primaryCampaignName?: string | null;
+    lastTouchAt?: string | null;
+    lastTouchCampaignName?: string | null;
+    lastOrderCampaignName?: string | null;
+    lastOrderAttributionType?: 'acquisition' | 'reengagement' | 'none' | null;
+    sourceStatus: 'fixed' | 'missing';
+  } | null;
 };
 
 const $q = useQuasar();
@@ -123,76 +319,248 @@ const roleTitles: Record<number, string> = {
 
 const users = ref<UserRow[]>([]);
 const loading = ref(false);
+const loadingMore = ref(false);
+const hasMore = ref(false);
 const savingRoleIds = ref<number[]>([]);
+const generatingCodes = ref(false);
+const selectedUser = ref<UserRow | null>(null);
+const generatingForUserIds = ref<Set<number>>(new Set());
 const search = ref('');
+const pagination = ref({
+  sortBy: null,
+  descending: false,
+  page: 1,
+  rowsPerPage: 20,
+  rowsNumber: 0,
+});
+
+const hasUsersWithoutReferralCode = computed(() =>
+  users.value.some((u) => u.referral_code == null),
+);
 
 const columns: QTableColumn<UserRow>[] = [
-  { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'width: 8%' },
-  { name: 'username', label: 'Username', field: 'username', align: 'left', style: 'width: 24%' },
-  { name: 'first_name', label: 'Имя', field: 'first_name', align: 'left', style: 'width: 18%' },
+  { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left', style: 'width: 6%' },
+  { name: 'username', label: 'Username', field: 'username', align: 'left', style: 'width: 18%' },
+  { name: 'first_name', label: 'Имя', field: 'first_name', align: 'left', style: 'width: 12%' },
   {
     name: 'role',
     label: 'Роль',
     field: (row: UserRow) => getRoleTitle(row),
     align: 'left',
-    style: 'width: 20%',
+    style: 'width: 12%',
   },
+  {
+    name: 'referralCode',
+    label: 'Реф. код',
+    field: 'referral_code',
+    align: 'left',
+    style: 'width: 132px; max-width: 160px',
+  },
+  {
+    name: 'referralRatePercent',
+    label: '% начисл.',
+    field: 'referral_rate_percent',
+    align: 'right',
+    style: 'width: 84px; max-width: 104px',
+  },
+  {
+    name: 'referredBy',
+    label: 'Реферер',
+    field: 'referred_by',
+    align: 'center',
+    style: 'width: 92px; max-width: 112px',
+  },
+  {
+    name: 'referralBalance',
+    label: 'Баланс',
+    field: 'balance',
+    align: 'center',
+    style: 'width: 112px; max-width: 140px',
+  },
+  {
+    name: 'referralAction',
+    label: '',
+    field: 'referral_code',
+    align: 'center',
+    style: 'width: 120px; max-width: 160px',
+  },
+  { name: 'attribution', label: 'Источники', field: 'attribution', align: 'center' },
   {
     name: 'createdAt',
     label: 'Регистрация',
     field: 'createdAt',
     align: 'left',
-    style: 'width: 20%',
+    style: 'width: 14%',
     format: (value) => formatAdminDateTime(String(value)),
   },
 ];
 
 const mobileConfig = {
-  title: (row: UserRow) => row.username ? `@${row.username}` : row.first_name ?? `ID ${row.id}`,
+  title: (row: UserRow) => (row.username ? `@${row.username}` : (row.first_name ?? `ID ${row.id}`)),
   subtitle: (row: UserRow) => formatAdminDateTime(row.createdAt),
-  badge: (row: UserRow) => ({ label: getRoleTitle(row), color: row.role === 2 ? 'primary' : 'grey' }),
+  badge: (row: UserRow) => ({
+    label: getRoleTitle(row),
+    color: row.role === 2 ? 'primary' : 'grey',
+  }),
   fields: [
     { name: 'id', label: 'ID' },
     { name: 'first_name', label: 'Имя' },
     { name: 'role', label: 'Роль' },
+    { name: 'referralCode', label: 'Реф. код' },
+    { name: 'referralRatePercent', label: '% начисл.' },
+    { name: 'referredBy', label: 'Реферер' },
+    { name: 'referralBalance', label: 'Баланс' },
+    { name: 'attribution', label: 'Источники' },
     { name: 'createdAt', label: 'Регистрация' },
   ],
 };
 
+function sourceLabel(value: string | null | undefined): string {
+  return (
+    (
+      {
+        referral: 'Реферальный',
+        campaign: 'Компания',
+        direct: 'Прямой',
+        legacy: 'Legacy',
+      } as Record<string, string>
+    )[value ?? ''] ?? '—'
+  );
+}
+
+function formatOptionalDate(value: string | null | undefined): string {
+  return value ? formatAdminDateTime(value) : '—';
+}
+
+/** Format rate percent string like "0.200000" → "0.2%" */
+function formatRate(value: string | null | undefined): string {
+  if (value == null) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
+  // Remove trailing zeros and potential trailing dot
+  const formatted = num.toFixed(2).replace(/\.?0+$/, '');
+  return `${formatted}%`;
+}
+
+/** Format balance string like "1240.5" → "₽ 1 240.50" */
+function formatBalance(value: string | null | undefined): string {
+  if (value == null) return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return '—';
+  // Format with two decimal places and space as thousand separator
+  const formatted = num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  // Using ruble symbol as per common usage in the app
+  return `${formatted}`;
+}
+
 async function fetchUsers() {
+  const limit = pagination.value.rowsPerPage;
+  const offset = (pagination.value.page - 1) * limit;
   loading.value = true;
   try {
-    const params = search.value ? { search: search.value } : undefined;
-    const res = await api.get<UserRow[]>('/api/admin/users', { params });
-    users.value = res.data;
+    const params: Record<string, unknown> = { limit, offset };
+    if (search.value) {
+      params.search = search.value;
+    }
+    const res = await api.get<{
+      items: UserRow[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/users', { params });
+    const payload = Array.isArray(res.data)
+      ? { items: res.data, total: res.data.length, limit, offset }
+      : res.data;
+    users.value = payload.items;
+    pagination.value = {
+      ...pagination.value,
+      rowsNumber: payload.total,
+      rowsPerPage: payload.limit,
+      page: Math.floor(payload.offset / payload.limit) + 1,
+    };
+    hasMore.value = payload.offset + payload.items.length < payload.total;
   } catch {
     users.value = [];
+    pagination.value = { ...pagination.value, rowsNumber: 0 };
+    hasMore.value = false;
   } finally {
     loading.value = false;
   }
 }
 
 onMounted(fetchUsers);
+watch(search, async () => {
+  pagination.value = { ...pagination.value, page: 1 };
+  await fetchUsers();
+});
 
-watch(search, fetchUsers);
+async function handleTableRequest(payload: { pagination: { page: number; rowsPerPage: number } }) {
+  pagination.value = { ...pagination.value, ...payload.pagination };
+  await fetchUsers();
+}
+
+function handlePaginationUpdate(value: Record<string, unknown>) {
+  pagination.value = { ...pagination.value, ...value };
+}
+
+async function handleLoadMore({ done }: { done: () => void }) {
+  if (loadingMore.value || !hasMore.value) {
+    done();
+    return;
+  }
+  loadingMore.value = true;
+  try {
+    const params: Record<string, unknown> = {
+      limit: pagination.value.rowsPerPage,
+      offset: users.value.length,
+    };
+    if (search.value) {
+      params.search = search.value;
+    }
+    const res = await api.get<{
+      items: UserRow[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/admin/users', { params });
+    const payload = Array.isArray(res.data)
+      ? {
+          items: res.data,
+          total: res.data.length,
+          limit: pagination.value.rowsPerPage,
+          offset: users.value.length,
+        }
+      : res.data;
+    users.value = [...users.value, ...payload.items];
+    pagination.value = { ...pagination.value, rowsNumber: payload.total };
+    hasMore.value = payload.offset + payload.items.length < payload.total;
+  } finally {
+    loadingMore.value = false;
+    done();
+  }
+}
 
 function getRoleTitle(row: UserRow) {
   return row.role_name ?? roleTitles[row.role] ?? `Роль ${row.role}`;
 }
 
 function hasAssignedManager() {
-  return users.value.some((row) => row.role === 2)
+  return users.value.some((row) => row.role === 2);
 }
 
 function getRoleOptions(row: UserRow) {
   return getRoleOptionsForUser({
     editedUserRole: row.role,
     hasAssignedManager: hasAssignedManager(),
-  })
+  });
 }
 
 function isRoleSaving(userId: number) {
-  return savingRoleIds.value.includes(userId)
+  return savingRoleIds.value.includes(userId);
+}
+
+function generatingForUser(userId: number): boolean {
+  return generatingForUserIds.value.has(userId);
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -215,15 +583,19 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 async function updateRole(row: UserRow, role: number) {
   if (isRoleSaving(row.id)) {
-    return
+    return;
   }
 
-  savingRoleIds.value = [...savingRoleIds.value, row.id]
+  savingRoleIds.value = [...savingRoleIds.value, row.id];
   try {
     const res = await api.patch<UserRow>(`/api/admin/users/${row.id}`, { role });
     const index = users.value.findIndex((item) => item.id === row.id);
     if (index >= 0) {
-      users.value[index] = res.data;
+      users.value[index] = {
+        ...users.value[index],
+        ...res.data,
+        attribution: res.data.attribution ?? users.value[index].attribution,
+      };
     }
     $q.notify({ type: 'positive', message: 'Роль пользователя сохранена' });
   } catch (error) {
@@ -232,7 +604,109 @@ async function updateRole(row: UserRow, role: number) {
       message: getErrorMessage(error, 'Не удалось сохранить роль пользователя'),
     });
   } finally {
-    savingRoleIds.value = savingRoleIds.value.filter((id) => id !== row.id)
+    savingRoleIds.value = savingRoleIds.value.filter((id) => id !== row.id);
   }
 }
+
+function generateReferralCodes() {
+  $q.dialog({
+    title: 'Генерация реферальных кодов',
+    message: 'Сгенерировать referral_code для всех пользователей без кода?',
+    cancel: { label: 'Отмена', flat: true },
+    ok: { label: 'Сгенерировать', color: 'primary' },
+  }).onOk(async () => {
+    generatingCodes.value = true;
+    try {
+      const res = await api.post<{ generated: number }>('/api/admin/aex/generate-referral-codes');
+      $q.notify({
+        type: 'positive',
+        message: `Сгенерировано кодов: ${res.data.generated}`,
+      });
+      await fetchUsers();
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: getErrorMessage(error, 'Не удалось сгенерировать коды'),
+      });
+    } finally {
+      generatingCodes.value = false;
+    }
+  });
+}
+
+async function generateReferralCodeForUser(row: UserRow, regenerate = false) {
+  const userId = row.id;
+  if (generatingForUser(userId)) {
+    return;
+  }
+  generatingForUserIds.value.add(userId);
+  try {
+    await api.post(`/api/admin/users/${userId}/generate-referral-code`, null, {
+      params: regenerate ? { regenerate: true } : undefined,
+    });
+    $q.notify({
+      type: 'positive',
+      message: regenerate ? 'Реферальный код обновлён' : 'Реферальный код создан',
+    });
+    await fetchUsers();
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: getErrorMessage(
+        error,
+        regenerate ? 'Не удалось обновить реферальный код' : 'Не удалось создать реферальный код',
+      ),
+    });
+  } finally {
+    generatingForUserIds.value.delete(userId);
+  }
+}
+
+function confirmRegenerateReferralCode(row: UserRow) {
+  $q.dialog({
+    title: 'Пересоздание реферального кода',
+    message: 'Пересоздать referral_code только для выбранного пользователя?',
+    cancel: { label: 'Отмена', flat: true },
+    ok: { label: 'Пересоздать', color: 'primary' },
+  }).onOk(() => {
+    void generateReferralCodeForUser(row, true);
+  });
+}
 </script>
+
+<style scoped>
+.referral-code-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.referral-code-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 148px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.04);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.referral-empty {
+  color: var(--q-grey-6);
+}
+
+.referral-number-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.referral-action-cell {
+  white-space: nowrap;
+}
+</style>

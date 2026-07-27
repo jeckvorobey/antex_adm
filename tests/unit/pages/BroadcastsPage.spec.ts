@@ -24,7 +24,9 @@ describe('BroadcastsPage', () => {
     mountPage();
     await flushPromises();
 
-    expect(api.get).toHaveBeenCalledWith('/api/admin/broadcasts');
+    expect(api.get).toHaveBeenCalledWith('/api/admin/broadcasts', {
+      params: { limit: 20, offset: 0 },
+    });
   });
 
   it('рендерит таблицу истории', async () => {
@@ -112,12 +114,17 @@ describe('BroadcastsPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.findAll('button').find((node) => node.text().includes('Остановить'))?.trigger('click');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Остановить'))
+      ?.trigger('click');
     await flushPromises();
 
     expect(api.post).toHaveBeenCalledWith('/api/admin/broadcasts/1/stop');
     expect(wrapper.html()).toContain('stopped');
-    expect(wrapper.findAll('button').some((node) => node.text().includes('Остановить'))).toBe(false);
+    expect(wrapper.findAll('button').some((node) => node.text().includes('Остановить'))).toBe(
+      false,
+    );
   });
 
   it('открывает подтверждение перед отправкой', async () => {
@@ -127,7 +134,10 @@ describe('BroadcastsPage', () => {
     await flushPromises();
 
     await wrapper.find('textarea').setValue('<p>Промо текст</p>');
-    await wrapper.findAll('button').find((node) => node.text().includes('Отправить'))?.trigger('click');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Отправить'))
+      ?.trigger('click');
     await flushPromises();
 
     expect(wrapper.html()).toContain('Подтверждение рассылки');
@@ -149,9 +159,15 @@ describe('BroadcastsPage', () => {
     await flushPromises();
 
     await wrapper.find('textarea').setValue('<p>Промо текст</p>');
-    await wrapper.findAll('button').find((node) => node.text().includes('Отправить'))?.trigger('click');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Отправить'))
+      ?.trigger('click');
     await flushPromises();
-    await wrapper.findAll('button').find((node) => node.text().includes('Подтвердить'))?.trigger('click');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Подтвердить'))
+      ?.trigger('click');
     await flushPromises();
 
     expect(api.post).toHaveBeenCalledWith('/api/admin/broadcasts', {
@@ -179,9 +195,15 @@ describe('BroadcastsPage', () => {
 
     await wrapper.find('textarea').setValue('<p>Платная рассылка</p>');
     await wrapper.find('.q-toggle').trigger('click');
-    await wrapper.findAll('button').find((node) => node.text().includes('Отправить'))?.trigger('click');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Отправить'))
+      ?.trigger('click');
     await flushPromises();
-    await wrapper.findAll('button').find((node) => node.text().includes('Подтвердить'))?.trigger('click');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Подтвердить'))
+      ?.trigger('click');
     await flushPromises();
 
     expect(api.post).toHaveBeenCalledWith('/api/admin/broadcasts', {
@@ -225,7 +247,10 @@ describe('BroadcastsPage', () => {
     await flushPromises();
 
     await wrapper.find('textarea').setValue('<p></p>');
-    await wrapper.findAll('button').find((node) => node.text().includes('Отправить'))?.trigger('click');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Отправить'))
+      ?.trigger('click');
     await flushPromises();
 
     expect(wrapper.html()).not.toContain('Подтверждение рассылки');

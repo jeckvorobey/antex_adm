@@ -59,6 +59,7 @@
               dense
               class="col-12 col-sm-3"
               :disable="!managerScheduleEnabled"
+              :rules="[managerTimeRequired]"
             />
             <q-input
               v-model="managerEndMsk"
@@ -68,6 +69,7 @@
               dense
               class="col-12 col-sm-3"
               :disable="!managerScheduleEnabled"
+              :rules="[managerTimeRequired]"
             />
             <q-option-group
               v-model="managerWorkingDays"
@@ -204,6 +206,8 @@ const references = useMarketingReferencesStore();
 const platform = reactive({ slug: '', name: '' });
 const currency = reactive({ code: '', name: '' });
 const required = (value: string) => Boolean(value) || 'Заполните поле';
+const managerTimeRequired = (value: string) =>
+  !managerScheduleEnabled.value || isValidTimeOnly(value) || 'Укажите время в формате ЧЧ:ММ';
 
 onMounted(async () => {
   try {
@@ -211,9 +215,13 @@ onMounted(async () => {
     botEnabled.value = res.data.enabled;
     marketingAttributionWindowDays.value = res.data.marketingAttributionWindowDays ?? 7;
     managerScheduleEnabled.value = res.data.managerScheduleEnabled ?? true;
-    managerStartMsk.value = utcToMsk(res.data.managerStartTimeUtc ?? '06:00');
-    managerEndMsk.value = utcToMsk(res.data.managerEndTimeUtc ?? '18:00');
-    managerWorkingDays.value = res.data.managerWorkingDaysUtc ?? [1, 2, 3, 4, 5, 6, 7];
+    const startMsk = utcToMsk(res.data.managerStartTimeUtc ?? '06:00');
+    managerStartMsk.value = startMsk.value;
+    managerEndMsk.value = utcToMsk(res.data.managerEndTimeUtc ?? '18:00').value;
+    managerWorkingDays.value = shiftWeekdays(
+      res.data.managerWorkingDaysUtc ?? [1, 2, 3, 4, 5, 6, 7],
+      startMsk.dayOffset,
+    );
   } catch {
     botEnabled.value = false;
   }
@@ -234,30 +242,70 @@ async function createPlatform() {
   }
 }
 
+interface ShiftedTime {
+  value: string;
+  dayOffset: number;
+}
+
 /** Конвертирует фиксированный UTC time-only контракт в МСК для административной формы. */
 function utcToMsk(value: string) { return shiftTime(value, 3); }
 /** Конвертирует введённое в МСК time-only значение в UTC-контракт API. */
 function mskToUtc(value: string) { return shiftTime(value, -3); }
 /** Сдвигает time-only значение на фиксированное число часов с переходом через полночь. */
-function shiftTime(value: string, hours: number) {
-  const [hour, minute] = value.slice(0, 5).split(':').map(Number);
-  return `${String((hour + hours + 24) % 24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+function shiftTime(value: string, hours: number): ShiftedTime {
+  if (!isValidTimeOnly(value)) {
+    throw new Error('Invalid manager time');
+  }
+  const [hour, minute] = value.split(':').map(Number);
+  const shiftedHour = hour + hours;
+  const normalizedHour = ((shiftedHour % 24) + 24) % 24;
+  return {
+    value: `${String(normalizedHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+    dayOffset: Math.floor(shiftedHour / 24),
+  };
+}
+
+function isValidTimeOnly(value: string | null | undefined) {
+  return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function shiftWeekdays(days: number[], dayOffset: number) {
+  return [...new Set(days.map((day) => (((day - 1 + dayOffset) % 7) + 7) % 7 + 1))].sort(
+    (left, right) => left - right,
+  );
 }
 
 /** Сохраняет независимый от остальных настроек UTC-контракт расписания менеджеров. */
 async function saveManagerSchedule() {
-  if (!managerWorkingDays.value.length) {
+  if (managerScheduleEnabled.value && !managerWorkingDays.value.length) {
     $q.notify({ type: 'negative', message: 'Выберите рабочие дни' });
+    return;
+  }
+  if (
+    managerScheduleEnabled.value &&
+    (!isValidTimeOnly(managerStartMsk.value) || !isValidTimeOnly(managerEndMsk.value))
+  ) {
+    $q.notify({ type: 'negative', message: 'Укажите время работы менеджеров' });
     return;
   }
   savingManagerSchedule.value = true;
   try {
-    await api.patch('/api/admin/config', {
+    const payload: {
+      managerScheduleEnabled: boolean;
+      managerWorkingDaysUtc: number[];
+      managerStartTimeUtc?: string;
+      managerEndTimeUtc?: string;
+    } = {
       managerScheduleEnabled: managerScheduleEnabled.value,
       managerWorkingDaysUtc: managerWorkingDays.value,
-      managerStartTimeUtc: mskToUtc(managerStartMsk.value),
-      managerEndTimeUtc: mskToUtc(managerEndMsk.value),
-    });
+    };
+    if (isValidTimeOnly(managerStartMsk.value) && isValidTimeOnly(managerEndMsk.value)) {
+      const startUtc = mskToUtc(managerStartMsk.value);
+      payload.managerWorkingDaysUtc = shiftWeekdays(managerWorkingDays.value, startUtc.dayOffset);
+      payload.managerStartTimeUtc = startUtc.value;
+      payload.managerEndTimeUtc = mskToUtc(managerEndMsk.value).value;
+    }
+    await api.patch('/api/admin/config', payload);
     $q.notify({ type: 'positive', message: 'Режим работы менеджеров сохранён' });
   } catch {
     $q.notify({ type: 'negative', message: 'Не удалось сохранить режим работы' });

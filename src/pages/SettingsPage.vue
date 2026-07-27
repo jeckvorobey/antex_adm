@@ -53,24 +53,51 @@
           <div class="row q-col-gutter-sm">
             <q-input
               v-model="managerStartMsk"
-              type="time"
               label="Начало (МСК)"
+              mask="time"
+              :rules="['time', managerTimeRequired]"
               outlined
               dense
+              readonly
               class="col-12 col-sm-3"
               :disable="!managerScheduleEnabled"
-              :rules="[managerTimeRequired]"
-            />
+            >
+              <template #append>
+                <q-icon name="access_time" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-time v-model="managerStartMsk" format24h>
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Готово" color="primary" flat />
+                      </div>
+                    </q-time>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
             <q-input
               v-model="managerEndMsk"
-              type="time"
               label="Окончание (МСК)"
+              mask="time"
+              :rules="['time', managerTimeRequired]"
               outlined
               dense
+              readonly
               class="col-12 col-sm-3"
               :disable="!managerScheduleEnabled"
-              :rules="[managerTimeRequired]"
-            />
+            >
+              <template #append>
+                <q-icon name="access_time" class="cursor-pointer">
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                    <q-time v-model="managerEndMsk" format24h>
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup label="Готово" color="primary" flat />
+                      </div>
+                    </q-time>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
             <q-option-group
               v-model="managerWorkingDays"
               :options="weekdays"
@@ -198,8 +225,12 @@ const managerStartMsk = ref('09:00');
 const managerEndMsk = ref('21:00');
 const managerWorkingDays = ref<number[]>([1, 2, 3, 4, 5, 6, 7]);
 const weekdays = [
-  { label: 'Пн', value: 1 }, { label: 'Вт', value: 2 }, { label: 'Ср', value: 3 },
-  { label: 'Чт', value: 4 }, { label: 'Пт', value: 5 }, { label: 'Сб', value: 6 },
+  { label: 'Пн', value: 1 },
+  { label: 'Вт', value: 2 },
+  { label: 'Ср', value: 3 },
+  { label: 'Чт', value: 4 },
+  { label: 'Пт', value: 5 },
+  { label: 'Сб', value: 6 },
   { label: 'Вс', value: 7 },
 ];
 const references = useMarketingReferencesStore();
@@ -248,9 +279,13 @@ interface ShiftedTime {
 }
 
 /** Конвертирует фиксированный UTC time-only контракт в МСК для административной формы. */
-function utcToMsk(value: string) { return shiftTime(value, 3); }
+function utcToMsk(value: string) {
+  return shiftTime(value, 3);
+}
 /** Конвертирует введённое в МСК time-only значение в UTC-контракт API. */
-function mskToUtc(value: string) { return shiftTime(value, -3); }
+function mskToUtc(value: string) {
+  return shiftTime(value, -3);
+}
 /** Сдвигает time-only значение на фиксированное число часов с переходом через полночь. */
 function shiftTime(value: string, hours: number): ShiftedTime {
   if (!isValidTimeOnly(value)) {
@@ -270,7 +305,7 @@ function isValidTimeOnly(value: string | null | undefined) {
 }
 
 function shiftWeekdays(days: number[], dayOffset: number) {
-  return [...new Set(days.map((day) => (((day - 1 + dayOffset) % 7) + 7) % 7 + 1))].sort(
+  return [...new Set(days.map((day) => ((((day - 1 + dayOffset) % 7) + 7) % 7) + 1))].sort(
     (left, right) => left - right,
   );
 }

@@ -110,6 +110,81 @@ describe('SettingsPage', () => {
     });
   });
 
+  it('сдвигает рабочие дни вместе со стартом до 03:00 МСК', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: true,
+        managerStartTimeUtc: '22:00',
+        managerEndTimeUtc: '06:00',
+        managerWorkingDaysUtc: [7],
+      },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect((wrapper.vm as unknown as { managerStartMsk: string }).managerStartMsk).toBe('01:00');
+    expect((wrapper.vm as unknown as { managerWorkingDays: number[] }).managerWorkingDays).toEqual([
+      1,
+    ]);
+
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      managerScheduleEnabled: true,
+      managerWorkingDaysUtc: [7],
+      managerStartTimeUtc: '22:00',
+      managerEndTimeUtc: '06:00',
+    });
+  });
+
+  it('сохраняет выключенное расписание с пустым набором дней', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: false,
+        managerStartTimeUtc: '06:00',
+        managerEndTimeUtc: '18:00',
+        managerWorkingDaysUtc: [],
+      },
+    });
+    vi.mocked(api.patch).mockResolvedValue({ data: {} });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/config', {
+      managerScheduleEnabled: false,
+      managerWorkingDaysUtc: [],
+      managerStartTimeUtc: '06:00',
+      managerEndTimeUtc: '18:00',
+    });
+  });
+
+  it('не отправляет PATCH при пустом времени включённого расписания', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        enabled: true,
+        managerScheduleEnabled: true,
+        managerStartTimeUtc: '06:00',
+        managerEndTimeUtc: '18:00',
+        managerWorkingDaysUtc: [1],
+      },
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.findAll('input[type="time"]')[0].setValue('');
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+
+    expect(api.patch).not.toHaveBeenCalled();
+  });
+
   it('toggleBot показывает positive уведомление при успехе', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { enabled: true } });
     vi.mocked(api.patch).mockResolvedValue({ data: { enabled: false } });

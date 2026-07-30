@@ -17,7 +17,7 @@ describe('MarketingCampaignCodeField', () => {
     const input = wrapper.get('input[name="code"]');
     expect((input.element as HTMLInputElement).readOnly).toBe(true);
     expect((input.element as HTMLInputElement).value).toBe('BDF7J9J8JH');
-    expect(wrapper.text()).not.toContain('market_');
+    expect(wrapper.text()).not.toContain('mkt_');
     expect(wrapper.get('[data-testid="campaign-code-field"]').classes()).toEqual(
       expect.arrayContaining(['col-12']),
     );

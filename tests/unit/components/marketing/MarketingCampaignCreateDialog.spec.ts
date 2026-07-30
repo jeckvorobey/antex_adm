@@ -22,7 +22,7 @@ describe('MarketingCampaignCreateDialog', () => {
     createMock.mockResolvedValue({
       id: 1,
       code: 'BDF7J9J8JH',
-      link: 'https://t.me/antex_bot?startapp=market_BDF7J9J8JH',
+      link: 'https://t.me/antex_bot?startapp=mkt_BDF7J9J8JH',
       marketParameter: 'market=BDF7J9J8JH',
     });
     const wrapper = mount(MarketingCampaignCreateDialog, { props: { modelValue: true } });

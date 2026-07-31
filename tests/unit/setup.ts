@@ -449,6 +449,8 @@ config.global.stubs = {
   'q-space': wrapTag('div', 'q-space'),
   'q-td': wrapTag('td', 'q-td'),
   'q-icon': wrapTag('span', 'q-icon'),
+  'q-avatar': wrapTag('span', 'q-avatar'),
+  'q-skeleton': wrapTag('div', 'q-skeleton'),
   'q-tooltip': wrapTag('span', 'q-tooltip'),
   'q-spinner': wrapTag('span', 'q-spinner'),
   'q-spinner-dots': wrapTag('span', 'q-spinner-dots'),

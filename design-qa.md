@@ -2,41 +2,56 @@
 
 **Source visual truth**
 
-- Mobile: `/workspace/scratch/89ae1bf8ee4a/upload/01-file_00000000a3188243ac4b0efd83bc1e1b.png`
-- Desktop: `/workspace/scratch/89ae1bf8ee4a/upload/02-file_000000002ab481f4a289bd95c2674a9a.png`
+- Desktop: `/home/serg/Develop/AntEx/tmp/file_000000002ab481f4a289bd95c2674a9a.png` (`1536 x 1120`, JPEG content).
+- Mobile: `/home/serg/Develop/AntEx/tmp/file_00000000a3188243ac4b0efd83bc1e1b.png` (`694 x 1536`, JPEG content).
 
 **Implementation target**
 
-- Route: `/dashboard`
-- Intended viewports: 390 px mobile and 1440 px desktop.
+- Route: `/dashboard`.
+- Intended viewports: desktop container at full available width and mobile at the reference aspect ratio.
 - State: populated operational summary.
+- Implementation screenshot: unavailable until local Playwright use is approved.
 
-**Findings and fixes applied**
+**Full-view comparison evidence**
 
-- [P1] The prior implementation made the dashboard too tall on mobile and showed up to five attention rows. Fixed by grouping rows into compact surfaces and limiting the API queue to two actionable orders.
-- [P1] The prior `Сегодня` card used a stacked metrics layout. Fixed with the approved two-group layout: users and orders, with totals in a dedicated footer row and no monetary values.
-- [P1] The prior rates card rendered one vertical column with repeated update labels. Fixed with a two-column rate grid, a single header timestamp, and a dedicated all-rates action.
-- [P2] The prior desktop composition used unequal proportions and did not visually match the reference. Fixed with paired top and bottom grids, shared card headers, dividers, compact rows, and Material icons.
+- Both source originals were opened at original detail before implementation.
+- Static implementation review confirms the desktop shell no longer has a local `max-width`, both desktop grids remain two-column, and the mobile breakpoint preserves vertical card stacking with a two-column rates table.
+- A rendered full-view comparison is still required; static CSS and unit tests are not treated as visual evidence.
+
+**Focused region comparison evidence**
+
+- `Сегодня`: source values are centered inside their metric cells; implementation now centers the complete metric cell.
+- `Оборот завершённых`: source uses distinct colored currency markers and stronger numeric values; implementation maps currencies to Quasar icons/colors and uses semibold tabular values.
+- `Курсы`: source uses a dense two-column table with cell dividers and stronger primary values; implementation keeps this geometry, adds pair markers, and replaces the lower direction line with `Базовая цена` from the backend contract.
+- Rendered focused crops are unavailable until browser capture is approved.
 
 **Required fidelity surfaces**
 
-- Fonts and typography: Quasar/Material system typography retained; headings, metric values, and captions use the compact hierarchy of the source.
-- Spacing and layout rhythm: unified 10 px card radius, restrained elevation, card headers, row dividers, and responsive two-column rates grid implemented.
-- Colors and tokens: AntEx/Quasar primary blue, semantic red/amber/green states, neutral page background, and white grouped surfaces retained.
-- Image quality and assets: no image assets are part of the approved dashboard; all icons use the existing Material icon set.
-- Copy and content: labels are aligned with the source; rate deltas are intentionally omitted because the API has no historical rate series and values must not be invented.
+- Fonts and typography: Roboto/Quasar typography retained; primary rate and turnover values use weight `600`, secondary base prices use smaller regular text.
+- Spacing and layout rhythm: full-width desktop shell, paired desktop grids, compact two-column rate cells, vertical cell divider, and mobile-specific padding are implemented.
+- Colors and tokens: Quasar semantic palette is used for currency markers; dashboard background, surfaces, borders, and semantic states remain aligned with the originals.
+- Image quality and assets: the dashboard uses the existing Quasar icon libraries; no generated or placeholder raster assets were introduced.
+- Copy and content: `Базовая цена` is backed by `baseRateDisplay`; no invented deltas or historical values are shown.
 
-**Browser-rendered evidence**
+**Findings**
 
-- Local Quasar dev server started successfully at port 4173.
-- Cloud Browser capture at `http://terminal.local:4173/dashboard` is blocked by `ERR_CONNECTION_REFUSED` in this environment, so a rendered comparison screenshot and console inspection are unavailable.
+- [P1] Rendered desktop/mobile fidelity is not yet proven.
+  - Evidence: source originals are available, but no implementation screenshots exist for same-viewport comparison.
+  - Fix: capture `/dashboard` in a real browser at matching desktop and mobile viewports, compare combined source/implementation evidence, then correct any visible P1/P2 drift.
+
+**Comparison history**
+
+1. Static pass: corrected shell width, `Сегодня` alignment, turnover markers/weight, rates table structure, pair markers, and base-price copy.
+2. Rendered pass: pending browser authorization.
 
 **Implementation checklist**
 
-- [x] Mobile and desktop responsive layout implemented.
-- [x] Targeted dashboard tests pass (6/6).
-- [x] Production build passes.
-- [x] Backend summary contract test and Ruff pass.
-- [ ] Browser visual capture: blocked by environment connectivity.
+- [x] Backend returns `baseRate` and `baseRateDisplay`.
+- [x] Dashboard targeted Vitest passes (`7/7`).
+- [x] ESLint and Quasar production build pass.
+- [x] Strict `expanded-admin-dashboard` OpenSpec validation passes.
+- [ ] Capture and compare desktop implementation.
+- [ ] Capture and compare mobile implementation.
+- [ ] Check browser console and primary refresh/navigation interactions.
 
 final result: blocked

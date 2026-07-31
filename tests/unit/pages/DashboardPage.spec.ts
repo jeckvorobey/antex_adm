@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import { Quasar } from 'quasar';
 import DashboardPage from '@pages/DashboardPage.vue';
+import dashboardSource from '@pages/DashboardPage.vue?raw';
 
 vi.mock('src/boot/axios', () => ({
   api: { get: vi.fn() },
@@ -49,6 +50,8 @@ const summaryFixture = {
     {
       pairId: 'rub-thb',
       label: 'THB/RUB',
+      baseRate: 2.44,
+      baseRateDisplay: '2.44',
       finalRate: 2.44,
       finalRateDisplay: '2.44',
       rateText: '1 THB = 2.44 RUB',
@@ -57,6 +60,8 @@ const summaryFixture = {
     {
       pairId: 'usdt-thb',
       label: 'USDT/THB',
+      baseRate: 30.5,
+      baseRateDisplay: '30.50',
       finalRate: 30.17,
       finalRateDisplay: '30.17',
       rateText: '1 USDT = 30.17 THB',
@@ -121,6 +126,11 @@ describe('DashboardPage', () => {
     expect(wrapper.get('[data-testid="turnover-USDT"]').text()).toContain('USDT');
     expect(wrapper.get('[data-testid="turnover-RUB"]').text()).toContain('RUB');
     expect(wrapper.get('[data-testid="turnover-THB"]').text()).toContain('THB');
+    expect(wrapper.get('[data-testid="turnover-icon-USDT"]').attributes('aria-label')).toBe('USDT');
+    expect(wrapper.get('[data-testid="turnover-icon-RUB"]').attributes('aria-label')).toBe('RUB');
+    expect(wrapper.get('[data-testid="turnover-icon-THB"]').attributes('aria-label')).toBe('THB');
+    expect(dashboardSource).toContain("THB: '🇹🇭'");
+    expect(dashboardSource).not.toContain("THB: 'currency_bitcoin'");
   });
 
   it('выводит все курсы в читаемом виде', async () => {
@@ -131,7 +141,22 @@ describe('DashboardPage', () => {
 
     expect(wrapper.text()).toContain('1 THB = 2.44 RUB');
     expect(wrapper.text()).toContain('1 USDT = 30.17 THB');
+    expect(wrapper.get('[data-testid="rate-rub-thb"]').text()).toContain(
+      'Базовая цена: 1 THB = 2.44 RUB',
+    );
+    expect(wrapper.get('[data-testid="rate-usdt-thb"]').text()).toContain(
+      'Базовая цена: 1 USDT = 30.50 THB',
+    );
+    expect(wrapper.findAll('[data-testid^="rate-currency-"]')).toHaveLength(4);
     expect(wrapper.text()).toContain('Все курсы');
+  });
+
+  it('занимает всю ширину desktop-контейнера и центрирует значения Сегодня', () => {
+    expect(dashboardSource).toContain('.dashboard-shell {\n  width: 100%;');
+    expect(dashboardSource).not.toContain('width: min(100%, 1440px)');
+    expect(dashboardSource).toContain(
+      '.compact-metrics div {\n  min-width: 0;\n  text-align: center;',
+    );
   });
 
   it('повторно загружает summary по кнопке обновления', async () => {

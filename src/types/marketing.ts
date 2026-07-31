@@ -107,9 +107,43 @@ export interface MarketingApplicationAttribution {
   completed: boolean;
 }
 
+export interface MarketingDashboardSummary {
+  attributedUsers?: number | null;
+  newUsers?: number | null;
+  returningUsers?: number | null;
+  touches?: number | null;
+  uniqueTouchedUsers?: number | null;
+  applications?: number | null;
+  uniqueApplicants?: number | null;
+  completedApplications?: number | null;
+  attributionToApplicationRate?: number | null;
+  applicationCompletionRate?: number | null;
+  spendTotal?: number | null;
+  costPerApplication?: number | null;
+  costPerAttributedUser?: number | null;
+  costPerNewUser?: number | null;
+  costPerCompletedApplication?: number | null;
+}
+
+export interface MarketingFunnelStage {
+  stage: string;
+  value: number;
+}
+
+export interface MarketingTimeSeriesRow {
+  date: string;
+  newUsers: number;
+  returningUsers: number;
+  touches: number;
+  applications: number;
+  completedApplications: number;
+  [key: string]: string | number;
+}
+
 export interface MarketingDashboard {
-  summary: Record<string, number | null>;
-  timeSeries: Array<Record<string, string | number>>;
+  summary: MarketingDashboardSummary;
+  funnel: MarketingFunnelStage[];
+  timeSeries: MarketingTimeSeriesRow[];
   campaignComparison: MarketingApplicationRow[];
   spendByCurrency: Array<{ currency: string; spend: number }>;
   appliedFilters: Record<string, string | number | null>;

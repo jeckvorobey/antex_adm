@@ -250,6 +250,40 @@ const QDateStub = defineComponent({
   },
 });
 
+const QTimeStub = defineComponent({
+  name: 'QTimeStub',
+  props: {
+    modelValue: { type: String, default: '' },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit, slots, attrs }) {
+    return () =>
+      h('div', { ...attrs, class: 'q-time' }, [
+        h('input', {
+          type: 'time',
+          value: props.modelValue,
+          onInput: (event: Event) => {
+            const target = event.target as HTMLInputElement;
+            emit('update:modelValue', target.value);
+          },
+        }),
+        ...slotChildren(slots),
+      ]);
+  },
+});
+
+const QOptionGroupStub = defineComponent({
+  name: 'QOptionGroupStub',
+  props: {
+    modelValue: { type: Array, default: () => [] },
+    options: { type: Array, default: () => [] },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { attrs }) {
+    return () => h('div', { ...attrs, class: 'q-option-group' }, String(props.options.length));
+  },
+});
+
 const QEditorStub = defineComponent({
   name: 'QEditorStub',
   props: {
@@ -449,6 +483,8 @@ config.global.stubs = {
   'q-space': wrapTag('div', 'q-space'),
   'q-td': wrapTag('td', 'q-td'),
   'q-icon': wrapTag('span', 'q-icon'),
+  'q-avatar': wrapTag('span', 'q-avatar'),
+  'q-skeleton': wrapTag('div', 'q-skeleton'),
   'q-tooltip': wrapTag('span', 'q-tooltip'),
   'q-spinner': wrapTag('span', 'q-spinner'),
   'q-spinner-dots': wrapTag('span', 'q-spinner-dots'),
@@ -457,6 +493,8 @@ config.global.stubs = {
   'q-menu': QMenuStub,
   'q-popup-proxy': QPopupProxyStub,
   'q-date': QDateStub,
+  'q-time': QTimeStub,
+  'q-option-group': QOptionGroupStub,
   'q-popup-edit': QPopupEditStub,
   'router-view': wrapTag('div', 'router-view'),
   'q-btn': QBtnStub,
@@ -543,4 +581,8 @@ config.global.stubs = {
       return () => h('div', { ...attrs, class: 'q-item', to: props.to }, slotChildren(slots));
     },
   }),
+};
+
+config.global.directives = {
+  'close-popup': () => undefined,
 };

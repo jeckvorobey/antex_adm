@@ -129,13 +129,8 @@ describe('DashboardPage', () => {
     expect(wrapper.get('[data-testid="turnover-icon-USDT"]').attributes('aria-label')).toBe('USDT');
     expect(wrapper.get('[data-testid="turnover-icon-RUB"]').attributes('aria-label')).toBe('RUB');
     expect(wrapper.get('[data-testid="turnover-icon-THB"]').attributes('aria-label')).toBe('THB');
-    expect(wrapper.get('[data-testid="turnover-icon-USDT"]').text()).toContain('₮');
     expect(dashboardSource).toContain("THB: '🇹🇭'");
     expect(dashboardSource).not.toContain("THB: 'currency_bitcoin'");
-    expect(dashboardSource).toContain("USDT: '₮'");
-    expect(dashboardSource).toContain(
-      ':color="currencyFlag(row.currency) ? undefined : currencyColor(row.currency)"',
-    );
   });
 
   it('выводит все курсы в читаемом виде', async () => {
@@ -152,7 +147,6 @@ describe('DashboardPage', () => {
     expect(dashboardSource).toContain("'rate-row__side--sell'");
     expect(dashboardSource).toContain("'rate-row__side--buy'");
     expect(dashboardSource).toContain('rate-row__quote');
-    expect(dashboardSource).toContain('flex-direction: row-reverse;');
     expect(dashboardSource).not.toContain('Базовая цена:');
     expect(wrapper.text()).toContain('Все курсы');
   });

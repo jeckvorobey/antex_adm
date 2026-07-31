@@ -194,17 +194,13 @@
                   :data-testid="`turnover-icon-${row.currency}`"
                   :aria-label="row.currency"
                   role="img"
-                  :color="currencyFlag(row.currency) ? undefined : currencyColor(row.currency)"
+                  :color="currencyColor(row.currency)"
                   text-color="white"
                   size="32px"
                   class="currency-avatar"
-                  :class="{ 'currency-avatar--flag': currencyFlag(row.currency) }"
                 >
                   <span v-if="currencyFlag(row.currency)" class="currency-flag" aria-hidden="true">
                     {{ currencyFlag(row.currency) }}
-                  </span>
-                  <span v-else-if="currencySymbol(row.currency)" class="currency-symbol" aria-hidden="true">
-                    {{ currencySymbol(row.currency) }}
                   </span>
                   <q-icon v-else :name="currencyIcon(row.currency)" size="19px" />
                 </q-avatar>
@@ -253,9 +249,6 @@
                 >
                   <span v-if="currencyFlag(currency)" class="currency-flag" aria-hidden="true">
                     {{ currencyFlag(currency) }}
-                  </span>
-                  <span v-else-if="currencySymbol(currency)" class="currency-symbol" aria-hidden="true">
-                    {{ currencySymbol(currency) }}
                   </span>
                   <q-icon v-else :name="currencyIcon(currency)" size="15px" />
                 </q-avatar>
@@ -431,11 +424,11 @@ function ageLabel(minutes: number) {
 }
 
 function currencyIcon(currency: string) {
-  return 'currency_exchange';
-}
-
-function currencySymbol(currency: string) {
-  return { USDT: '₮' }[currency] ?? '';
+  return (
+    {
+      USDT: 'paid',
+    }[currency] ?? 'currency_exchange'
+  );
 }
 
 function currencyFlag(currency: string) {
@@ -892,13 +885,6 @@ function baseRateText(rate: DashboardRate) {
   line-height: 1;
 }
 
-.currency-symbol {
-  color: #fff;
-  font-size: 1.25em;
-  font-weight: 700;
-  line-height: 1;
-}
-
 .currency-avatar--flag {
   background: transparent;
 }
@@ -980,7 +966,6 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .rate-row__side--buy {
-  flex-direction: row-reverse;
   justify-content: flex-end;
   text-align: right;
 }

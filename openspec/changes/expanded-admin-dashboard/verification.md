@@ -21,3 +21,4 @@ Quasar dev preview успешно запускается на `127.0.0.1:9000`. 
 - `openspec validate expanded-admin-dashboard --strict`: пройден.
 - Secure review: ошибочный Bitcoin-маркер THB заменён на флаг Таиланда; регрессионный test пройден.
 - Browser QA desktop/mobile ожидает разрешения на локальный Playwright.
+- Строки курсов приведены к последнему референсу: флаги и коды валют размещены по краям, итоговый курс — в центральной плашке, базовая цена обозначена `БЦ`; dashboard Vitest `7 passed`, ESLint и production build пройдены.

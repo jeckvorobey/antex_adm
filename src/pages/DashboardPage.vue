@@ -231,26 +231,33 @@
               class="rate-row"
               :data-testid="`rate-${rate.pairId}`"
             >
-              <div class="rate-row__currencies">
+              <div
+                v-for="(currency, index) in rateCurrencies(rate)"
+                :key="currency"
+                class="rate-row__side"
+                :class="index === 0 ? 'rate-row__side--sell' : 'rate-row__side--buy'"
+              >
                 <q-avatar
-                  v-for="currency in rateCurrencies(rate)"
-                  :key="currency"
                   :data-testid="`rate-currency-${rate.pairId}-${currency}`"
                   :aria-label="currency"
                   role="img"
-                  :color="currencyColor(currency)"
+                  :color="currencyFlag(currency) ? undefined : currencyColor(currency)"
                   text-color="white"
                   size="25px"
-                  class="currency-avatar rate-currency-avatar"
+                  class="currency-avatar"
+                  :class="{ 'currency-avatar--flag': currencyFlag(currency) }"
                 >
                   <span v-if="currencyFlag(currency)" class="currency-flag" aria-hidden="true">
                     {{ currencyFlag(currency) }}
                   </span>
                   <q-icon v-else :name="currencyIcon(currency)" size="15px" />
                 </q-avatar>
+                <span class="rate-row__currency">{{ currency }}</span>
               </div>
-              <div class="rate-row__content">
-                <div class="rate-row__value">{{ rate.rateText }}</div>
+              <div class="rate-row__quote">
+                <div class="rate-row__value">
+                  от {{ rate.finalRateDisplay }} <q-icon name="arrow_forward" size="16px" />
+                </div>
                 <div class="rate-row__base">{{ baseRateText(rate) }}</div>
               </div>
             </div>
@@ -420,7 +427,6 @@ function currencyIcon(currency: string) {
   return (
     {
       USDT: 'paid',
-      RUB: 'currency_ruble',
     }[currency] ?? 'currency_exchange'
   );
 }
@@ -428,6 +434,7 @@ function currencyIcon(currency: string) {
 function currencyFlag(currency: string) {
   return (
     {
+      RUB: '🇷🇺',
       THB: '🇹🇭',
       GEL: '🇬🇪',
       VND: '🇻🇳',
@@ -448,8 +455,7 @@ function rateCurrencies(rate: DashboardRate) {
 }
 
 function baseRateText(rate: DashboardRate) {
-  const [currencySell = '—', currencyBuy = '—'] = rateCurrencies(rate);
-  return `Базовая цена: 1 ${currencySell} = ${rate.baseRateDisplay ?? '—'} ${currencyBuy}`;
+  return `БЦ ${rate.baseRateDisplay ?? '—'}`;
 }
 </script>
 
@@ -879,6 +885,10 @@ function baseRateText(rate: DashboardRate) {
   line-height: 1;
 }
 
+.currency-avatar--flag {
+  background: transparent;
+}
+
 .rates-updated {
   gap: 7px;
   color: #7b8794;
@@ -934,9 +944,10 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .rate-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(64px, 1fr) auto minmax(64px, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   min-height: 78px;
   padding: 12px 14px;
@@ -947,34 +958,49 @@ function baseRateText(rate: DashboardRate) {
   border-left: 1px solid #edf0f3;
 }
 
-.rate-row__currencies {
+.rate-row__side {
   display: flex;
-  flex: 0 0 auto;
   align-items: center;
-  padding-left: 3px;
-}
-
-.rate-currency-avatar + .rate-currency-avatar {
-  margin-left: -7px;
-  box-shadow: 0 0 0 2px #fff;
-}
-
-.rate-row__content {
+  gap: 6px;
   min-width: 0;
 }
 
+.rate-row__side--buy {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.rate-row__currency {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rate-row__quote {
+  min-width: 0;
+  align-items: center;
+  text-align: center;
+}
+
 .rate-row__value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   margin: 0;
+  padding: 5px 10px;
+  border: 1px solid #d6b328;
+  border-radius: 999px;
   overflow: hidden;
-  color: #20242a;
-  font-size: 16px;
+  color: #765b00;
+  font-size: 14px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .rate-row__base {
-  margin-top: 5px;
+  margin-top: 4px;
   overflow: hidden;
   color: #7b8794;
   font-size: 12px;
@@ -1112,18 +1138,20 @@ function baseRateText(rate: DashboardRate) {
   }
   .rate-row {
     min-height: 76px;
-    gap: 7px;
+    grid-template-columns: minmax(54px, 1fr) auto minmax(54px, 1fr);
+    gap: 5px;
     padding: 11px 8px;
   }
   .rate-row__value {
-    font-size: 13px;
+    padding: 4px 8px;
+    font-size: 12px;
   }
   .rate-row__base {
     margin-top: 4px;
     font-size: 10px;
   }
-  .rate-currency-avatar {
-    font-size: 12px;
+  .rate-row__currency {
+    font-size: 11px;
   }
 
   .turnover-table__head,

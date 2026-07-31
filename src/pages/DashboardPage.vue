@@ -8,10 +8,12 @@
         </div>
         <q-btn
           data-testid="dashboard-refresh"
-          round
           flat
+          dense
+          no-caps
           color="primary"
           icon="refresh"
+          label="Обновить"
           aria-label="Обновить данные"
           :loading="loading"
           @click="loadSummary"
@@ -28,9 +30,9 @@
       <div class="dashboard-top-grid">
         <section class="dashboard-surface attention-surface" aria-labelledby="attention-title">
           <div class="surface-header">
-            <div>
+            <div class="surface-heading-with-icon">
+              <q-icon name="error" color="negative" size="26px" />
               <h2 id="attention-title" class="surface-title">Требуют внимания</h2>
-              <div class="surface-caption">Новые и задержавшиеся заявки</div>
             </div>
             <q-badge
               rounded
@@ -57,7 +59,12 @@
               <q-item-section>
                 <div class="attention-row__top">
                   <span class="attention-number">№ {{ order.publicNumber }}</span>
-                  <span class="attention-age">{{ ageLabel(order.ageMinutes) }}</span>
+                  <span
+                    class="attention-age"
+                    :class="order.overdue ? 'text-negative' : 'text-warning'"
+                  >
+                    {{ ageLabel(order.ageMinutes) }}
+                  </span>
                 </div>
                 <div class="attention-direction">
                   {{ formatAmount(order.amountSell) }} {{ order.currencySell }}
@@ -65,17 +72,19 @@
                   {{ order.amountBuy == null ? '—' : formatAmount(order.amountBuy) }}
                   {{ order.currencyBuy }}
                 </div>
-                <div
-                  class="attention-reason"
-                  :class="
-                    order.overdue
-                      ? 'text-negative'
-                      : order.status === 1
-                        ? 'text-warning'
-                        : 'text-primary'
-                  "
-                >
-                  {{ order.reason }}
+                <div class="attention-reason">
+                  <span
+                    :class="
+                      order.overdue
+                        ? 'text-negative'
+                        : order.status === 1
+                          ? 'text-warning'
+                          : 'text-primary'
+                    "
+                    >{{ order.reason }}</span
+                  >
+                  <span class="attention-reason__separator">•</span>
+                  <span>Ожидает подтверждения</span>
                 </div>
               </q-item-section>
               <q-item-section side>
@@ -88,14 +97,22 @@
             <q-icon name="task_alt" color="positive" size="28px" />
             <span>Заявок, требующих внимания, нет</span>
           </div>
+
+          <q-btn
+            v-if="attentionOrders.length"
+            flat
+            no-caps
+            color="primary"
+            class="surface-footer-action"
+            label="Все заявки"
+            icon-right="chevron_right"
+            href="/orders"
+          />
         </section>
 
         <section class="dashboard-surface today-surface" aria-labelledby="today-title">
           <div class="surface-header">
-            <div>
-              <h2 id="today-title" class="surface-title">Сегодня</h2>
-              <div class="surface-caption">{{ updatedLabel }}</div>
-            </div>
+            <h2 id="today-title" class="surface-title">Сегодня</h2>
           </div>
 
           <div v-if="loading && !summary" class="today-grid">
@@ -109,17 +126,13 @@
                 <q-icon name="group" color="primary" size="20px" />
                 Пользователи
               </div>
-              <div class="primary-metric">
-                <span class="metric-label">Всего</span>
-                <strong data-testid="users-total">{{ userMetrics.total }}</strong>
-              </div>
-              <div class="secondary-metric">
-                <span>Новые сегодня</span>
-                <strong>{{ userMetrics.newToday }}</strong>
-              </div>
-              <div class="secondary-metric">
-                <span>Активны сегодня</span>
-                <strong>{{ userMetrics.activeToday }}</strong>
+              <div class="compact-metrics compact-metrics--users">
+                <div>
+                  <span>Новые</span><strong>{{ userMetrics.newToday }}</strong>
+                </div>
+                <div>
+                  <span>Активные</span><strong>{{ userMetrics.activeToday }}</strong>
+                </div>
               </div>
             </div>
 
@@ -128,27 +141,29 @@
                 <q-icon name="receipt_long" color="primary" size="20px" />
                 Заявки
               </div>
-              <div class="primary-metric">
-                <span class="metric-label">Всего</span>
-                <strong data-testid="orders-total">{{ orderMetrics.total }}</strong>
-              </div>
-              <div class="secondary-metric">
-                <span>Сегодня</span>
-                <strong>{{ orderMetrics.today }}</strong>
-              </div>
-              <div class="secondary-metric">
-                <span>Новые</span>
-                <strong class="text-warning">{{ orderMetrics.new }}</strong>
-              </div>
-              <div class="secondary-metric">
-                <span>В работе</span>
-                <strong class="text-primary">{{ orderMetrics.inProgress }}</strong>
-              </div>
-              <div class="secondary-metric">
-                <span>Завершены сегодня</span>
-                <strong class="text-positive">{{ orderMetrics.completedToday }}</strong>
+              <div class="compact-metrics compact-metrics--orders">
+                <div>
+                  <span>Создано</span><strong>{{ orderMetrics.today }}</strong>
+                </div>
+                <div>
+                  <span>Завершено</span><strong>{{ orderMetrics.completedToday }}</strong>
+                </div>
+                <div>
+                  <span>В работе</span><strong>{{ orderMetrics.inProgress }}</strong>
+                </div>
               </div>
             </div>
+          </div>
+          <div v-if="!loading || summary" class="today-total-row">
+            <span>Всего</span>
+            <span class="today-total-row__metric"
+              ><q-icon name="group" color="primary" size="20px" /> Пользователи
+              <strong data-testid="users-total">{{ userMetrics.total }}</strong></span
+            >
+            <span class="today-total-row__metric"
+              ><q-icon name="receipt_long" color="positive" size="20px" /> Заявки
+              <strong data-testid="orders-total">{{ orderMetrics.total }}</strong></span
+            >
           </div>
         </section>
       </div>
@@ -156,15 +171,15 @@
       <div class="dashboard-bottom-grid">
         <section class="dashboard-surface" aria-labelledby="turnover-title">
           <div class="surface-header">
-            <div>
+            <div class="surface-heading-with-icon">
+              <q-icon name="monetization_on" color="primary" size="26px" />
               <h2 id="turnover-title" class="surface-title">Оборот завершённых</h2>
-              <div class="surface-caption">Без смешивания валют</div>
             </div>
           </div>
 
           <div v-if="turnover.length" class="turnover-table">
             <div class="turnover-table__head">
-              <span>Валюта</span>
+              <span></span>
               <span>Сегодня</span>
               <span>За всё время</span>
             </div>
@@ -174,7 +189,13 @@
               class="turnover-row"
               :data-testid="`turnover-${row.currency}`"
             >
-              <strong>{{ row.currency }}</strong>
+              <strong class="turnover-currency"
+                ><q-icon
+                  :name="currencyIcon(row.currency)"
+                  :color="currencyColor(row.currency)"
+                  size="25px"
+                />{{ row.currency }}</strong
+              >
               <span>{{ formatAmount(row.today) }}</span>
               <span>{{ formatAmount(row.total) }}</span>
             </div>
@@ -184,21 +205,31 @@
 
         <section class="dashboard-surface" aria-labelledby="rates-title">
           <div class="surface-header">
-            <div>
+            <div class="surface-heading-with-icon">
+              <q-icon name="swap_horiz" color="primary" size="28px" />
               <h2 id="rates-title" class="surface-title">Курсы</h2>
-              <div class="surface-caption">Клиентские значения</div>
             </div>
-            <q-btn flat dense no-caps color="primary" label="Все курсы" href="/rates" />
+            <div class="rates-updated">
+              Обновлено {{ ratesUpdatedLabel }} <q-icon name="schedule" size="18px" />
+            </div>
           </div>
 
           <div v-if="rates.length" class="rates-grid">
             <div v-for="rate in rates" :key="rate.pairId" class="rate-row">
-              <div class="rate-row__pair">{{ rate.label }}</div>
               <div class="rate-row__value">{{ rate.rateText }}</div>
-              <div class="rate-row__time">{{ rateUpdatedLabel(rate.updatedAt) }}</div>
             </div>
           </div>
           <div v-else class="empty-state empty-state--compact">Курсы недоступны</div>
+          <q-btn
+            v-if="rates.length"
+            flat
+            no-caps
+            color="primary"
+            class="surface-footer-action"
+            label="Все курсы"
+            icon-right="chevron_right"
+            href="/rates"
+          />
         </section>
       </div>
     </div>
@@ -286,6 +317,9 @@ const orderMetrics = computed(
 const attentionOrders = computed(() => summary.value?.attentionOrders ?? []);
 const turnover = computed(() => summary.value?.turnover ?? []);
 const rates = computed(() => summary.value?.rates ?? summary.value?.featuredRates ?? []);
+const ratesUpdatedLabel = computed(() =>
+  rates.value[0]?.updatedAt ? formatDateTime(rates.value[0].updatedAt) : '—',
+);
 
 const updatedLabel = computed(() => {
   if (!summary.value?.generatedAt) {
@@ -322,8 +356,14 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-function rateUpdatedLabel(value: string) {
-  return value ? `Обновлено ${formatTime(value)}` : 'Время обновления неизвестно';
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function ageLabel(minutes: number) {
@@ -336,6 +376,16 @@ function ageLabel(minutes: number) {
     return remainingMinutes ? `${hours} ч ${remainingMinutes} мин` : `${hours} ч`;
   }
   return `${Math.floor(minutes / 1440)} дн`;
+}
+
+function currencyIcon(currency: string) {
+  return currency === 'USDT' ? 'token' : 'currency_exchange';
+}
+
+function currencyColor(currency: string) {
+  return (
+    { USDT: 'positive', RUB: 'primary', THB: 'amber-8', GEL: 'deep-purple' }[currency] ?? 'grey-7'
+  );
 }
 </script>
 
@@ -553,6 +603,231 @@ function ageLabel(minutes: number) {
   align-items: center;
 }
 
+/* Operational dashboard: compact density and grouping follow the approved mobile/desktop reference. */
+.surface-heading-with-icon,
+.today-total-row,
+.today-total-row__metric,
+.turnover-currency,
+.rates-updated {
+  display: flex;
+  align-items: center;
+}
+
+.surface-heading-with-icon {
+  gap: 10px;
+}
+
+.dashboard-header {
+  min-height: 58px;
+  margin-bottom: 14px;
+}
+
+.dashboard-top-grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(440px, 0.92fr);
+  margin-bottom: 14px;
+}
+
+.dashboard-bottom-grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+}
+
+.dashboard-surface {
+  padding: 0;
+  overflow: hidden;
+  border-color: #e3e7ec;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgb(31 41 55 / 12%);
+}
+
+.surface-header {
+  min-height: 68px;
+  margin: 0;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e7ebf0;
+}
+
+.surface-title {
+  color: #20242a;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.surface-caption {
+  display: none;
+}
+
+.attention-count {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 15px;
+}
+
+.attention-list {
+  margin: 0 20px;
+}
+
+.attention-row {
+  min-height: 78px;
+  padding: 10px 6px;
+}
+
+.attention-number,
+.attention-direction {
+  font-size: 16px;
+}
+
+.attention-age,
+.attention-reason {
+  font-size: 13px;
+}
+
+.attention-reason {
+  color: #7b8794;
+}
+
+.attention-reason__separator {
+  margin: 0 6px;
+  color: #98a2b3;
+}
+
+.surface-footer-action {
+  width: 100%;
+  min-height: 52px;
+  border-top: 1px solid #e7ebf0;
+  border-radius: 0;
+}
+
+.today-grid {
+  min-height: 128px;
+  padding: 18px 20px 14px;
+}
+
+.today-group {
+  padding-right: 18px;
+}
+
+.today-group--orders {
+  padding-left: 18px;
+}
+
+.today-group__title {
+  margin-bottom: 16px;
+  color: #1976d2;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.today-group--orders .today-group__title {
+  color: #16a56a;
+}
+
+.compact-metrics {
+  display: grid;
+  gap: 12px;
+}
+
+.compact-metrics--users {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compact-metrics--orders {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.compact-metrics div {
+  min-width: 0;
+}
+
+.compact-metrics span {
+  display: block;
+  overflow: hidden;
+  color: #667085;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-metrics strong {
+  display: block;
+  margin-top: 8px;
+  color: #20242a;
+  font-size: 21px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.today-total-row {
+  min-height: 64px;
+  gap: 18px;
+  padding: 12px 20px;
+  border-top: 1px solid #e7ebf0;
+  color: #20242a;
+  font-size: 16px;
+}
+
+.today-total-row__metric {
+  gap: 7px;
+  color: #667085;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.today-total-row__metric + .today-total-row__metric {
+  margin-left: auto;
+  padding-left: 18px;
+  border-left: 1px solid #e7ebf0;
+}
+
+.today-total-row__metric strong {
+  margin-left: 8px;
+  color: #20242a;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.turnover-table,
+.rates-grid {
+  padding: 8px 20px 0;
+}
+
+.turnover-table__head {
+  min-height: 38px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.turnover-row {
+  min-height: 58px;
+  font-size: 16px;
+}
+
+.turnover-currency {
+  gap: 10px;
+}
+
+.rates-updated {
+  gap: 7px;
+  color: #7b8794;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.rates-grid {
+  gap: 0 22px;
+}
+
+.rate-row {
+  min-height: 73px;
+  padding: 15px 0;
+}
+
+.rate-row__value {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
 .turnover-table__head {
   min-height: 34px;
   color: #98a2b3;
@@ -626,22 +901,98 @@ function ageLabel(minutes: number) {
   }
 
   .dashboard-surface {
-    padding: 16px;
-    border-radius: 14px;
+    border-radius: 10px;
+  }
+
+  .surface-header {
+    min-height: 62px;
+    padding: 12px 16px;
+  }
+
+  .surface-title {
+    font-size: 18px;
+  }
+
+  .attention-list {
+    margin: 0 16px;
+  }
+
+  .attention-row {
+    min-height: 74px;
+    padding: 9px 2px;
+  }
+
+  .attention-number,
+  .attention-direction {
+    font-size: 15px;
+  }
+
+  .today-grid {
+    min-height: 122px;
+    padding: 16px 14px 12px;
   }
 
   .today-group {
-    padding-right: 12px;
+    padding-right: 10px;
   }
 
   .today-group--orders {
     padding-right: 0;
-    padding-left: 12px;
+    padding-left: 10px;
   }
 
   .today-group__title {
-    align-items: flex-start;
-    font-size: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+
+  .compact-metrics {
+    gap: 7px;
+  }
+  .compact-metrics span {
+    font-size: 11px;
+  }
+  .compact-metrics strong {
+    margin-top: 6px;
+    font-size: 18px;
+  }
+
+  .today-total-row {
+    min-height: 58px;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .today-total-row__metric {
+    gap: 4px;
+    font-size: 10px;
+  }
+  .today-total-row__metric + .today-total-row__metric {
+    margin-left: 4px;
+    padding-left: 8px;
+  }
+  .today-total-row__metric strong {
+    margin-left: 2px;
+    font-size: 17px;
+  }
+
+  .turnover-table,
+  .rates-grid {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .turnover-table__head {
+    font-size: 11px;
+  }
+  .turnover-row {
+    min-height: 54px;
+    font-size: 14px;
+  }
+  .rates-updated {
+    font-size: 11px;
   }
 
   .secondary-metric {
@@ -656,7 +1007,15 @@ function ageLabel(minutes: number) {
   }
 
   .rates-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+  }
+  .rate-row {
+    min-height: 67px;
+    padding: 13px 0;
+  }
+  .rate-row__value {
+    font-size: 14px;
   }
 
   .turnover-table__head,

@@ -91,8 +91,10 @@ describe('DashboardPage', () => {
     expect(wrapper.text()).toContain('Курсы');
     expect(wrapper.get('[data-testid="users-total"]').text()).toBe('1248');
     expect(wrapper.get('[data-testid="orders-total"]').text()).toBe('4821');
-    expect(wrapper.text()).toContain('Новые сегодня');
-    expect(wrapper.text()).toContain('Активны сегодня');
+    expect(wrapper.text()).toContain('Новые');
+    expect(wrapper.text()).toContain('Активные');
+    expect(wrapper.text()).toContain('Создано');
+    expect(wrapper.text()).toContain('Завершено');
   });
 
   it('показывает очередь внимания с направлением, возрастом и причиной', async () => {

@@ -222,24 +222,6 @@
               class="rate-row"
               :data-testid="`rate-${rate.pairId}`"
             >
-              <div class="rate-row__currencies">
-                <q-avatar
-                  v-for="currency in rateCurrencies(rate)"
-                  :key="currency"
-                  :data-testid="`rate-currency-${rate.pairId}-${currency}`"
-                  :aria-label="currency"
-                  role="img"
-                  :color="currencyColor(currency)"
-                  text-color="white"
-                  size="25px"
-                  class="currency-avatar rate-currency-avatar"
-                >
-                  <span v-if="currencyFlag(currency)" class="currency-flag" aria-hidden="true">
-                    {{ currencyFlag(currency) }}
-                  </span>
-                  <q-icon v-else :name="currencyIcon(currency)" size="15px" />
-                </q-avatar>
-              </div>
               <div class="rate-row__content">
                 <div class="rate-row__value">{{ rate.rateText }}</div>
                 <div class="rate-row__base">{{ baseRateText(rate) }}</div>
@@ -406,33 +388,6 @@ function ageLabel(minutes: number) {
     return remainingMinutes ? `${hours} ч ${remainingMinutes} мин` : `${hours} ч`;
   }
   return `${Math.floor(minutes / 1440)} дн`;
-}
-
-function currencyIcon(currency: string) {
-  return (
-    {
-      USDT: 'paid',
-      RUB: 'currency_ruble',
-    }[currency] ?? 'currency_exchange'
-  );
-}
-
-function currencyFlag(currency: string) {
-  return (
-    {
-      THB: '🇹🇭',
-      GEL: '🇬🇪',
-      VND: '🇻🇳',
-    }[currency] ?? ''
-  );
-}
-
-function currencyColor(currency: string) {
-  return (
-    { USDT: 'positive', RUB: 'primary', THB: 'amber-8', GEL: 'deep-purple', VND: 'red-7' }[
-      currency
-    ] ?? 'grey-7'
-  );
 }
 
 function rateCurrencies(rate: DashboardRate) {
@@ -862,15 +817,6 @@ function baseRateText(rate: DashboardRate) {
   gap: 10px;
 }
 
-.currency-avatar {
-  flex: 0 0 auto;
-}
-
-.currency-flag {
-  font-size: 0.9em;
-  line-height: 1;
-}
-
 .rates-updated {
   gap: 7px;
   color: #7b8794;
@@ -937,18 +883,6 @@ function baseRateText(rate: DashboardRate) {
 
 .rate-row:nth-child(even) {
   border-left: 1px solid #edf0f3;
-}
-
-.rate-row__currencies {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  padding-left: 3px;
-}
-
-.rate-currency-avatar + .rate-currency-avatar {
-  margin-left: -7px;
-  box-shadow: 0 0 0 2px #fff;
 }
 
 .rate-row__content {
@@ -1114,10 +1048,6 @@ function baseRateText(rate: DashboardRate) {
     margin-top: 4px;
     font-size: 10px;
   }
-  .rate-currency-avatar {
-    font-size: 12px;
-  }
-
   .turnover-table__head,
   .turnover-row {
     grid-template-columns: 60px repeat(2, minmax(82px, 1fr));

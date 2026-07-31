@@ -222,24 +222,26 @@
               class="rate-row"
               :data-testid="`rate-${rate.pairId}`"
             >
-              <div class="rate-row__quote">
-                <div class="rate-row__value">
-                  <DashboardCurrencyMarker
-                    :currency="rateCurrencies(rate)[0]"
-                    size="rate"
-                    :data-testid="`rate-marker-${rate.pairId}-${rateCurrencies(rate)[0]}`"
-                  />
-                  <span class="rate-row__from">1 {{ rateCurrencies(rate)[0] }}</span>
-                  <q-icon name="arrow_forward" size="16px" aria-hidden="true" />
-                  <span class="rate-row__to"
-                    >от {{ rate.finalRateDisplay }} {{ rateCurrencies(rate)[1] }}</span
-                  >
-                  <DashboardCurrencyMarker
-                    :currency="rateCurrencies(rate)[1]"
-                    size="rate"
-                    :data-testid="`rate-marker-${rate.pairId}-${rateCurrencies(rate)[1]}`"
-                  />
-                </div>
+              <div class="rate-row__currencies">
+                <q-avatar
+                  v-for="currency in rateCurrencies(rate)"
+                  :key="currency"
+                  :data-testid="`rate-currency-${rate.pairId}-${currency}`"
+                  :aria-label="currency"
+                  role="img"
+                  :color="currencyColor(currency)"
+                  text-color="white"
+                  size="25px"
+                  class="currency-avatar rate-currency-avatar"
+                >
+                  <span v-if="currencyFlag(currency)" class="currency-flag" aria-hidden="true">
+                    {{ currencyFlag(currency) }}
+                  </span>
+                  <q-icon v-else :name="currencyIcon(currency)" size="15px" />
+                </q-avatar>
+              </div>
+              <div class="rate-row__content">
+                <div class="rate-row__value">{{ rate.rateText }}</div>
                 <div class="rate-row__base">{{ baseRateText(rate) }}</div>
               </div>
             </div>
@@ -406,14 +408,40 @@ function ageLabel(minutes: number) {
   return `${Math.floor(minutes / 1440)} дн`;
 }
 
-/** Возвращает две валюты из label курсовой пары в порядке отображения. */
+function currencyIcon(currency: string) {
+  return (
+    {
+      USDT: 'paid',
+      RUB: 'currency_ruble',
+    }[currency] ?? 'currency_exchange'
+  );
+}
+
+function currencyFlag(currency: string) {
+  return (
+    {
+      THB: '🇹🇭',
+      GEL: '🇬🇪',
+      VND: '🇻🇳',
+    }[currency] ?? ''
+  );
+}
+
+function currencyColor(currency: string) {
+  return (
+    { USDT: 'positive', RUB: 'primary', THB: 'amber-8', GEL: 'deep-purple', VND: 'red-7' }[
+      currency
+    ] ?? 'grey-7'
+  );
+}
+
 function rateCurrencies(rate: DashboardRate) {
   return rate.label.split('/').filter(Boolean).slice(0, 2);
 }
 
-/** Формирует короткую подпись базового курса для строки dashboard. */
 function baseRateText(rate: DashboardRate) {
-  return `БЦ ${rate.baseRateDisplay ?? '—'}`;
+  const [currencySell = '—', currencyBuy = '—'] = rateCurrencies(rate);
+  return `Базовая цена: 1 ${currencySell} = ${rate.baseRateDisplay ?? '—'} ${currencyBuy}`;
 }
 </script>
 
@@ -834,6 +862,15 @@ function baseRateText(rate: DashboardRate) {
   gap: 10px;
 }
 
+.currency-avatar {
+  flex: 0 0 auto;
+}
+
+.currency-flag {
+  font-size: 0.9em;
+  line-height: 1;
+}
+
 .rates-updated {
   gap: 7px;
   color: #7b8794;
@@ -889,9 +926,9 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .rate-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: flex;
   align-items: center;
+  gap: 10px;
   min-width: 0;
   min-height: 78px;
   padding: 12px 14px;
@@ -902,37 +939,34 @@ function baseRateText(rate: DashboardRate) {
   border-left: 1px solid #edf0f3;
 }
 
-.rate-row__quote {
-  min-width: 0;
+.rate-row__currencies {
+  display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  text-align: center;
+  padding-left: 3px;
+}
+
+.rate-currency-avatar + .rate-currency-avatar {
+  margin-left: -7px;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.rate-row__content {
+  min-width: 0;
 }
 
 .rate-row__value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
   margin: 0;
-  padding: 5px 10px;
-  border: 1px solid #d6b328;
-  border-radius: 999px;
-  min-width: 0;
-  color: #765b00;
-  font-size: 14px;
+  overflow: hidden;
+  color: #20242a;
+  font-size: 16px;
   font-weight: 600;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rate-row__from,
-.rate-row__to {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .rate-row__base {
-  margin-top: 4px;
+  margin-top: 5px;
   overflow: hidden;
   color: #7b8794;
   font-size: 12px;
@@ -1070,17 +1104,20 @@ function baseRateText(rate: DashboardRate) {
   }
   .rate-row {
     min-height: 76px;
+    gap: 7px;
     padding: 11px 8px;
   }
   .rate-row__value {
-    gap: 3px;
-    padding: 4px 6px;
-    font-size: 11px;
+    font-size: 13px;
   }
   .rate-row__base {
     margin-top: 4px;
     font-size: 10px;
   }
+  .rate-currency-avatar {
+    font-size: 12px;
+  }
+
   .turnover-table__head,
   .turnover-row {
     grid-template-columns: 60px repeat(2, minmax(82px, 1fr));

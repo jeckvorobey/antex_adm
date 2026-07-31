@@ -52,7 +52,7 @@ const flags: Record<string, string> = {
 const normalizedCurrency = computed(() => props.currency.toUpperCase());
 const iconSource = computed(() => iconSources[normalizedCurrency.value] ?? '');
 const flag = computed(() => flags[normalizedCurrency.value] ?? '');
-const markerSize = computed(() => (props.size === 'turnover' ? 32 : 25));
+const markerSize = computed(() => (props.size === 'turnover' ? 28 : 25));
 </script>
 
 <style scoped lang="scss">
@@ -72,8 +72,8 @@ const markerSize = computed(() => (props.size === 'turnover' ? 32 : 25));
 }
 
 .dashboard-currency-marker--turnover {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 
 .dashboard-currency-marker--flag {
@@ -81,6 +81,6 @@ const markerSize = computed(() => (props.size === 'turnover' ? 32 : 25));
 }
 
 .dashboard-currency-marker--turnover.dashboard-currency-marker--flag {
-  font-size: 23px;
+  font-size: 20px;
 }
 </style>

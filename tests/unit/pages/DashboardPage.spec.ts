@@ -45,16 +45,17 @@ const summaryFixture = {
     { currency: 'USDT', today: 12500, total: 282430 },
     { currency: 'RUB', today: 740000, total: 15840000 },
     { currency: 'THB', today: 439000, total: 9162000 },
+    { currency: 'ATXG', today: 300, total: 1300 },
   ],
   rates: [
     {
       pairId: 'rub-thb',
-      label: 'THB/RUB',
+      label: 'GEL/RUB',
       baseRate: 2.44,
       baseRateDisplay: '2.44',
-      finalRate: 2.44,
-      finalRateDisplay: '2.44',
-      rateText: '1 THB = 2.44 RUB',
+      finalRate: 31.27,
+      finalRateDisplay: '31.27',
+      rateText: '1 GEL = 31.27 RUB',
       updatedAt: '2026-07-31T06:20:00Z',
     },
     {
@@ -126,16 +127,14 @@ describe('DashboardPage', () => {
     expect(wrapper.get('[data-testid="turnover-USDT"]').text()).toContain('USDT');
     expect(wrapper.get('[data-testid="turnover-RUB"]').text()).toContain('RUB');
     expect(wrapper.get('[data-testid="turnover-THB"]').text()).toContain('THB');
-    expect(wrapper.get('[data-testid="turnover-icon-USDT"]').attributes('aria-label')).toBe('USDT');
-    expect(wrapper.get('[data-testid="turnover-icon-RUB"]').attributes('aria-label')).toBe('RUB');
-    expect(wrapper.get('[data-testid="turnover-icon-THB"]').attributes('aria-label')).toBe('THB');
-    expect(wrapper.get('[data-testid="turnover-icon-USDT"]').text()).toContain('₮');
-    expect(dashboardSource).toContain("THB: '🇹🇭'");
-    expect(dashboardSource).not.toContain("THB: 'currency_bitcoin'");
-    expect(dashboardSource).toContain("USDT: '₮'");
-    expect(dashboardSource).toContain(
-      ':color="currencyFlag(row.currency) ? undefined : currencyColor(row.currency)"',
-    );
+    expect(wrapper.get('[data-testid="turnover-marker-USDT"]').attributes('alt')).toBe('USDT');
+    expect(wrapper.get('[data-testid="turnover-marker-ATXG"]').attributes('alt')).toBe('ATXG');
+    expect(wrapper.get('[data-testid="turnover-marker-RUB"]').text()).toContain('🇷🇺');
+    expect(wrapper.get('[data-testid="turnover-marker-USDT"]').attributes('width')).toBe('32');
+    expect(wrapper.get('[data-testid="turnover-marker-ATXG"]').attributes('height')).toBe('32');
+    expect(dashboardSource).toContain('DashboardCurrencyMarker');
+    expect(dashboardSource).not.toContain('q-avatar');
+    expect(dashboardSource).not.toContain('currencyColor');
   });
 
   it('выводит все курсы в читаемом виде', async () => {
@@ -144,15 +143,17 @@ describe('DashboardPage', () => {
     const wrapper = mountDashboard();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('от 2.44');
+    expect(wrapper.text()).toContain('от 31.27 RUB');
     expect(wrapper.text()).toContain('от 30.17');
-    expect(wrapper.get('[data-testid="rate-rub-thb"]').text()).toContain('БЦ 2.44');
+    expect(wrapper.get('[data-testid="rate-rub-thb"]').text()).toContain('1 GEL');
+    expect(wrapper.get('[data-testid="rate-rub-thb"]').text()).toContain('от 31.27 RUB');
     expect(wrapper.get('[data-testid="rate-usdt-thb"]').text()).toContain('БЦ 30.50');
-    expect(wrapper.findAll('[data-testid^="rate-currency-"]')).toHaveLength(4);
-    expect(dashboardSource).toContain("'rate-row__side--sell'");
-    expect(dashboardSource).toContain("'rate-row__side--buy'");
+    expect(wrapper.get('[data-testid="rate-marker-rub-thb-GEL"]').text()).toContain('🇬🇪');
+    expect(wrapper.get('[data-testid="rate-marker-rub-thb-RUB"]').text()).toContain('🇷🇺');
+    expect(wrapper.get('[data-testid="rate-marker-usdt-thb-USDT"]').attributes('width')).toBe('25');
+    expect(wrapper.findAll('[data-testid^="rate-marker-"]')).toHaveLength(4);
+    expect(dashboardSource).not.toContain('rate-row__side');
     expect(dashboardSource).toContain('rate-row__quote');
-    expect(dashboardSource).toContain('flex-direction: row-reverse;');
     expect(dashboardSource).not.toContain('Базовая цена:');
     expect(wrapper.text()).toContain('Все курсы');
   });

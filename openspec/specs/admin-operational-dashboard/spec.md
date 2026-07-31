@@ -1,4 +1,9 @@
-## ADDED Requirements
+# Спецификация операционного admin dashboard
+
+## Purpose
+Описывает структуру и визуальные требования адаптивной операционной сводки admin panel.
+
+## Requirements
 
 ### Requirement: Dashboard собирает операционные данные в одном экране
 

@@ -139,15 +139,15 @@ describe('DashboardPage', () => {
     const wrapper = mountDashboard();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('1 THB = 2.44 RUB');
-    expect(wrapper.text()).toContain('1 USDT = 30.17 THB');
-    expect(wrapper.get('[data-testid="rate-rub-thb"]').text()).toContain(
-      'Базовая цена: 1 THB = 2.44 RUB',
-    );
-    expect(wrapper.get('[data-testid="rate-usdt-thb"]').text()).toContain(
-      'Базовая цена: 1 USDT = 30.50 THB',
-    );
+    expect(wrapper.text()).toContain('от 2.44');
+    expect(wrapper.text()).toContain('от 30.17');
+    expect(wrapper.get('[data-testid="rate-rub-thb"]').text()).toContain('БЦ 2.44');
+    expect(wrapper.get('[data-testid="rate-usdt-thb"]').text()).toContain('БЦ 30.50');
     expect(wrapper.findAll('[data-testid^="rate-currency-"]')).toHaveLength(4);
+    expect(dashboardSource).toContain("'rate-row__side--sell'");
+    expect(dashboardSource).toContain("'rate-row__side--buy'");
+    expect(dashboardSource).toContain('rate-row__quote');
+    expect(dashboardSource).not.toContain('Базовая цена:');
     expect(wrapper.text()).toContain('Все курсы');
   });
 

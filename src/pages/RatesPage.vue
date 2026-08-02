@@ -31,6 +31,22 @@
         dense
         :pagination="{ rowsPerPage: 0 }"
       >
+        <template #body-cell-currency="props">
+          <q-td :props="props">
+            <span>{{ props.row.currency }}</span>
+            <q-icon
+              v-if="props.row.isReversed"
+              name="star"
+              size="16px"
+              class="text-negative q-ml-xs"
+              aria-label="Реверсивный курс"
+              tabindex="0"
+            >
+              <q-tooltip>{{ getReversedRateHint(props.row) }}</q-tooltip>
+            </q-icon>
+          </q-td>
+        </template>
+
         <template #body-cell-country="props">
           <q-td :props="props">
             {{ getRateScopeLabel(props.row) }}
@@ -115,6 +131,13 @@ interface RateRow {
   finalRate: number;
   finalRateDisplay: string;
   margin: number;
+  isReversed: boolean;
+  displayCurrencySell: string;
+  displayCurrencyBuy: string;
+  directBaseRate: number;
+  directBaseRateDisplay: string;
+  directFinalRate: number;
+  directFinalRateDisplay: string;
   updatedAt: string;
 }
 
@@ -178,7 +201,10 @@ const rateColumns: QTableColumn<RateRow>[] = [
 const mobileConfig = {
   title: (row: RateRow) => row.currency,
   subtitle: (row: RateRow) => getRateScopeLabel(row),
-  badge: (row: RateRow) => ({ label: formatMargin(row.margin), color: 'primary' }),
+  badge: (row: RateRow) =>
+    row.isReversed
+      ? { label: `★ ${formatMargin(row.margin)}`, color: 'negative', tooltip: getReversedRateHint(row) }
+      : { label: formatMargin(row.margin), color: 'primary' },
   fields: [
     { name: 'baseRate', label: 'Базовый курс' },
     { name: 'finalRate', label: 'Итоговый курс' },
@@ -233,5 +259,9 @@ function formatMargin(value: number) {
 
 function getRateScopeLabel(row: RateRow) {
   return row.isInternal ? 'Внутренний курс' : (row.countryRuName ?? '—');
+}
+
+function getReversedRateHint(row: RateRow) {
+  return `Курс показан реверсивно: ${row.finalRateDisplay} ${row.displayCurrencyBuy} за 1 ${row.displayCurrencySell}. Прямой курс: ${row.directFinalRateDisplay} ${row.displayCurrencySell} за 1 ${row.displayCurrencyBuy}.`;
 }
 </script>

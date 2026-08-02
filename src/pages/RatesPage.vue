@@ -34,16 +34,17 @@
         <template #body-cell-currency="props">
           <q-td :props="props">
             <span>{{ props.row.currency }}</span>
-            <q-icon
+            <q-badge
               v-if="props.row.isReversed"
-              name="star"
-              size="16px"
-              class="text-negative q-ml-xs"
+              color="negative"
+              rounded
+              class="q-ml-xs"
               aria-label="Реверсивный курс"
               tabindex="0"
             >
+              <q-icon name="info" size="12px" />
               <q-tooltip>{{ getReversedRateHint(props.row) }}</q-tooltip>
-            </q-icon>
+            </q-badge>
           </q-td>
         </template>
 
@@ -203,7 +204,7 @@ const mobileConfig = {
   subtitle: (row: RateRow) => getRateScopeLabel(row),
   badge: (row: RateRow) =>
     row.isReversed
-      ? { label: `★ ${formatMargin(row.margin)}`, color: 'negative', tooltip: getReversedRateHint(row) }
+      ? { label: formatMargin(row.margin), color: 'negative', icon: 'info', tooltip: getReversedRateHint(row) }
       : { label: formatMargin(row.margin), color: 'primary' },
   fields: [
     { name: 'baseRate', label: 'Базовый курс' },

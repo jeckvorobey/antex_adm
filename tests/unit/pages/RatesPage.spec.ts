@@ -173,6 +173,8 @@ describe('RatesPage', () => {
     await flushPromises();
 
     expect(wrapper.findAll('[aria-label="Реверсивный курс"]')).toHaveLength(3);
+    expect(wrapper.findAll('.q-badge .q-icon')).toHaveLength(3);
+    expect(wrapper.html()).not.toContain('name="star"');
     expect(wrapper.html()).toContain('Курс показан реверсивно: 92.78 RUB за 1 USDT');
     expect(wrapper.html()).not.toContain('Курс показан реверсивно: 35.11');
   });

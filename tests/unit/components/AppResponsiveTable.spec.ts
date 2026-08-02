@@ -42,13 +42,7 @@ function mountTable(screenXs = false, withTooltip = false) {
         subtitle: (row: (typeof rows)[number]) => row.createdAt,
         badge: (row: (typeof rows)[number]) =>
           withTooltip
-            ? {
-                label: '10%',
-                color: 'negative',
-                icon: 'info',
-                class: 'q-px-sm q-py-xs q-gutter-xs',
-                tooltip: 'Курс показан реверсивно',
-              }
+            ? { label: '10%', color: 'negative', icon: 'info', tooltip: 'Курс показан реверсивно' }
             : { label: row.status, color: 'orange' },
         fields: [
           { name: 'amount', label: 'Сумма' },
@@ -91,8 +85,6 @@ describe('AppResponsiveTable', () => {
     const badge = wrapper.find('.app-responsive-table__badge');
     expect(badge.attributes('aria-label')).toBe('Реверсивный курс');
     expect(badge.attributes('tabindex')).toBe('0');
-    expect(badge.classes()).toContain('q-px-sm');
-    expect(badge.classes()).toContain('q-py-xs');
     expect(wrapper.html()).toContain('info');
     expect(wrapper.html()).toContain('Курс показан реверсивно');
   });

@@ -46,8 +46,14 @@
                     v-if="getBadge(row)"
                     :color="getBadge(row)?.color"
                     class="app-responsive-table__badge"
+                    :aria-label="getBadge(row)?.tooltip ? 'Реверсивный курс' : undefined"
+                    :tabindex="getBadge(row)?.tooltip ? 0 : undefined"
                   >
+                    <q-icon v-if="getBadge(row)?.icon" :name="getBadge(row)?.icon" size="12px" />
                     {{ getBadge(row)?.label }}
+                    <q-tooltip v-if="getBadge(row)?.tooltip">
+                      {{ getBadge(row)?.tooltip }}
+                    </q-tooltip>
                   </q-badge>
                 </div>
 
@@ -105,8 +111,14 @@
                   v-if="getBadge(row)"
                   :color="getBadge(row)?.color"
                   class="app-responsive-table__badge"
+                  :aria-label="getBadge(row)?.tooltip ? 'Реверсивный курс' : undefined"
+                  :tabindex="getBadge(row)?.tooltip ? 0 : undefined"
                 >
+                  <q-icon v-if="getBadge(row)?.icon" :name="getBadge(row)?.icon" size="12px" />
                   {{ getBadge(row)?.label }}
+                  <q-tooltip v-if="getBadge(row)?.tooltip">
+                    {{ getBadge(row)?.tooltip }}
+                  </q-tooltip>
                 </q-badge>
               </div>
 
@@ -152,6 +164,8 @@ type TableRow = Record<string, unknown>;
 type MobileBadge = {
   label: string;
   color?: string;
+  icon?: string;
+  tooltip?: string;
 };
 
 type MobileField = {

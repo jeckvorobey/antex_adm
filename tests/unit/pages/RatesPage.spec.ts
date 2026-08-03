@@ -86,6 +86,99 @@ describe('RatesPage', () => {
     expect(wrapper.html()).toContain('Вьетнам');
   });
 
+  it('помечает только backend-обозначенные реверсивные пары', async () => {
+    mockAdminGet({
+      rates: [
+        {
+          id: 1,
+          currency: 'RUBTHB',
+          country: 'thailand',
+          countryRuName: 'Таиланд',
+          isReversed: true,
+          displayCurrencySell: 'THB',
+          displayCurrencyBuy: 'RUB',
+          baseRate: 2.44,
+          baseRateDisplay: '2.44',
+          finalRate: 2.51,
+          finalRateDisplay: '2.51',
+          directBaseRate: 0.41,
+          directBaseRateDisplay: '0.410000',
+          directFinalRate: 0.3977,
+          directFinalRateDisplay: '0.397700',
+          margin: 3,
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+        {
+          id: 2,
+          currency: 'RUBGEL',
+          country: 'georgia',
+          countryRuName: 'Грузия',
+          isReversed: true,
+          displayCurrencySell: 'GEL',
+          displayCurrencyBuy: 'RUB',
+          baseRate: 33.33,
+          baseRateDisplay: '33.33',
+          finalRate: 34.36,
+          finalRateDisplay: '34.36',
+          directBaseRate: 0.03,
+          directBaseRateDisplay: '0.030000',
+          directFinalRate: 0.0291,
+          directFinalRateDisplay: '0.029100',
+          margin: 3,
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+        {
+          id: 3,
+          currency: 'RUBUSDT',
+          country: null,
+          countryRuName: null,
+          isInternal: true,
+          isReversed: true,
+          displayCurrencySell: 'USDT',
+          displayCurrencyBuy: 'RUB',
+          baseRate: 90,
+          baseRateDisplay: '90.00',
+          finalRate: 92.78,
+          finalRateDisplay: '92.78',
+          directBaseRate: 0.011111111,
+          directBaseRateDisplay: '0.011111',
+          directFinalRate: 0.010777777,
+          directFinalRateDisplay: '0.010778',
+          margin: 3,
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+        {
+          id: 4,
+          currency: 'USDTTHB',
+          country: 'thailand',
+          countryRuName: 'Таиланд',
+          isReversed: false,
+          displayCurrencySell: 'USDT',
+          displayCurrencyBuy: 'THB',
+          baseRate: 36.2,
+          baseRateDisplay: '36.20',
+          finalRate: 35.11,
+          finalRateDisplay: '35.11',
+          directBaseRate: 36.2,
+          directBaseRateDisplay: '36.20',
+          directFinalRate: 35.114,
+          directFinalRateDisplay: '35.11',
+          margin: 3,
+          updatedAt: '2026-05-12T10:00:00Z',
+        },
+      ],
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.findAll('[aria-label="Реверсивный курс"]')).toHaveLength(3);
+    expect(wrapper.findAll('.q-badge .q-icon')).toHaveLength(3);
+    expect(wrapper.html()).not.toContain('name="star"');
+    expect(wrapper.html()).toContain('Курс показан реверсивно: 92.78 RUB за 1 USDT');
+    expect(wrapper.html()).not.toContain('Курс показан реверсивно: 35.11');
+  });
+
   it('редактирует наценку внутреннего RUB/USDT курса', async () => {
     mockAdminGet({
       rates: [

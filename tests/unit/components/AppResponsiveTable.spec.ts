@@ -29,7 +29,7 @@ function setScreenXs(value: boolean) {
   screen.width = value ? 390 : 1280;
 }
 
-function mountTable(screenXs = false) {
+function mountTable(screenXs = false, withTooltip = false) {
   setScreenXs(screenXs);
 
   return mount(AppResponsiveTable, {
@@ -40,7 +40,10 @@ function mountTable(screenXs = false) {
       mobile: {
         title: (row: (typeof rows)[number]) => `Заявка ${row.number}`,
         subtitle: (row: (typeof rows)[number]) => row.createdAt,
-        badge: (row: (typeof rows)[number]) => ({ label: row.status, color: 'orange' }),
+        badge: (row: (typeof rows)[number]) =>
+          withTooltip
+            ? { label: '10%', color: 'negative', icon: 'info', tooltip: 'Курс показан реверсивно' }
+            : { label: row.status, color: 'orange' },
         fields: [
           { name: 'amount', label: 'Сумма' },
           { name: 'createdAt', label: 'Дата' },
@@ -74,5 +77,15 @@ describe('AppResponsiveTable', () => {
     expect(wrapper.html()).toContain('Сумма');
     expect(wrapper.html()).toContain('100 RUB');
     expect(wrapper.html()).toContain('Открыть');
+  });
+
+  it('показывает tooltip для mobile badge и сохраняет доступность', () => {
+    const wrapper = mountTable(true, true);
+
+    const badge = wrapper.find('.app-responsive-table__badge');
+    expect(badge.attributes('aria-label')).toBe('Реверсивный курс');
+    expect(badge.attributes('tabindex')).toBe('0');
+    expect(wrapper.html()).toContain('info');
+    expect(wrapper.html()).toContain('Курс показан реверсивно');
   });
 });

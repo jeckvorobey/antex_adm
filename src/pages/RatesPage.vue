@@ -39,9 +39,10 @@
                 v-if="props.row.isReversed"
                 color="red"
                 outline
-                label="info"
+                aria-label="Реверсивный курс"
                 tabindex="0"
               >
+                <q-icon name="info" size="14px" />
                 <q-tooltip>{{ getReversedRateHint(props.row) }}</q-tooltip>
               </q-badge>
             </span>

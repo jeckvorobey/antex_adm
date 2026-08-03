@@ -223,7 +223,25 @@
               :data-testid="`rate-${rate.pairId}`"
             >
               <div class="rate-row__content">
-                <div class="rate-row__value">{{ rate.rateText }}</div>
+                <div class="rate-row__quote">
+                  <DashboardCurrencyMarker
+                    v-if="rateCurrencies(rate)[0]"
+                    :currency="rateCurrencies(rate)[0]"
+                    size="rate"
+                    :data-testid="`rate-marker-${rate.pairId}-${rateCurrencies(rate)[0]}`"
+                  />
+                  <span>{{ ` 1 ${rateCurrencies(rate)[0] ?? '—'} ` }}</span>
+                  <span class="rate-row__connector">от</span>
+                  <span>{{
+                    ` ${rate.finalRateDisplay ?? rate.finalRate} ${rateCurrencies(rate)[1] ?? '—'} `
+                  }}</span>
+                  <DashboardCurrencyMarker
+                    v-if="rateCurrencies(rate)[1]"
+                    :currency="rateCurrencies(rate)[1]"
+                    size="rate"
+                    :data-testid="`rate-marker-${rate.pairId}-${rateCurrencies(rate)[1]}`"
+                  />
+                </div>
                 <div class="rate-row__base">{{ baseRateText(rate) }}</div>
               </div>
             </div>
@@ -395,8 +413,7 @@ function rateCurrencies(rate: DashboardRate) {
 }
 
 function baseRateText(rate: DashboardRate) {
-  const [currencySell = '—', currencyBuy = '—'] = rateCurrencies(rate);
-  return `Базовая цена: 1 ${currencySell} = ${rate.baseRateDisplay ?? '—'} ${currencyBuy}`;
+  return `БЦ ${rate.baseRateDisplay ?? '—'}`;
 }
 </script>
 
@@ -889,7 +906,7 @@ function baseRateText(rate: DashboardRate) {
   min-width: 0;
 }
 
-.rate-row__value {
+.rate-row__quote {
   margin: 0;
   overflow: hidden;
   color: #20242a;
@@ -897,6 +914,17 @@ function baseRateText(rate: DashboardRate) {
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.rate-row__quote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rate-row__connector {
+  color: #7b8794;
+  font-weight: 400;
 }
 
 .rate-row__base {
@@ -1041,7 +1069,7 @@ function baseRateText(rate: DashboardRate) {
     gap: 7px;
     padding: 11px 8px;
   }
-  .rate-row__value {
+  .rate-row__quote {
     font-size: 13px;
   }
   .rate-row__base {

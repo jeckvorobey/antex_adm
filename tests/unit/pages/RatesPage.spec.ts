@@ -233,6 +233,100 @@ describe('RatesPage', () => {
     expect(wrapper.html()).toContain('85.50');
   });
 
+  it('переключает режим обратного отображения через admin API', async () => {
+    const row = {
+      id: 9,
+      currency: 'USDTTHB',
+      country: 'thailand',
+      countryRuName: 'Таиланд',
+      isInternal: false,
+      isReversed: false,
+      displayCurrencySell: 'USDT',
+      displayCurrencyBuy: 'THB',
+      baseRateDisplay: '36.20',
+      finalRateDisplay: '35.11',
+      directBaseRateDisplay: '36.20',
+      directFinalRateDisplay: '35.11',
+      margin: 3,
+      updatedAt: '2026-05-12T10:00:00Z',
+    };
+    mockAdminGet({ rates: [row] });
+    vi.mocked(api.patch).mockResolvedValue({
+      data: {
+        ...row,
+        isReversed: true,
+        displayCurrencySell: 'THB',
+        displayCurrencyBuy: 'USDT',
+      },
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const toggle = wrapper.findComponent('[data-testid="rate-display-reversed-9"]');
+    expect(toggle.exists()).toBe(true);
+    toggle.vm.$emit('update:modelValue', true);
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/rates/9', {
+      displayReversed: true,
+    });
+  });
+
+  it('последовательно сохраняет наценку и ориентацию одной строки', async () => {
+    const row = {
+      id: 9,
+      currency: 'USDTTHB',
+      country: 'thailand',
+      countryRuName: 'Таиланд',
+      isInternal: false,
+      isReversed: false,
+      displayCurrencySell: 'USDT',
+      displayCurrencyBuy: 'THB',
+      baseRateDisplay: '36.20',
+      finalRateDisplay: '35.11',
+      directBaseRateDisplay: '36.20',
+      directFinalRateDisplay: '35.11',
+      margin: 3,
+      updatedAt: '2026-05-12T10:00:00Z',
+    };
+    let resolveMargin!: (value: { data: typeof row }) => void;
+    const marginRequest = new Promise<{ data: typeof row }>((resolve) => {
+      resolveMargin = resolve;
+    });
+    mockAdminGet({ rates: [row] });
+    vi.mocked(api.patch).mockImplementation((_url, payload) => {
+      if ('margin' in payload) {
+        return marginRequest;
+      }
+      return Promise.resolve({
+        data: {
+          ...row,
+          margin: 5,
+          isReversed: true,
+          displayCurrencySell: 'THB',
+          displayCurrencyBuy: 'USDT',
+        },
+      });
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    wrapper.findComponent({ name: 'QPopupEdit' }).vm.$emit('save', 5);
+    wrapper
+      .findComponent('[data-testid="rate-display-reversed-9"]')
+      .vm.$emit('update:modelValue', true);
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledTimes(1);
+    resolveMargin({ data: { ...row, margin: 5 } });
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledTimes(2);
+    expect(
+      wrapper.findComponent('[data-testid="rate-display-reversed-9"]').props('modelValue'),
+    ).toBe(true);
+  });
+
   it('показывает дату обновления курса в едином admin-формате', async () => {
     mockAdminGet({
       rates: [

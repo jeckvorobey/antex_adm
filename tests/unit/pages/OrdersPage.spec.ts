@@ -69,6 +69,33 @@ describe('OrdersPage', () => {
     expect(wrapper.html()).toContain('2026050001');
   });
 
+  it('показывает сохранённое представление курса вместо расчётного значения', async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          publicNumber: '2026050001',
+          UserId: 42,
+          amountSell: 15000,
+          currencySell: 'RUB',
+          amountBuy: 436.5,
+          currencyBuy: 'GEL',
+          rate: 0.0291,
+          rateDisplay: '34.36',
+          rateText: '1 GEL = 34.36 RUB',
+          status: 1,
+          createdAt: '2024-01-01',
+        },
+      ],
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('1 GEL = 34.36 RUB');
+    expect(wrapper.text()).not.toContain('0.0291');
+  });
+
   it('показывает дату заявки в едином admin-формате', async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: [

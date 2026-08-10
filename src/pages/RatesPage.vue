@@ -170,6 +170,7 @@ const refreshing = ref(false);
 const loadingRates = ref(false);
 const rates = ref<RateRow[]>([]);
 const displayUpdating = ref(new Set<number>());
+const rateMutationTails = new Map<number, Promise<void>>();
 const rateColumns: QTableColumn<RateRow>[] = [
   {
     name: 'currency',
@@ -283,36 +284,56 @@ async function refreshRates() {
 
 /** Сохраняет клиентскую наценку выбранной валютной пары. */
 async function updateMargin(row: RateRow, margin: number) {
-  try {
-    const res = await api.patch<RateRow>(`/api/admin/rates/${row.id}`, { margin });
-    const index = rates.value.findIndex((item) => item.id === row.id);
-    if (index >= 0) {
-      rates.value[index] = res.data;
+  await serializeRateMutation(row.id, async () => {
+    try {
+      const res = await api.patch<RateRow>(`/api/admin/rates/${row.id}`, { margin });
+      const index = rates.value.findIndex((item) => item.id === row.id);
+      if (index >= 0) {
+        rates.value[index] = res.data;
+      }
+      $q.notify({ type: 'positive', message: 'Наценка сохранена' });
+    } catch {
+      $q.notify({ type: 'negative', message: 'Не удалось сохранить наценку' });
     }
-    $q.notify({ type: 'positive', message: 'Наценка сохранена' });
-  } catch {
-    $q.notify({ type: 'negative', message: 'Не удалось сохранить наценку' });
-  }
+  });
 }
 
 /** Переключает только ориентацию показа курса, не меняя прямой курс расчёта. */
 async function updateDisplayReversed(row: RateRow, displayReversed: boolean) {
   displayUpdating.value = new Set(displayUpdating.value).add(row.id);
   try {
-    const res = await api.patch<RateRow>(`/api/admin/rates/${row.id}`, {
-      displayReversed,
+    await serializeRateMutation(row.id, async () => {
+      try {
+        const res = await api.patch<RateRow>(`/api/admin/rates/${row.id}`, {
+          displayReversed,
+        });
+        const index = rates.value.findIndex((item) => item.id === row.id);
+        if (index >= 0) {
+          rates.value[index] = res.data;
+        }
+        $q.notify({ type: 'positive', message: 'Отображение курса сохранено' });
+      } catch {
+        $q.notify({ type: 'negative', message: 'Не удалось изменить отображение курса' });
+      }
     });
-    const index = rates.value.findIndex((item) => item.id === row.id);
-    if (index >= 0) {
-      rates.value[index] = res.data;
-    }
-    $q.notify({ type: 'positive', message: 'Отображение курса сохранено' });
-  } catch {
-    $q.notify({ type: 'negative', message: 'Не удалось изменить отображение курса' });
   } finally {
     const next = new Set(displayUpdating.value);
     next.delete(row.id);
     displayUpdating.value = next;
+  }
+}
+
+/** Последовательно выполняет изменения одной пары и не блокирует остальные строки. */
+async function serializeRateMutation(rateId: number, mutation: () => Promise<void>) {
+  const previous = rateMutationTails.get(rateId) ?? Promise.resolve();
+  const current = previous.catch(() => undefined).then(mutation);
+  rateMutationTails.set(rateId, current);
+  try {
+    await current;
+  } finally {
+    if (rateMutationTails.get(rateId) === current) {
+      rateMutationTails.delete(rateId);
+    }
   }
 }
 

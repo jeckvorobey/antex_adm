@@ -83,6 +83,18 @@
           </q-td>
         </template>
 
+        <template #body-cell-displayMode="props">
+          <q-td :props="props">
+            <q-toggle
+              :model-value="props.row.isReversed"
+              :label="props.row.isReversed ? 'Обратный' : 'Прямой'"
+              :disable="displayUpdating.has(props.row.id)"
+              :data-testid="`rate-display-reversed-${props.row.id}`"
+              @update:model-value="(value) => updateDisplayReversed(props.row, value)"
+            />
+          </q-td>
+        </template>
+
         <template #mobile-field-margin="{ row }">
           <div class="row items-center justify-end q-gutter-xs">
             <span>{{ formatMargin(row.margin) }}</span>
@@ -107,6 +119,16 @@
               outlined
             />
           </q-popup-edit>
+        </template>
+
+        <template #mobile-field-displayMode="{ row }">
+          <q-toggle
+            :model-value="row.isReversed"
+            :label="row.isReversed ? 'Обратный' : 'Прямой'"
+            :disable="displayUpdating.has(row.id)"
+            :data-testid="`rate-display-reversed-${row.id}`"
+            @update:model-value="(value) => updateDisplayReversed(row, value)"
+          />
         </template>
       </AppResponsiveTable>
     </q-card>
@@ -147,6 +169,7 @@ const $q = useQuasar();
 const refreshing = ref(false);
 const loadingRates = ref(false);
 const rates = ref<RateRow[]>([]);
+const displayUpdating = ref(new Set<number>());
 const rateColumns: QTableColumn<RateRow>[] = [
   {
     name: 'currency',
@@ -154,7 +177,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'currency',
     align: 'left',
     sortable: true,
-    style: 'width: 15%',
+    style: 'width: 12%',
   },
   {
     name: 'country',
@@ -162,7 +185,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: (row) => getRateScopeLabel(row),
     align: 'left',
     sortable: true,
-    style: 'width: 18%',
+    style: 'width: 14%',
   },
   {
     name: 'baseRate',
@@ -170,7 +193,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'baseRateDisplay',
     align: 'right',
     sortable: true,
-    style: 'width: 17%',
+    style: 'width: 14%',
   },
   {
     name: 'finalRate',
@@ -178,7 +201,15 @@ const rateColumns: QTableColumn<RateRow>[] = [
     field: 'finalRateDisplay',
     align: 'right',
     sortable: true,
-    style: 'width: 17%',
+    style: 'width: 14%',
+  },
+  {
+    name: 'displayMode',
+    label: 'Отображение',
+    field: (row) => (row.isReversed ? 'Обратный' : 'Прямой'),
+    align: 'left',
+    sortable: true,
+    style: 'width: 15%',
   },
   {
     name: 'margin',
@@ -187,7 +218,7 @@ const rateColumns: QTableColumn<RateRow>[] = [
     align: 'right',
     sortable: true,
     format: (value: number) => formatMargin(value),
-    style: 'width: 14%',
+    style: 'width: 12%',
   },
   {
     name: 'updatedAt',
@@ -215,6 +246,7 @@ const mobileConfig = {
   fields: [
     { name: 'baseRate', label: 'Базовый курс' },
     { name: 'finalRate', label: 'Итоговый курс' },
+    { name: 'displayMode', label: 'Отображение' },
     { name: 'margin', label: 'Наценка' },
     { name: 'updatedAt', label: 'Обновлено' },
   ],
@@ -224,6 +256,7 @@ onMounted(async () => {
   await loadRates();
 });
 
+/** Загружает актуальные курсы и их серверную ориентацию отображения. */
 async function loadRates() {
   loadingRates.value = true;
   try {
@@ -236,6 +269,7 @@ async function loadRates() {
   }
 }
 
+/** Обновляет внешние курсы и повторно загружает их представление. */
 async function refreshRates() {
   refreshing.value = true;
   try {
@@ -247,6 +281,7 @@ async function refreshRates() {
   }
 }
 
+/** Сохраняет клиентскую наценку выбранной валютной пары. */
 async function updateMargin(row: RateRow, margin: number) {
   try {
     const res = await api.patch<RateRow>(`/api/admin/rates/${row.id}`, { margin });
@@ -257,6 +292,27 @@ async function updateMargin(row: RateRow, margin: number) {
     $q.notify({ type: 'positive', message: 'Наценка сохранена' });
   } catch {
     $q.notify({ type: 'negative', message: 'Не удалось сохранить наценку' });
+  }
+}
+
+/** Переключает только ориентацию показа курса, не меняя прямой курс расчёта. */
+async function updateDisplayReversed(row: RateRow, displayReversed: boolean) {
+  displayUpdating.value = new Set(displayUpdating.value).add(row.id);
+  try {
+    const res = await api.patch<RateRow>(`/api/admin/rates/${row.id}`, {
+      displayReversed,
+    });
+    const index = rates.value.findIndex((item) => item.id === row.id);
+    if (index >= 0) {
+      rates.value[index] = res.data;
+    }
+    $q.notify({ type: 'positive', message: 'Отображение курса сохранено' });
+  } catch {
+    $q.notify({ type: 'negative', message: 'Не удалось изменить отображение курса' });
+  } finally {
+    const next = new Set(displayUpdating.value);
+    next.delete(row.id);
+    displayUpdating.value = next;
   }
 }
 

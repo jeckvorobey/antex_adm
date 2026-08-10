@@ -92,6 +92,8 @@ interface AdminOrder {
   currencyBuy: string;
   amountBuy: number | null;
   rate: number | null;
+  rateDisplay: string | null;
+  rateText: string | null;
   status: number;
   contactTelegram?: string | null;
   methodGet?: string | null;
@@ -161,7 +163,7 @@ const columns: QTableColumn<AdminOrder>[] = [
   {
     name: 'rate',
     label: 'Курс',
-    field: (row) => row.rate ?? '—',
+    field: (row) => row.rateText ?? row.rateDisplay ?? row.rate ?? '—',
     align: 'right',
     style: 'width: 9%',
   },

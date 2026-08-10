@@ -233,6 +233,45 @@ describe('RatesPage', () => {
     expect(wrapper.html()).toContain('85.50');
   });
 
+  it('переключает режим обратного отображения через admin API', async () => {
+    const row = {
+      id: 9,
+      currency: 'USDTTHB',
+      country: 'thailand',
+      countryRuName: 'Таиланд',
+      isInternal: false,
+      isReversed: false,
+      displayCurrencySell: 'USDT',
+      displayCurrencyBuy: 'THB',
+      baseRateDisplay: '36.20',
+      finalRateDisplay: '35.11',
+      directBaseRateDisplay: '36.20',
+      directFinalRateDisplay: '35.11',
+      margin: 3,
+      updatedAt: '2026-05-12T10:00:00Z',
+    };
+    mockAdminGet({ rates: [row] });
+    vi.mocked(api.patch).mockResolvedValue({
+      data: {
+        ...row,
+        isReversed: true,
+        displayCurrencySell: 'THB',
+        displayCurrencyBuy: 'USDT',
+      },
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const toggle = wrapper.findComponent('[data-testid="rate-display-reversed-9"]');
+    expect(toggle.exists()).toBe(true);
+    toggle.vm.$emit('update:modelValue', true);
+    await flushPromises();
+
+    expect(api.patch).toHaveBeenCalledWith('/api/admin/rates/9', {
+      displayReversed: true,
+    });
+  });
+
   it('показывает дату обновления курса в едином admin-формате', async () => {
     mockAdminGet({
       rates: [

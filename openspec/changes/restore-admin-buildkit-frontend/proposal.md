@@ -1,17 +1,21 @@
-# Восстановление Dockerfile админки
+# Устранение внешней зависимости Dockerfile админки
 
 ## Проблема
 
-В ветке `dev` Dockerfile админки расходится с рабочими Dockerfile production
-админки и Mini App: удалена директива BuildKit frontend, необходимая сборочному
-контуру с `RUN --mount=type=cache`.
+Coolify не может начать сборку админки при временном сбое DNS для
+`production.cloudfront.docker.com`: директива `# syntax=docker/dockerfile:1.7`
+заставляет BuildKit скачать внешний Dockerfile frontend до обработки базового
+образа. Docker 28.5.1 уже поддерживает используемый `RUN --mount=type=cache`
+через встроенный frontend.
 
 ## Изменение
 
-- Восстановить `# syntax=docker/dockerfile:1.7`.
+- Не загружать отдельный внешний Dockerfile frontend перед сборкой.
+- Сохранить cache mount для Yarn через встроенный frontend BuildKit.
 - Не менять Node.js, Nginx, зависимости и команды сборки.
 
 ## Проверка
 
-- Dockerfile `dev` должен совпадать с рабочим Dockerfile `origin/main`.
+- Регрессионный тест должен подтверждать отсутствие внешней syntax-директивы и
+  сохранение cache mount.
 - Выполнить production build админки.

@@ -116,6 +116,7 @@
           <q-btn
             v-if="!props.row.referral_code && !generatingForUser(props.row.id)"
             icon="vpn_key"
+            aria-label="Создать реферальный код"
             size="sm"
             color="primary"
             flat

@@ -138,6 +138,7 @@
               dense
               round
               icon="delete"
+              aria-label="Удалить ставку"
               color="negative"
               size="sm"
               @click="deletePersonalRate(props.row)"
@@ -235,6 +236,7 @@
               dense
               round
               icon="delete"
+              aria-label="Удалить ставку"
               color="negative"
               size="sm"
               @click="deletePartnerRate(props.row)"

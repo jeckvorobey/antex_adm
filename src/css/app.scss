@@ -1,25 +1,4 @@
-// Global tokens AntEx admin. Shared primitives follow the active Penpot library;
-// desktop-only aliases preserve the current Admin density and light workspace.
-:root {
-  --antex-admin-gold-base: #ffb300;
-  --antex-admin-gold-light: #f1c769;
-  --antex-admin-gold-dark: #c79539;
-  --antex-admin-surface-page: #0f2a26;
-  --antex-admin-surface-card: #123530;
-  --antex-admin-text-primary: #ffffff;
-  --antex-admin-text-muted: #aab7b4;
-  --antex-admin-radius-card: 18px;
-  --antex-admin-shadow-card-default: none;
-
-  --antex-admin-workspace-bg: #f5f7fa;
-  --antex-admin-panel-bg: #ffffff;
-  --antex-admin-heading: #20242a;
-  --antex-admin-copy-muted: #7b8794;
-  --antex-admin-copy-secondary: #667085;
-  --antex-admin-border-subtle: #e7ebf0;
-  --antex-admin-filter-radius: 10px;
-}
-
+// Global styles AntEx admin
 body {
   font-family: 'Roboto', sans-serif;
 }

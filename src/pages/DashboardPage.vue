@@ -419,7 +419,7 @@ function baseRateText(rate: DashboardRate) {
 
 <style scoped lang="scss">
 .dashboard-page {
-  background: var(--antex-admin-workspace-bg);
+  background: #f5f7fa;
 }
 
 .dashboard-shell {
@@ -456,7 +456,7 @@ function baseRateText(rate: DashboardRate) {
 .dashboard-subtitle,
 .surface-caption,
 .rate-row__time {
-  color: var(--antex-admin-copy-muted);
+  color: #7b8794;
 }
 
 .dashboard-subtitle {
@@ -486,9 +486,9 @@ function baseRateText(rate: DashboardRate) {
 .dashboard-surface {
   min-width: 0;
   padding: 20px;
-  border: 1px solid var(--antex-admin-border-subtle);
+  border: 1px solid #e7ebf0;
   border-radius: 16px;
-  background: var(--antex-admin-panel-bg);
+  background: #fff;
   box-shadow: 0 2px 10px rgb(31 41 55 / 4%);
 }
 
@@ -534,7 +534,7 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .attention-age {
-  color: var(--antex-admin-copy-muted);
+  color: #7b8794;
   font-size: 12px;
 }
 
@@ -559,7 +559,7 @@ function baseRateText(rate: DashboardRate) {
   justify-content: center;
   gap: 10px;
   min-height: 184px;
-  color: var(--antex-admin-copy-secondary);
+  color: #667085;
   text-align: center;
 }
 
@@ -580,7 +580,7 @@ function baseRateText(rate: DashboardRate) {
 .today-group--orders {
   padding-right: 0;
   padding-left: 20px;
-  border-left: 1px solid var(--antex-admin-border-subtle);
+  border-left: 1px solid #e7ebf0;
 }
 
 .today-group__title {
@@ -604,7 +604,7 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .metric-label {
-  color: var(--antex-admin-copy-secondary);
+  color: #667085;
   font-size: 13px;
 }
 
@@ -612,7 +612,7 @@ function baseRateText(rate: DashboardRate) {
   gap: 8px;
   min-height: 30px;
   border-top: 1px solid #f0f2f5;
-  color: var(--antex-admin-copy-secondary);
+  color: #667085;
   font-size: 12px;
 }
 
@@ -670,11 +670,11 @@ function baseRateText(rate: DashboardRate) {
   min-height: 68px;
   margin: 0;
   padding: 14px 20px;
-  border-bottom: 1px solid var(--antex-admin-border-subtle);
+  border-bottom: 1px solid #e7ebf0;
 }
 
 .surface-title {
-  color: var(--antex-admin-heading);
+  color: #20242a;
   font-size: 20px;
   font-weight: 500;
 }
@@ -710,7 +710,7 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .attention-reason {
-  color: var(--antex-admin-copy-muted);
+  color: #7b8794;
 }
 
 .attention-reason__separator {
@@ -721,7 +721,7 @@ function baseRateText(rate: DashboardRate) {
 .surface-footer-action {
   width: 100%;
   min-height: 52px;
-  border-top: 1px solid var(--antex-admin-border-subtle);
+  border-top: 1px solid #e7ebf0;
   border-radius: 0;
 }
 
@@ -770,7 +770,7 @@ function baseRateText(rate: DashboardRate) {
 .compact-metrics span {
   display: block;
   overflow: hidden;
-  color: var(--antex-admin-copy-secondary);
+  color: #667085;
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -779,7 +779,7 @@ function baseRateText(rate: DashboardRate) {
 .compact-metrics strong {
   display: block;
   margin-top: 8px;
-  color: var(--antex-admin-heading);
+  color: #20242a;
   font-size: 21px;
   font-weight: 500;
   text-align: center;
@@ -789,14 +789,14 @@ function baseRateText(rate: DashboardRate) {
   min-height: 64px;
   gap: 18px;
   padding: 12px 20px;
-  border-top: 1px solid var(--antex-admin-border-subtle);
-  color: var(--antex-admin-heading);
+  border-top: 1px solid #e7ebf0;
+  color: #20242a;
   font-size: 16px;
 }
 
 .today-total-row__metric {
   gap: 7px;
-  color: var(--antex-admin-copy-secondary);
+  color: #667085;
   font-size: 13px;
   white-space: nowrap;
 }
@@ -804,12 +804,12 @@ function baseRateText(rate: DashboardRate) {
 .today-total-row__metric + .today-total-row__metric {
   margin-left: auto;
   padding-left: 18px;
-  border-left: 1px solid var(--antex-admin-border-subtle);
+  border-left: 1px solid #e7ebf0;
 }
 
 .today-total-row__metric strong {
   margin-left: 8px;
-  color: var(--antex-admin-heading);
+  color: #20242a;
   font-size: 20px;
   font-weight: 500;
 }
@@ -836,7 +836,7 @@ function baseRateText(rate: DashboardRate) {
 
 .rates-updated {
   gap: 7px;
-  color: var(--antex-admin-copy-muted);
+  color: #7b8794;
   font-size: 13px;
   white-space: nowrap;
 }
@@ -878,7 +878,7 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .turnover-row > span {
-  color: var(--antex-admin-heading);
+  color: #20242a;
   font-weight: 600;
 }
 
@@ -909,7 +909,7 @@ function baseRateText(rate: DashboardRate) {
 .rate-row__quote {
   margin: 0;
   overflow: hidden;
-  color: var(--antex-admin-heading);
+  color: #20242a;
   font-size: 16px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -923,14 +923,14 @@ function baseRateText(rate: DashboardRate) {
 }
 
 .rate-row__connector {
-  color: var(--antex-admin-copy-muted);
+  color: #7b8794;
   font-weight: 400;
 }
 
 .rate-row__base {
   margin-top: 5px;
   overflow: hidden;
-  color: var(--antex-admin-copy-muted);
+  color: #7b8794;
   font-size: 12px;
   font-weight: 400;
   text-overflow: ellipsis;

@@ -2,16 +2,9 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Открыть навигацию"
-          @click="drawer = !drawer"
-        />
+        <q-btn flat dense round icon="menu" @click="drawer = !drawer" />
         <q-toolbar-title>AntEx Admin</q-toolbar-title>
-        <q-btn flat round icon="logout" aria-label="Выйти" @click="handleLogout" />
+        <q-btn flat round icon="logout" @click="handleLogout" />
       </q-toolbar>
     </q-header>
 

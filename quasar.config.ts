@@ -38,18 +38,7 @@ export default defineConfig((/* ctx */) => {
       open: false,
     },
     framework: {
-      config: {
-        brand: {
-          primary: '#FFB300',
-          secondary: '#123530',
-          accent: '#F1C769',
-          dark: '#0F2A26',
-          positive: '#4CAF50',
-          negative: '#E53935',
-          info: '#29B6F6',
-          warning: '#FFB300',
-        },
-      },
+      config: {},
       plugins: ['Dark', 'Notify', 'Loading', 'Dialog', 'LocalStorage'],
     },
     animations: [],

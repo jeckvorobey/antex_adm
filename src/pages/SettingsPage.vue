@@ -137,7 +137,6 @@
                     dense
                     color="negative"
                     icon="delete"
-                    aria-label="Удалить рекламную платформу"
                     @click="deletePlatform(item.slug)"
                 /></q-item-section>
               </q-item>
@@ -179,7 +178,6 @@
                     dense
                     color="negative"
                     icon="delete"
-                    aria-label="Удалить валюту маркетинга"
                     @click="deleteCurrency(item.code)"
                 /></q-item-section>
               </q-item>

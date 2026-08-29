@@ -50,8 +50,32 @@
                   class="q-mb-md"
                 />
 
-                <q-input v-model="form.buttonText" label="Текст кнопки" class="q-mb-sm" />
-                <q-input v-model="form.buttonUrl" label="URL / WebApp" class="q-mb-md" />
+                <div class="text-caption text-grey-7 q-mb-xs">Тип кнопки</div>
+                <q-btn-toggle
+                  v-model="form.buttonType"
+                  :options="buttonTypeOptions"
+                  no-caps
+                  unelevated
+                  spread
+                  toggle-color="primary"
+                  color="grey-3"
+                  text-color="grey-9"
+                  class="q-mb-sm"
+                />
+                <q-input
+                  v-model="form.buttonText"
+                  data-testid="broadcast-button-text"
+                  label="Текст кнопки"
+                  class="q-mb-sm"
+                />
+                <q-input
+                  v-model="form.buttonUrl"
+                  data-testid="broadcast-button-url"
+                  :label="buttonUrlLabel"
+                  :hint="buttonUrlHint"
+                  :persistent-hint="form.buttonType === 'web_app'"
+                  class="q-mb-md"
+                />
 
                 <q-btn
                   color="primary"
@@ -165,7 +189,8 @@
         <q-card-section>
           <div class="preview-html q-mb-md" v-html="previewHtml"></div>
           <div v-if="form.buttonText && form.buttonUrl" class="q-mb-md">
-            Кнопка: {{ form.buttonText }}
+            Кнопка: {{ form.buttonText }} ·
+            {{ form.buttonType === 'web_app' ? 'Telegram Mini App' : 'URL-ссылка' }}
           </div>
           <div class="text-caption">Режим: {{ isPaid ? 'paid' : 'free' }}</div>
         </q-card-section>
@@ -190,6 +215,8 @@ import {
 } from '@utils/telegramHtml';
 import { formatAdminDateTime } from '@utils/date';
 
+type BroadcastButtonType = 'url' | 'web_app';
+
 type BroadcastRow = {
   id: number;
   status: string;
@@ -212,11 +239,21 @@ const hasMore = ref(false);
 const stoppingIds = ref(new Set<number>());
 const isPaid = ref(false);
 const emojiQuery = ref('');
-const form = ref({
+const form = ref<{
+  text: string;
+  buttonText: string;
+  buttonUrl: string;
+  buttonType: BroadcastButtonType;
+}>({
   text: '<p></p>',
   buttonText: '',
   buttonUrl: '',
+  buttonType: 'url',
 });
+const buttonTypeOptions = [
+  { label: 'Обычная ссылка', value: 'url' },
+  { label: 'Telegram Mini App', value: 'web_app' },
+];
 let pollTimer: number | null = null;
 const pagination = ref({
   sortBy: null,
@@ -296,6 +333,14 @@ const mobileConfig = {
 
 const normalizedMessageHtml = computed(() => normalizeTelegramHtml(form.value.text));
 const previewHtml = computed(() => telegramPreviewHtml(normalizedMessageHtml.value));
+const buttonUrlLabel = computed(() =>
+  form.value.buttonType === 'web_app' ? 'HTTPS URL Mini App' : 'URL ссылки',
+);
+const buttonUrlHint = computed(() =>
+  form.value.buttonType === 'web_app'
+    ? 'Для реферальной страницы: https://<домен-mini-app>/#/referral'
+    : '',
+);
 const emojiCatalog = [
   '😀',
   '😁',
@@ -552,6 +597,7 @@ function insertEmoji(emoji: string) {
   form.value.text = `${currentText}${emoji}`;
 }
 
+/** Проверяет обязательные поля и ограничения выбранного типа кнопки. */
 function validateForm() {
   if (!hasTelegramRenderableContent(form.value.text)) {
     $q.notify({ type: 'negative', message: 'Введите текст рассылки' });
@@ -563,6 +609,18 @@ function validateForm() {
   if (hasButtonText !== hasButtonUrl) {
     $q.notify({ type: 'negative', message: 'Текст кнопки и URL должны быть заполнены вместе' });
     return false;
+  }
+
+  if (hasButtonUrl && form.value.buttonType === 'web_app') {
+    try {
+      const url = new URL(form.value.buttonUrl.trim());
+      if (url.protocol !== 'https:') {
+        throw new Error('invalid protocol');
+      }
+    } catch {
+      $q.notify({ type: 'negative', message: 'Для Mini App укажите абсолютный HTTPS URL' });
+      return false;
+    }
   }
 
   return true;
@@ -702,6 +760,7 @@ async function submitBroadcast() {
       format: 'html',
       button_text: form.value.buttonText.trim() || null,
       button_url: form.value.buttonUrl.trim() || null,
+      button_type: form.value.buttonType,
       speed_mode: isPaid.value ? 'paid' : 'free',
     });
     if (pagination.value.page === 1) {
@@ -714,7 +773,7 @@ async function submitBroadcast() {
       await loadBroadcasts();
     }
     confirmOpen.value = false;
-    form.value = { text: '<p></p>', buttonText: '', buttonUrl: '' };
+    form.value = { text: '<p></p>', buttonText: '', buttonUrl: '', buttonType: 'url' };
     isPaid.value = false;
     startPollingIfNeeded();
     $q.notify({ type: 'positive', message: 'Рассылка запущена' });

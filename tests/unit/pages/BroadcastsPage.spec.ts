@@ -175,6 +175,7 @@ describe('BroadcastsPage', () => {
       format: 'html',
       button_text: null,
       button_url: null,
+      button_type: 'url',
       speed_mode: 'free',
     });
   });
@@ -211,7 +212,54 @@ describe('BroadcastsPage', () => {
       format: 'html',
       button_text: null,
       button_url: null,
+      button_type: 'url',
       speed_mode: 'paid',
+    });
+  });
+
+  it('передаёт web_app тип и прямой referral URL', async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: [] });
+    vi.mocked(api.post).mockResolvedValue({
+      data: {
+        id: 1,
+        text: 'Реферальная программа',
+        status: 'pending',
+        speed_mode_requested: 'free',
+      },
+    });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.find('textarea').setValue('<p>Реферальная программа</p>');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Telegram Mini App'))
+      ?.trigger('click');
+    await wrapper
+      .find('[data-testid="broadcast-button-text"] input')
+      .setValue('Реферальная программа');
+    await wrapper
+      .find('[data-testid="broadcast-button-url"] input')
+      .setValue('https://app.example.test/#/referral');
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Отправить'))
+      ?.trigger('click');
+    await flushPromises();
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Подтвердить'))
+      ?.trigger('click');
+    await flushPromises();
+
+    expect(api.post).toHaveBeenCalledWith('/api/admin/broadcasts', {
+      text: 'Реферальная программа',
+      format: 'html',
+      button_text: 'Реферальная программа',
+      button_url: 'https://app.example.test/#/referral',
+      button_type: 'web_app',
+      speed_mode: 'free',
     });
   });
 

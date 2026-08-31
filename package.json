@@ -12,9 +12,9 @@
   "dependencies": {
     "@quasar/extras": "^1.16.0",
     "apexcharts": "^3.45.0",
-    "axios": "^1.6.0",
+    "axios": "^1.18.0",
     "pinia": "^2.1.0",
-    "quasar": "^2.14.0",
+    "quasar": "^2.22.0",
     "vue": "^3.4.0",
     "vue-apexcharts": "^1.7.0",
     "vue-router": "^4.2.0"
